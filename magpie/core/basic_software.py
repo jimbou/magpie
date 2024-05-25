@@ -55,7 +55,7 @@ class BasicSoftware(AbstractSoftware):
         if 'fitness' not in config['software']:
             msg = 'Invalid config file: "[software] fitness" must be defined'
             raise ScenarioError(msg)
-        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars']
+        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars', 'perf_cycles']
         if config['software']['fitness'] not in known_fitness:
             tmp = '/'.join(known_fitness)
             msg = f'Invalid config file: "[software] fitness" key must be {tmp}'
@@ -465,9 +465,35 @@ class BasicSoftware(AbstractSoftware):
         # if "[software] fitness" is "perf_time", we assume a perf-like output on STDERR
         elif self.fitness_type == 'perf_time':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
-            m = re.search('(.*) seconds time elapsed', stderr)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9.,]+)\s+seconds time elapsed\s*', stderr)
+            if m:
+                elapsed_time = m.group(1).strip().replace(',', '.')
+                print(f"Elapsed time: -{elapsed_time}- seconds")
+            else:
+                print("Elapsed time not found")
+                run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(m.group(1)), 4)
+                run_result.fitness = round(float(elapsed_time), 8)
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+        
+        # if "[software] fitness" is "perf_cycles", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_cycles':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+cycles\s*', stderr)
+            if m:
+                cycles = m.group(1).strip().replace(',', '.')
+                print(f"Cycles: -{cycles}- cycles")
+            else:
+                print("Cycels not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(cycles), 3)
+                print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
