@@ -55,7 +55,7 @@ class BasicSoftware(AbstractSoftware):
         if 'fitness' not in config['software']:
             msg = 'Invalid config file: "[software] fitness" must be defined'
             raise ScenarioError(msg)
-        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars', 'perf_cycles',"perf_cache_references", "perf_cache_misses", "perf_branches","perf_branch_misses",  "perf_cpu_clock", "perf_task_clock",  "perf_faults"]
+        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars', 'perf_cycles',"perf_cache_references", "perf_cache_misses", "perf_branches","perf_branch_misses",  "perf_cpu_clock", "perf_task_clock",  "perf_faults", "perf_minor_faults", "perf_major_faults", "perf_cs", "perf_migrations", "perf_L1_dcache_loads","perf_L1_dcache_load_misses", "perf_dTLB_loads", "perf_dTLB_load_misses"]
         if config['software']['fitness'] not in known_fitness:
             tmp = '/'.join(known_fitness)
             msg = f'Invalid config file: "[software] fitness" key must be {tmp}'
@@ -631,7 +631,7 @@ class BasicSoftware(AbstractSoftware):
             m = re.search(r'\s*([0-9,]+)\s+faults\s*', stderr)
             if m:
                 faults = m.group(1).strip().replace(',', '.')
-                print(f"faults: -{faults}- msec")
+                print(f"faults: -{faults}- ")
             else:
                 print("faults not found")
                 run_result.status = 'PARSE_ERROR'
@@ -640,6 +640,152 @@ class BasicSoftware(AbstractSoftware):
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_major_faults", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_major_faults':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+major-faults\s*', stderr)
+            if m:
+                maj_faults = m.group(1).strip().replace(',', '.')
+                print(f"major faults: -{maj_faults}-")
+            else:
+                print("major_faults not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(maj_faults), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_minor_faults", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_minor_faults':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+minor-faults\s*', stderr)
+            if m:
+                min_faults = m.group(1).strip().replace(',', '.')
+                print(f"minor faults: -{min_faults}-")
+            else:
+                print("min_faults not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(min_faults), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_cs", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_cs':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+cs\s*', stderr)
+            if m:
+                cs = m.group(1).strip().replace(',', '.')
+                print(f"contex switchs: -{cs}- ")
+            else:
+                print("contex switches not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(cs), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_migrations", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_migrations':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+migrations\s*', stderr)
+            if m:
+                migrations = m.group(1).strip().replace(',', '.')
+                print(f"migrations: -{migrations}- ")
+            else:
+                print("migrations not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(migrations), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+        
+        # if "[software] fitness" is "perf_L1_dcache_loads", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_L1_dcache_loads':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+L1-dcache-loads\s*', stderr)
+            if m:
+                l1_loads = m.group(1).strip().replace(',', '.')
+                print(f"l1_loads: -{l1_loads}- ")
+            else:
+                print("l1_loads not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(l1_loads), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_L1_dcache_load_misses", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_L1_dcache_load_misses':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+L1-dcache-load-misses\s*', stderr)
+            if m:
+                L1_misses = m.group(1).strip().replace(',', '.')
+                print(f"L1_misses: -{L1_misses}-")
+            else:
+                print("L1_misses not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(L1_misses), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_dTLB_loads", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_dTLB_loads':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+dTLB-loads\s*', stderr)
+            if m:
+                dtlb_loads = m.group(1).strip().replace(',', '.')
+                print(f"dtlb_loads: -{dtlb_loads}-")
+            else:
+                print("dtlb_loads not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(dtlb_loads), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "perf_dTLB_load_misses", we assume a perf-like output on STDERR
+        elif self.fitness_type == 'perf_dTLB_load_misses':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            m = re.search(r'\s*([0-9,]+)\s+dTLB-load-misses\s*', stderr)
+            if m:
+                dtlb_misses = m.group(1).strip().replace(',', '.')
+                print(f"dtlb_misses: -{dtlb_misses}-")
+            else:
+                print("dtlb_misses not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(dtlb_misses), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+       
 
         # if "[software] fitness" is "perf_instructions", we assume a perf-like output on STDERR
         # elif self.fitness_type == 'perf_instructions':
