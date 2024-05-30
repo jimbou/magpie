@@ -1,3 +1,7 @@
+#mine
+see if potential averages in the fitness function are worth the overhead
+
+
 # Magpie (Machine Automated General Performance Improvement via Evolution of software)
 
 <p align="center">
