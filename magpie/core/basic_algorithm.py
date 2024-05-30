@@ -263,6 +263,7 @@ class BasicAlgorithm(AbstractAlgorithm):
             current_fitness = max(warmup_values)
         elif self.config['warmup_strategy'] == 'mean':
             current_fitness = sum(warmup_values)/len(warmup_values)
+            print("Warmup strategy mean and current fitness is: ", current_fitness)
         elif self.config['warmup_strategy'] == 'median':
             current_fitness = sorted(warmup_values)[len(warmup_values)//2]
         else:

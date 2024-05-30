@@ -11,6 +11,7 @@ from .errors import ScenarioError
 from .runresult import RunResult
 
 
+
 class BasicSoftware(AbstractSoftware):
     def __init__(self, config):
         self.config = config
@@ -55,7 +56,7 @@ class BasicSoftware(AbstractSoftware):
         if 'fitness' not in config['software']:
             msg = 'Invalid config file: "[software] fitness" must be defined'
             raise ScenarioError(msg)
-        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars', 'perf_cycles',"perf_cache_references", "perf_cache_misses", "perf_branches","perf_branch_misses",  "perf_cpu_clock", "perf_task_clock",  "perf_faults", "perf_minor_faults", "perf_major_faults", "perf_cs", "perf_migrations", "perf_L1_dcache_loads","perf_L1_dcache_load_misses", "perf_dTLB_loads", "perf_dTLB_load_misses"]
+        known_fitness = ['output', 'time', 'posix_time', 'perf_time', 'perf_instructions', 'repair', 'bloat_lines', 'bloat_words', 'bloat_chars', 'perf_cycles',"perf_cache_references", "perf_cache_misses", "perf_branches","perf_branch_misses",  "perf_cpu_clock", "perf_task_clock",  "perf_faults", "perf_minor_faults", "perf_major_faults", "perf_cs", "perf_migrations", "perf_L1_dcache_loads","perf_L1_dcache_load_misses", "perf_dTLB_loads", "perf_dTLB_load_misses", "weights","energy", "energy_ram", "energy_uncore"]
         if config['software']['fitness'] not in known_fitness:
             tmp = '/'.join(known_fitness)
             msg = f'Invalid config file: "[software] fitness" key must be {tmp}'
@@ -342,9 +343,18 @@ class BasicSoftware(AbstractSoftware):
                         run_cmd = run_cmd.replace('{PARAMS}', cli)
                     else:
                         run_cmd = f'{run_cmd} {cli}'
-                    exec_result = self.exec_cmd(shlex.split(run_cmd),
+                    #print(f"Running command: {run_cmd}")
+                    #shlex.split(run_cmd)
+                    #self.run_command(run_cmd+" "+cli)
+                    #if run_cmd contains "./run_custom.sh"
+                    if run_cmd.find("./run_custom.sh") != -1:
+                         exec_result = self.exec_cmd_record(run_cmd+" "+cli,  
                                                 timeout=timeout,
                                                 lengthout=lengthout)
+                    else:
+                        exec_result = self.exec_cmd(shlex.split(run_cmd),  
+                                                    timeout=timeout,
+                                                    lengthout=lengthout)
                     run_result.status = exec_result.status
                     run_result.last_exec = exec_result
                     if run_result.status == 'SUCCESS':
@@ -785,7 +795,100 @@ class BasicSoftware(AbstractSoftware):
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
-       
+        # if "[software] fitness" is "weights", we assume our custom  output on STDERR
+        elif self.fitness_type == 'weights':
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            pattern = r"Custom Metric: ([\d\.]+)"
+
+            # Use re.search to find the pattern in the given line
+            m = re.search(pattern, stderr)
+            print(f"STDERR: {stderr}")
+            
+            if m:
+                custom = m.group(1).strip().replace(',', '.')
+                print(f"Custom weights: -{custom}-")
+            else:
+                print("Custom weight metric not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(custom), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+       # if "[software] fitness" is "energy", we assume our custom  output on STDERR
+        elif self.fitness_type == 'energy':
+            
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            pattern = r"Energy consumed: (\d+)"
+
+            # Use re.search to find the pattern in the given line
+            m = re.search(pattern, stderr)
+            print(f"STDERR: {stderr}")
+            
+            if m:
+                energy = m.group(1).strip().replace(',', '.')
+                print(f"Rapl energy: -{energy}-")
+            else:
+                print("energy rapl metric not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(energy), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+
+        # if "[software] fitness" is "energy_ram", we assume our custom  output on STDERR
+        elif self.fitness_type == 'energy_ram':
+            
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            pattern = r"Energy ram consumed: (\d+)"
+
+            # Use re.search to find the pattern in the given line
+            m = re.search(pattern, stderr)
+            print(f"STDERR: {stderr}")
+            
+            if m:
+                energy_ram = m.group(1).strip().replace(',', '.')
+                print(f"Rapl energy_ram: -{energy_ram}-")
+            else:
+                print("energy_ram rapl metric not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(energy_ram), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
+        
+        # if "[software] fitness" is "energy_uncore", we assume our custom  output on STDERR
+        elif self.fitness_type == 'energy_uncore':
+            
+            stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
+            #print(stderr)
+            #m = re.search('(.*) seconds time elapsed', stderr)
+            pattern = r"Energy uncore consumed: (\d+)"
+
+            # Use re.search to find the pattern in the given line
+            m = re.search(pattern, stderr)
+            print(f"STDERR: {stderr}")
+            
+            if m:
+                energy_uncore = m.group(1).strip().replace(',', '.')
+                print(f"Rapl energy_uncore: -{energy_uncore}-")
+            else:
+                print("energy_uncore rapl metric not found")
+                run_result.status = 'PARSE_ERROR'
+            try:
+                run_result.fitness = round(float(energy_uncore), 3)
+                print(f"Fitness: {run_result.fitness}")
+            except (AttributeError, ValueError):
+                run_result.status = 'PARSE_ERROR'
 
         # if "[software] fitness" is "perf_instructions", we assume a perf-like output on STDERR
         # elif self.fitness_type == 'perf_instructions':
