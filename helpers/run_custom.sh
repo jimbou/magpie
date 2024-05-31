@@ -15,4 +15,4 @@ perf report  --stdio > report1.txt
 perf annotate --stdio > report2.txt
 #echo "All files have been created."
 python3 read_total.py report1.txt report2.txt
-sleep 2
+sleep 0.1 #unneneded
