@@ -82,6 +82,7 @@ class BasicSoftware(AbstractSoftware):
         self.run_lengthout = None
         self.batch_timeout = None
         self.batch_lengthout = None
+        self.retries = None
 
         # init
         if 'init_cmd' in config['software']:
@@ -167,6 +168,11 @@ class BasicSoftware(AbstractSoftware):
                 self.run_lengthout = None
             else:
                 self.run_lengthout = int(config['software']['run_lengthout'])
+        if 'retries' in config['software']:
+            if config['software']['retries'].lower() in ['', 'none']:
+                self.retries = None
+            else:
+                self.retries = int(config['software']['retries'])
 
         # batch parameters
         self.batch = [''] # default initial batch: single empty instance
@@ -328,6 +334,8 @@ class BasicSoftware(AbstractSoftware):
                 cli = self.compute_local_cli(variant, 'run')
                 timeout = self.run_timeout or magpie.settings.default_timeout
                 lengthout = self.run_lengthout or magpie.settings.default_lengthout
+                retries = self.retries or 1
+                print(f"Retries: {retries}")
                 batch_timeout = self.batch_timeout
                 batch_lengthout = self.batch_lengthout
                 insts = [inst for b in self.batch for inst in b]
@@ -350,11 +358,13 @@ class BasicSoftware(AbstractSoftware):
                     if run_cmd.find("./run_custom.sh") != -1:
                          exec_result = self.exec_cmd_record(run_cmd+" "+cli,  
                                                 timeout=timeout,
-                                                lengthout=lengthout)
+                                                lengthout=lengthout,
+                                                retries=retries)
                     else:
-                        exec_result = self.exec_cmd(shlex.split(run_cmd),  
+                        exec_result = self.exec_cmd_retries(shlex.split(run_cmd),  
                                                     timeout=timeout,
-                                                    lengthout=lengthout)
+                                                    lengthout=lengthout,
+                                                    retries=retries)
                     run_result.status = exec_result.status
                     run_result.last_exec = exec_result
                     if run_result.status == 'SUCCESS':
@@ -453,9 +463,10 @@ class BasicSoftware(AbstractSoftware):
         # if "[software] fitness" is "output", we check STDOUT for the string "MAGPIE_FITNESS:"
         if self.fitness_type == 'output':
             stdout = exec_result.stdout.decode(magpie.settings.output_encoding)
-            m = re.search('MAGPIE_FITNESS: (.*)', stdout)
+            m = re.findall('MAGPIE_FITNESS: (.*)', stdout)
             try:
-                run_result.fitness = float(m.group(1))
+                fitnesses = [float(time.strip()) for time in m]
+                run_result.fitness = sum(fitnesses)/len(fitnesses)
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
@@ -466,9 +477,10 @@ class BasicSoftware(AbstractSoftware):
         # if "[software] fitness" is "posix_time", we assume a POSIX-compatible output on STDERR
         elif self.fitness_type == 'posix_time':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
-            m = re.search('real (.*)', stderr)
+            m = re.findall('real (.*)', stderr)
             try:
-                run_result.fitness = float(m.group(1))
+                ptimes =[float(time.strip()) for time in m]
+                run_result.fitness = sum(ptimes)/len(ptimes)
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
@@ -476,16 +488,19 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_time':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9.,]+)\s+seconds time elapsed\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m =  re.findall(r'\s*([0-9.,]+)\s+seconds time elapsed\s*', stderr)
             if m:
-                elapsed_time = m.group(1).strip().replace(',', '.')
+                elapsed_times = [round(float(time.strip().replace(',', '.')),8) for time in m]
+                #print(f"Elapsed times: -{elapsed_times}- seconds")
+                # Calculate the average if more than one time is found
+                elapsed_time = sum(elapsed_times) / len(elapsed_times)
                 print(f"Elapsed time: -{elapsed_time}- seconds")
             else:
                 print("Elapsed time not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(elapsed_time), 8)
+                run_result.fitness = elapsed_time
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
         
@@ -493,16 +508,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_cycles':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+cycles\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+cycles\s*', stderr)
             if m:
-                cycles = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                cycles = sum(temp) / len(temp)
                 print(f"Cycles: -{cycles}- cycles")
             else:
-                print("Cycels not found")
+                print("Cycles not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(cycles), 3)
+                run_result.fitness = cycles
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -511,16 +527,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_instructions':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+instructions\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+instructions\s*', stderr)
             if m:
-                insts = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                insts = sum(temp) / len(temp)
                 print(f"Perf instructions: -{insts}- instructions")
             else:
                 print("Perf Instructions not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(insts), 3)
+                run_result.fitness = insts
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -529,16 +546,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_cache_references':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+cache-references\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+cache-references\s*', stderr)
             if m:
-                cache_refs = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                cache_refs = sum(temp) / len(temp)
                 print(f"cache-references: -{cache_refs}")
             else:
                 print("Cache-references not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(cache_refs), 3)
+                run_result.fitness = cache_refs
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -547,16 +565,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_cache_misses':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+cache-misses\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+cache-misses\s*', stderr)
             if m:
-                misses = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                misses = sum(temp) / len(temp)
                 print(f"Misses: -{misses}-")
             else:
                 print("Perf cache misses not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(misses), 3)
+                run_result.fitness = misses
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -565,16 +584,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_branches':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+branches\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+branches\s*', stderr)
             if m:
-                branches = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                branches = sum(temp) / len(temp)
                 print(f"Branches: -{branches}- branches")
             else:
                 print("Branches not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(branches), 3)
+                run_result.fitness = branches
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -583,16 +603,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_branch_misses':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+branch-misses\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+branch-misses\s*', stderr)
             if m:
-                branch_misses = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                branch_misses = sum(temp) / len(temp)
                 print(f"branch-misses: -{branch_misses}- branch-misses")
             else:
                 print("Branch misses not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(branch_misses), 3)
+                run_result.fitness = branch_misses
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -601,16 +622,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_cpu_clock':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+msec cpu-clock\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+msec cpu-clock\s*', stderr)
             if m:
-                clocks = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),4) for val in m]
+                clocks = sum(temp) / len(temp)
                 print(f"clocks: -{clocks}- msec")
             else:
                 print("Cpu clocks not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(clocks), 4)
+                run_result.fitness = clocks
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -619,16 +641,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_task_clock':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+msec task-clock\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+msec task-clock\s*', stderr)
             if m:
-                task_clock = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),4) for val in m]
+                task_clock = sum(temp) / len(temp)
                 print(f"task_clock: -{task_clock}- msec")
             else:
                 print("task_clock not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(task_clock), 4)
+                run_result.fitness = task_clock
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -637,16 +660,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_faults':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+faults\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+faults\s*', stderr)
             if m:
-                faults = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                faults = sum(temp) / len(temp)
                 print(f"faults: -{faults}- ")
             else:
                 print("faults not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(faults), 3)
+                run_result.fitness = faults
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -655,16 +679,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_major_faults':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+major-faults\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+major-faults\s*', stderr)
             if m:
-                maj_faults = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                maj_faults = sum(temp) / len(temp)
                 print(f"major faults: -{maj_faults}-")
             else:
                 print("major_faults not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(maj_faults), 3)
+                run_result.fitness = maj_faults
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -673,16 +698,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_minor_faults':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+minor-faults\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+minor-faults\s*', stderr)
             if m:
-                min_faults = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                min_faults = sum(temp) / len(temp)
                 print(f"minor faults: -{min_faults}-")
             else:
                 print("min_faults not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(min_faults), 3)
+                run_result.fitness = min_faults
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -691,16 +717,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_cs':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+cs\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+cs\s*', stderr)
             if m:
-                cs = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                cs = sum(temp) / len(temp)
                 print(f"contex switchs: -{cs}- ")
             else:
                 print("contex switches not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(cs), 3)
+                run_result.fitness = cs
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -709,16 +736,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_migrations':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+migrations\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+migrations\s*', stderr)
             if m:
-                migrations = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                migrations = sum(temp) / len(temp)
                 print(f"migrations: -{migrations}- ")
             else:
                 print("migrations not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(migrations), 3)
+                run_result.fitness = migrations
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -727,16 +755,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_L1_dcache_loads':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+L1-dcache-loads\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+L1-dcache-loads\s*', stderr)
             if m:
-                l1_loads = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                l1_loads = sum(temp) / len(temp)
                 print(f"l1_loads: -{l1_loads}- ")
             else:
                 print("l1_loads not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(l1_loads), 3)
+                run_result.fitness = l1_loads
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -745,16 +774,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_L1_dcache_load_misses':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+L1-dcache-load-misses\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+L1-dcache-load-misses\s*', stderr)
             if m:
-                L1_misses = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                L1_misses = sum(temp) / len(temp)
                 print(f"L1_misses: -{L1_misses}-")
             else:
                 print("L1_misses not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(L1_misses), 3)
+                run_result.fitness = L1_misses
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -763,16 +793,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_dTLB_loads':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+dTLB-loads\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+dTLB-loads\s*', stderr)
             if m:
-                dtlb_loads = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                dtlb_loads = sum(temp) / len(temp)
                 print(f"dtlb_loads: -{dtlb_loads}-")
             else:
                 print("dtlb_loads not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(dtlb_loads), 3)
+                run_result.fitness = dtlb_loads
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -781,16 +812,17 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'perf_dTLB_load_misses':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
-            m = re.search(r'\s*([0-9,]+)\s+dTLB-load-misses\s*', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
+            m = re.findall(r'\s*([0-9,]+)\s+dTLB-load-misses\s*', stderr)
             if m:
-                dtlb_misses = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                dtlb_misses = sum(temp) / len(temp)
                 print(f"dtlb_misses: -{dtlb_misses}-")
             else:
                 print("dtlb_misses not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(dtlb_misses), 3)
+                run_result.fitness = dtlb_misses
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -799,21 +831,22 @@ class BasicSoftware(AbstractSoftware):
         elif self.fitness_type == 'weights':
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
             pattern = r"Custom Metric: ([\d\.]+)"
 
-            # Use re.search to find the pattern in the given line
-            m = re.search(pattern, stderr)
-            print(f"STDERR: {stderr}")
+            # Use re.findall to find the pattern in the given line
+            m = re.findall(pattern, stderr)
             
             if m:
-                custom = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                print(f"All weights: -{temp}-")
+                custom = sum(temp) / len(temp)
                 print(f"Custom weights: -{custom}-")
             else:
                 print("Custom weight metric not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(custom), 3)
+                run_result.fitness = custom
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -823,21 +856,22 @@ class BasicSoftware(AbstractSoftware):
             
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
             pattern = r"Energy consumed: (\d+)"
 
-            # Use re.search to find the pattern in the given line
-            m = re.search(pattern, stderr)
+            # Use re.findall to find the pattern in the given line
+            m = re.findall(pattern, stderr)
             print(f"STDERR: {stderr}")
             
             if m:
-                energy = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                energy = sum(temp) / len(temp)
                 print(f"Rapl energy: -{energy}-")
             else:
                 print("energy rapl metric not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(energy), 3)
+                run_result.fitness = energy
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -847,21 +881,22 @@ class BasicSoftware(AbstractSoftware):
             
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
             pattern = r"Energy ram consumed: (\d+)"
 
-            # Use re.search to find the pattern in the given line
-            m = re.search(pattern, stderr)
+            # Use re.findall to find the pattern in the given line
+            m = re.findall(pattern, stderr)
             print(f"STDERR: {stderr}")
             
             if m:
-                energy_ram = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                energy_ram = sum(temp) / len(temp)
                 print(f"Rapl energy_ram: -{energy_ram}-")
             else:
                 print("energy_ram rapl metric not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(energy_ram), 3)
+                run_result.fitness = energy_ram
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -871,21 +906,22 @@ class BasicSoftware(AbstractSoftware):
             
             stderr = exec_result.stderr.decode(magpie.settings.output_encoding)
             #print(stderr)
-            #m = re.search('(.*) seconds time elapsed', stderr)
+            #m = re.findall('(.*) seconds time elapsed', stderr)
             pattern = r"Energy uncore consumed: (\d+)"
 
-            # Use re.search to find the pattern in the given line
-            m = re.search(pattern, stderr)
+            # Use re.findall to find the pattern in the given line
+            m = re.findall(pattern, stderr)
             print(f"STDERR: {stderr}")
             
             if m:
-                energy_uncore = m.group(1).strip().replace(',', '.')
+                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                energy_uncore = sum(temp) / len(temp)
                 print(f"Rapl energy_uncore: -{energy_uncore}-")
             else:
                 print("energy_uncore rapl metric not found")
                 run_result.status = 'PARSE_ERROR'
             try:
-                run_result.fitness = round(float(energy_uncore), 3)
+                run_result.fitness = energy_uncore
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'

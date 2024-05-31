@@ -220,6 +220,79 @@ class AbstractSoftware(abc.ABC):
                 return ExecResult(cmd, 'SUCCESS', sprocess.returncode, stdout, stderr, end-start, len(stdout)+len(stderr))
         except FileNotFoundError:
             return ExecResult(cmd, 'CLI_ERROR', -1, b'', b'', 0, 0)
+
+    def exec_cmd_retries(self, cmd, timeout=15, env=None, shell=False, lengthout=1e6, retries=1):
+        # 1e6 bytes is 1Mb
+        sprocess = None
+        stdout_total = b''
+        stderr_total = b''
+        total_time = 0
+        sprocess = None
+        env = env or os.environ.copy()
+        env['MAGPIE_ROOT'] = magpie.settings.magpie_root
+        env['MAGPIE_LOG_DIR'] = magpie.settings.log_dir
+        env['MAGPIE_WORK_DIR'] = magpie.settings.work_dir
+        env['MAGPIE_BASENAME'] = self.basename
+        env['MAGPIE_TIMESTAMP'] = self.timestamp
+        env['PERF_EVENT_PARANOID'] = '-1'
+        env['KPTR_RESTRICT'] = '0'
+        stdout = b''
+        stderr = b''
+
+        try:
+            
+            for i in range(retries):  
+                start = time.time()
+                with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, env=env, start_new_session=True) as sprocess:      
+                    #print("RETRY:", i)
+                    if lengthout > 0:
+                        stdout_size = 0
+                        stderr_size = 0
+                        while sprocess.poll() is None:
+                            end = time.time()
+                            if end-start > timeout:
+                                os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
+                                _, _ = sprocess.communicate()
+                                return ExecResult(cmd, 'TIMEOUT', sprocess.returncode, stdout, stderr, end-start, stdout_size+stderr_size)
+                            a = select.select([sprocess.stdout, sprocess.stderr], [], [], 1)[0]
+                            if sprocess.stdout in a:
+                                for _ in range(1024):
+                                    if not select.select([sprocess.stdout], [], [], 0)[0]:
+                                        break
+                                    stdout += sprocess.stdout.read(1)
+                                    stdout_size += 1
+                            if sprocess.stderr in a:
+                                for _ in range(1024):
+                                    if not select.select([sprocess.stderr], [], [], 0)[0]:
+                                        break
+                                    stderr += sprocess.stderr.read(1)
+                                    stderr_size += 1
+                            if stdout_size+stderr_size >= lengthout:
+                                os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
+                                _, _ = sprocess.communicate()
+                                return ExecResult(cmd, 'LENGTHOUT', sprocess.returncode, stdout, stderr, end-start, stdout_size+stderr_size)
+                        end = time.time()
+                        stdout += sprocess.stdout.read()
+                        stderr += sprocess.stderr.read()
+                    else:
+                        try:
+                            stdout, stderr = sprocess.communicate(timeout=timeout)
+                        except subprocess.TimeoutExpired:
+                            os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
+                            stdout, stderr = sprocess.communicate()
+                            end = time.time()
+                            return ExecResult(cmd, 'TIMEOUT', sprocess.returncode, stdout, stderr, end-start, len(stdout)+len(stderr))
+                        end = time.time()
+                total_time+= end-start
+                #print("TIME:", total_time)  
+                stdout_total += stdout
+                stderr_total += stderr
+                stdout = b''
+                stderr = b''
+            #print("TOTAL stder:", stderr_total)    
+            return ExecResult(cmd, 'SUCCESS', sprocess.returncode, stdout_total, stderr_total, total_time/retries, len(stdout)+len(stderr))
+        except FileNotFoundError:
+            return ExecResult(cmd, 'CLI_ERROR', -1, b'', b'', 0, 0)
         
     # def run_command(self,cmd):
         
@@ -237,12 +310,12 @@ class AbstractSoftware(abc.ABC):
     #         return ExecResult(cmd, 'CLI_ERROR', -1, b'', b'', 0, 0)
     
     #function specifically to handle perf record
-    def exec_cmd_record(self, cmd, timeout=15, env=None, shell=False, lengthout=1e6):
+    def exec_cmd_record(self, cmd, timeout=15, env=None, shell=False, lengthout=1e6,retries=1):
         # 1e6 bytes is 1Mb
         sprocess = None
         stdout = b''
         stderr = b''
-        start = time.time()
+        
         sprocess = None
         env =os.environ.copy()
         env['MAGPIE_ROOT'] = magpie.settings.magpie_root
@@ -252,11 +325,18 @@ class AbstractSoftware(abc.ABC):
         env['MAGPIE_TIMESTAMP'] = self.timestamp
         env['PERF_EVENT_PARANOID'] = '-1'
         env['KPTR_RESTRICT'] = '0'
+        stdout_total = b''
+        stderr_total = b''
+        total_time = 0
+        stdout = b''
 
         try:
+            for i in range(retries):    
+                print("RETRY from record:", i)
+                start = time.time()
                 process = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE)
                 stdout, stderr = process.communicate()
-                stdout =""
+                stdout =b""
                 end = time.time()
                 # if lengthout > 0:
                 #     stdout_size = 0
@@ -296,7 +376,12 @@ class AbstractSoftware(abc.ABC):
                 #         end = time.time()
                 #         return ExecResult(cmd, 'TIMEOUT', sprocess.returncode, stdout, stderr, end-start, len(stdout)+len(stderr))
                 #     end = time.time()
-                return ExecResult(cmd, 'SUCCESS', process.returncode, stdout, stderr, end-start, len(stdout)+len(stderr))
+                total_time += end-start
+                stdout_total += stdout
+                stderr_total += stderr
+                stdout = b''
+                stderr = b''
+            return ExecResult(cmd, 'SUCCESS', process.returncode, stdout_total, stderr_total, total_time/retries, len(stdout_total)+len(stderr_total))
         except FileNotFoundError:
             return ExecResult(cmd, 'CLI_ERROR', -1, b'', b'', 0, 0)
 

@@ -53,6 +53,7 @@ default_scenario = {
         'run_cmd': '',
         'run_timeout': '',
         'run_lengthout': '',
+        'retries': '',
         'batch_timeout': '',
         'batch_lengthout': '',
         'batch_bin_fitness_strategy': 'aggregate', # aggregate ; sum ; average ; median ; q10 ; q25 ; q75 ; q90

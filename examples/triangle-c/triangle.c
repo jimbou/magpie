@@ -2,8 +2,7 @@
 
 int classify_triangle(double a, double b, double c) {
   double tmp;
-  double tmpi;
-  
+
   // sort the sides so that a <= b <= c
   if(a > b) {
     tmp = a;
@@ -22,7 +21,7 @@ int classify_triangle(double a, double b, double c) {
     b = c;
     c = tmp;
   }
-  
+
   if(a + b <= c)
     return INVALID;
   if(a == b && b == c)

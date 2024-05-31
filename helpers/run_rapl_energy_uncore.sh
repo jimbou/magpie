@@ -13,7 +13,6 @@ if [ $# -eq 0 ]; then
   echo "Usage: $0 \"<command>\""
   exit 1
 fi
-
 # The command to execute is the first argument
 user_command=$1
 sleep 1
