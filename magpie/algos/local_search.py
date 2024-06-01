@@ -117,7 +117,6 @@ class DebugSearch(LocalSearch):
 
             # next
             self.stats['steps'] += 1
-
         self.report['stop'] = 'debug end'
         return current_patch, current_fitness
 

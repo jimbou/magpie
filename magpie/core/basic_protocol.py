@@ -10,6 +10,10 @@ class BasicProtocol:
     def __init__(self):
         self.search = None
         self.software = None
+    
+    def print_attributes(self):
+        print(dir(self))
+    
 
     def run(self, config):
         if self.software is None:
@@ -38,6 +42,12 @@ class BasicProtocol:
         self.search.software = self.software
 
         logger = self.software.logger
+        retries=1
+        if 'retries' in config['software']:
+            if config['software']['retries'].lower() in ['', 'none']:
+                retries=1
+            else:
+                retries=int(config['software']['retries'])
 
         # run the algorithm a single time
         logger.debug('') # because CONFIG above is also debug
@@ -47,7 +57,6 @@ class BasicProtocol:
         logger.info(msg, self.search.__class__.__name__)
         self.search.run()
         result.update(self.search.report)
-
         # print the report
         logger.info('')
         msg = '==== REPORT ===='
@@ -55,6 +64,9 @@ class BasicProtocol:
             msg = f'\033[1m{msg}\033[0m'
         logger.info(msg)
         logger.info('Termination: %s', result['stop'])
+
+        
+        logger.info('Retries: %s', retries)
         for handler in logger.handlers:
             if handler.__class__.__name__ == 'FileHandler':
                 logger.info('Log file: %s', handler.baseFilename)
