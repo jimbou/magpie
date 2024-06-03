@@ -6,13 +6,35 @@ import sys
 import time
 import json
 import re
-
+#python3.11 run_examples.py triangle-c scenario run_triangle "make run_triangle" triangle.c
 data = {
     "original": {
         "median_execution_time": 0
     },
     "items": []
 }
+
+def update_retries(filepath, new_retry_value):
+    # Read the original file
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+
+    # Update the specified line
+    for i in range(len(lines)):
+        if lines[i].strip().startswith("retries ="):
+            lines[i] = f"retries = {new_retry_value}\n"
+            break
+
+    # Generate a new file name based on the original name and new_retry_value
+    base_name, ext = os.path.splitext(filepath)
+    new_filepath = f"{base_name}_{new_retry_value}{ext}"
+
+    # Write to the new file
+    with open(new_filepath, 'w') as file:
+        file.writelines(lines)
+
+    
+    return new_filepath
 
 
 def extract_data_from_log(file_path):
@@ -59,7 +81,7 @@ def extract_data_from_log(file_path):
     return retries_number, max_patch_number, best_fitness, ref_fitness
 
 
-#python3.11 run_examples.py triangle-c scenario run_triangle "make run_triangle" triangle.c
+
 
 def run_command(command, directory =None):
     """ Helper function to run a shell command and return its output. """
@@ -78,13 +100,14 @@ def create_directory_with_suffix(base_path):
 
 def main(name1, name2,name3, compile_command, improved_file):
     # perf_items = [
-    #     'time', 'posix_time', 'perf_time', 'perf_instructions', 'perf_cycles',
+    #     'time', 'perf_time', 'perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
     #     "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults",
     #     "perf_minor_faults", "perf_major_faults", "perf_cs", "perf_migrations",
     #     "perf_L1_dcache_loads", "perf_L1_dcache_load_misses", "perf_dTLB_loads",
-    #     "perf_dTLB_load_misses", "weights", "energy", "energy_ram", "energy_uncore"
+    #     "perf_dTLB_load_misses", "weights", "energy"
     # ]
+    # "energy_ram", "energy_uncore"
     perf_items = ['time','perf_time']
     execution_times = []
     result = run_command(compile_command, f"examples/{name1}/necessary")
@@ -105,85 +128,87 @@ def main(name1, name2,name3, compile_command, improved_file):
     orig_path=f"examples/{name1}/necessary"
     for item in perf_items:
         #get time before execution
-        
-        new_string = f"{name2}_{item}.txt"
-        scenario_path = f"examples/{name1}/_magpie/{new_string}"
-        
-        command = f"python3.11 magpie local_search --scenario {scenario_path}"
-        start = time.time()
-        result = run_command(command)
-        end = time.time()
-        duration_magpie = end - start  
-        print(f"Duration: {duration}")
-        # Parse output for file paths
-        log_path = None
-        patch_path = None
-        diff_path = None
-        print(result.stderr)
-        for line in result.stderr.splitlines():
-            if "Log file:" in line:
-                log_path = line.split()[-1]
-            elif "Patch file:" in line:
-                patch_path = line.split()[-1]
-            elif "Diff file:" in line:
-                diff_path = line.split()[-1]
-
-        if not log_path or not patch_path or not diff_path:
-            print(f"Files not found for {item}")
-            continue
-
-        # Subdirectory for the current item
-        item_directory = os.path.join(main_directory, item)
-        os.makedirs(item_directory, exist_ok=True)
-        final_destination = os.path.join(item_directory, 'necessary')
-        # Copy files
-        shutil.copytree(orig_path, final_destination)
-        shutil.copy(log_path, item_directory)
-        shutil.copy(patch_path, item_directory)
-        shutil.copy(diff_path,item_directory )
-
-        #get in  a string the contents of the patch file
-        with open(patch_path, 'r') as file:
-            patch_contents = file.read()
-        diff_name = os.path.basename(diff_path)
-
-        retries, max_patch, best_fitness, ref_fitness = extract_data_from_log(log_path)
-        if retries is not None and max_patch is not None:
-            print("Number of Retries:", retries)
-            print("Highest Patch Number:", max_patch)
-        else:
-            print("Failed to extract data.")
-
-      
-
-        
-        patch_command= f"patch {improved_file} ../{diff_name}"
-        result = run_command(patch_command, f"{item_directory}/necessary")
-        print(result.stderr)
-        result = run_command(compile_command, f"{item_directory}/necessary")
-        print(f"Files for {item} saved in {item_directory}")
-        execution_times = []
-        for _ in range(10):
+        for retries_num  in range(1,6):
+            new_string = f"{name2}_{item}.txt"
+            scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
+            scenario_path=update_retries(scenario_path_base,retries_num)
+            command = f"python3.11 magpie local_search --scenario {scenario_path}"
             start = time.time()
-            result = run_command(f'./{name3}',)
+            result = run_command(command)
             end = time.time()
-            duration = end - start  
-            execution_times.append(float(duration))
-        
-    
-        median_time = statistics.median(execution_times)
-        print(f'Median execution time: {median_time}')
+            duration_magpie = end - start  
+            print(f"Duration: {duration}")
+            # Parse output for file paths
+            os.remove(scenario_path)
+            log_path = None
+            patch_path = None
+            diff_path = None
+            print(result.stderr)
+            for line in result.stderr.splitlines():
+                if "Log file:" in line:
+                    log_path = line.split()[-1]
+                elif "Patch file:" in line:
+                    patch_path = line.split()[-1]
+                elif "Diff file:" in line:
+                    diff_path = line.split()[-1]
 
-        data["items"].append({
-        "item_name": item,
-        "median_execution_time": median_time,
-        "duration":duration_magpie ,
-        "patch_contents": patch_contents,
-        "number_of_retries": retries,
-        "number_of_steps": max_patch,
-        "best_fitness": best_fitness,
-        "reference_fitness": ref_fitness
-        })
+            if not log_path or not patch_path or not diff_path:
+                print(f"Files not found for {item}")
+                continue
+
+            # Subdirectory for the current item
+            item_directory = os.path.join(main_directory, item)
+            item_directory = item_directory +"_"+str(retries_num)
+            os.makedirs(item_directory, exist_ok=True)
+            final_destination = os.path.join(item_directory, 'necessary')
+            # Copy files
+            shutil.copytree(orig_path, final_destination)
+            shutil.copy(log_path, item_directory)
+            shutil.copy(patch_path, item_directory)
+            shutil.copy(diff_path,item_directory )
+
+            #get in  a string the contents of the patch file
+            with open(patch_path, 'r') as file:
+                patch_contents = file.read()
+            diff_name = os.path.basename(diff_path)
+
+            retries, max_patch, best_fitness, ref_fitness = extract_data_from_log(log_path)
+            if retries is not None and max_patch is not None:
+                print("Number of Retries:", retries)
+                print("Highest Patch Number:", max_patch)
+            else:
+                print("Failed to extract data.")
+
+        
+
+            
+            patch_command= f"patch {improved_file} ../{diff_name}"
+            result = run_command(patch_command, f"{item_directory}/necessary")
+            print(result.stderr)
+            result = run_command(compile_command, f"{item_directory}/necessary")
+            print(f"Files for {item} saved in {item_directory}")
+            execution_times = []
+            for _ in range(10):
+                start = time.time()
+                result = run_command(f'./{name3}',)
+                end = time.time()
+                duration = end - start  
+                execution_times.append(float(duration))
+            
+        
+            median_time = statistics.median(execution_times)
+            print(f'Median execution time: {median_time}')
+
+            data["items"].append({
+            "item_name": item,
+            "median_execution_time": median_time,
+            "duration":duration_magpie ,
+            "patch_contents": patch_contents,
+            "number_of_retries": retries,
+            "number_of_steps": max_patch,
+            "best_fitness": best_fitness,
+            "reference_fitness": ref_fitness
+            })
 
     with open(f'{main_directory}/performance_data.json', 'w') as file:
         json.dump(data, file, indent=4)
