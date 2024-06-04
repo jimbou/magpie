@@ -453,6 +453,7 @@ class BasicSoftware(AbstractSoftware):
                         run_result.fitness += sum(len(s.split()) for s in target.readlines())
                     elif self.fitness_type == 'bloat_chars':
                         run_result.fitness += sum(len(s) for s in target.readlines())
+                    
 
     def process_run_exec(self, run_result, exec_result):
         # in all cases "[software] run_cmd" must yield nonzero return code
@@ -467,12 +468,14 @@ class BasicSoftware(AbstractSoftware):
             try:
                 fitnesses = [float(time.strip()) for time in m]
                 run_result.fitness = sum(fitnesses)/len(fitnesses)
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
         # if "[software] fitness" is "time", we just use time as seen by the main Python process
         elif self.fitness_type == 'time':
             run_result.fitness = round(exec_result.runtime, 4)
+            # self.logger.info(f'Fitness value === {run_result.fitness}')
 
         # if "[software] fitness" is "posix_time", we assume a POSIX-compatible output on STDERR
         elif self.fitness_type == 'posix_time':
@@ -481,6 +484,7 @@ class BasicSoftware(AbstractSoftware):
             try:
                 ptimes =[float(time.strip()) for time in m]
                 run_result.fitness = sum(ptimes)/len(ptimes)
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
 
@@ -501,6 +505,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = elapsed_time
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
         
@@ -519,6 +524,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = cycles
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -538,6 +544,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = insts
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -557,6 +564,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = cache_refs
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -576,6 +584,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = misses
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -595,6 +604,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = branches
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -614,6 +624,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = branch_misses
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -633,6 +644,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = clocks
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -652,6 +664,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = task_clock
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -671,6 +684,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = faults
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -690,6 +704,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = maj_faults
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -709,6 +724,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = min_faults
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -728,6 +744,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = cs
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -747,6 +764,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = migrations
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -766,6 +784,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = l1_loads
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -785,6 +804,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = L1_misses
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -804,6 +824,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = dtlb_loads
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -823,6 +844,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = dtlb_misses
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -847,6 +869,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = custom
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -872,6 +895,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = energy
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -897,6 +921,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = energy_ram
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
@@ -922,6 +947,7 @@ class BasicSoftware(AbstractSoftware):
                 run_result.status = 'PARSE_ERROR'
             try:
                 run_result.fitness = energy_uncore
+                # self.logger.info(f'Fitness value === {run_result.fitness}')
                 print(f"Fitness: {run_result.fitness}")
             except (AttributeError, ValueError):
                 run_result.status = 'PARSE_ERROR'
