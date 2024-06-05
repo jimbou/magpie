@@ -332,7 +332,7 @@ class AbstractSoftware(abc.ABC):
 
         try:
             for i in range(retries):    
-                print("RETRY from record:", i)
+                # print("RETRY from record:", i)
                 start = time.time()
                 process = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE)
                 stdout, stderr = process.communicate()

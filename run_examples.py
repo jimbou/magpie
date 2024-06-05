@@ -6,6 +6,7 @@ import sys
 import time
 import json
 import re
+import magpie.settings
 #python3.11 run_examples.py triangle-c scenario scenario_params run_triangle "make run_triangle" triangle.c
 data = {
     "original": {
@@ -130,7 +131,11 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     #     "perf_dTLB_load_misses", "weights", "energy"
     # ]
     # "energy_ram", "energy_uncore"
-    perf_items = ['time','perf_time']
+    perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
+        "perf_cache_references", "perf_cache_misses", "perf_branches",
+        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
+    
+    erroneous=[]
     execution_times = []
     result = run_command(compile_command, f"examples/{name1}/necessary")
     for _ in range(10):
@@ -149,99 +154,121 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     orig_path=f"examples/{name1}/necessary"
     for item in perf_items:
         #get time before execution
-        for retries_num  in range(1,6):
+        try:
+            for retries_num  in range(1,6):
 
-            new_string = f"{scenario }_{item}.txt"
-            print(f"Running {new_string}")
-            scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
-            scenario_path=update_retries(scenario_path_base,retries_num)
-            command = f"python3.11 magpie local_search --scenario {scenario_path}"
-            start = time.time()
-            result = run_command(command)
-            end = time.time()
-            duration_magpie = end - start  
-            print(f"Duration: {duration}")
-            # Parse output for file paths
-            os.remove(scenario_path)
-            log_path = None
-            patch_path = None
-            diff_path = None
-            # print(result.stderr)
-            for line in result.stderr.splitlines():
-                if "Log file:" in line:
-                    log_path = line.split()[-1]
-                elif "Patch file:" in line:
-                    patch_path = line.split()[-1]
-                elif "Diff file:" in line:
-                    diff_path = line.split()[-1]
+                new_string = f"{scenario }_{item}.txt"
+                print(f"Running {new_string} for retry {retries_num}")
+                scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
+                scenario_path=update_retries(scenario_path_base,retries_num)
+                command = f"python3.11 magpie local_search --scenario {scenario_path}"
+                if item != "weights":
+                    start = time.time()
+                    result1 = run_command(command)
+                    end = time.time()
+                    duration_magpie = end - start  
+                    print(f"Duration: {duration}")
+                    result1 =result1.stderr
+                else: 
+                    print(command)
+                    start = time.time()
+                    process = subprocess.Popen(command, shell=True,stderr=subprocess.PIPE)
+                    stdout, result1 = process.communicate()
+                    result1 =result1.decode(magpie.settings.output_encoding)
+                    end = time.time()
+                    duration_magpie = end - start  
+                    print(f"Duration: {duration}")
+                    
 
-            if not log_path or not patch_path or not diff_path:
-                print(f"Files not found for {item}")
-                continue
+                # Parse output for file paths
+                os.remove(scenario_path)
+                log_path = None
+                patch_path = None
+                diff_path = None
+                # print(result.stderr)
+                for line in result1.splitlines():
+                    if "Log file:" in line:
+                        log_path = line.split()[-1]
+                    elif "Patch file:" in line:
+                        patch_path = line.split()[-1]
+                    elif "Diff file:" in line:
+                        diff_path = line.split()[-1]
 
-            # Subdirectory for the current item
-            item_directory = os.path.join(main_directory, scenario+"_"+item)
-            item_directory = item_directory +"_"+str(retries_num)
-            os.makedirs(item_directory, exist_ok=True)
-            final_destination = os.path.join(item_directory, 'necessary')
-            # Copy files
-            shutil.copytree(orig_path, final_destination)
-            shutil.copy(log_path, item_directory)
-            shutil.copy(patch_path, item_directory)
-            shutil.copy(diff_path,item_directory )
+                if not log_path or not patch_path or not diff_path:
+                    print(f"ERROR : Files not found for {item}")
+                    print (result1)
+                    erroneous.append(item)
+                    continue
 
-            #get in  a string the contents of the patch file
-            with open(patch_path, 'r') as file:
-                patch_contents = file.read()
-            diff_name = os.path.basename(diff_path)
+                # Subdirectory for the current item
+                item_directory = os.path.join(main_directory, scenario+"_"+item)
+                item_directory = item_directory +"_"+str(retries_num)
+                os.makedirs(item_directory, exist_ok=True)
+                final_destination = os.path.join(item_directory, 'necessary')
+                # Copy files
+                shutil.copytree(orig_path, final_destination)
+                shutil.copy(log_path, item_directory)
+                shutil.copy(patch_path, item_directory)
+                shutil.copy(diff_path,item_directory )
 
-            retries, max_patch, best_fitness, ref_fitness, fitness_values = extract_data_from_log(log_path)
-            if retries is not None and max_patch is not None:
-                print("Number of Retries:", retries)
-                print("Highest Patch Number:", max_patch)
-            else:
-                print("Failed to extract data.")
+                #get in  a string the contents of the patch file
+                with open(patch_path, 'r') as file:
+                    patch_contents = file.read()
+                diff_name = os.path.basename(diff_path)
 
-        
+                retries, max_patch, best_fitness, ref_fitness, fitness_values = extract_data_from_log(log_path)
+                if retries is not None and max_patch is not None:
+                    print("Number of Retries:", retries)
+                    print("Highest Patch Number:", max_patch)
+                else:
+                    print("Failed to extract data.")
 
             
-            patch_command= f"patch {improved_file} ../{diff_name}"
-            result = run_command(patch_command, f"{item_directory}/necessary")
-            # print(result.stderr)
-            result = run_command(compile_command, f"{item_directory}/necessary")
-            print(f"Files for {item} saved in {item_directory}")
-            execution_times = []
-            for _ in range(10):
-                start = time.time()
-                result = run_command(f'./{name3}',)
-                end = time.time()
-                duration = end - start  
-                execution_times.append(float(duration))
-            
-        
-            median_time = statistics.median(execution_times)
-            print(f'Median execution time: {median_time}')
 
-            params_val = False
-            if "params" in scenario:
-                params_val =True
+                
+                patch_command= f"patch {improved_file} ../{diff_name}"
+                result = run_command(patch_command, f"{item_directory}/necessary")
+                # print(result.stderr)
+                result = run_command(compile_command, f"{item_directory}/necessary")
+                print(f"Files for {item} saved in {item_directory}")
+                execution_times = []
+                for _ in range(10):
+                    start = time.time()
+                    result = run_command(f'./{name3}',)
+                    end = time.time()
+                    duration = end - start  
+                    execution_times.append(float(duration))
+                
             
-            new_highs = count_new_best(fitness_values)
-            data["items"].append({
-            "item_name": item,
-            "median_execution_time": median_time,
-            "duration":duration_magpie ,
-            "patch_contents": patch_contents,
-            "number_of_retries": retries,
-            "number_of_steps": max_patch,
-            "best_fitness": best_fitness,
-            "reference_fitness": ref_fitness,
-            "params": params_val,
-            "fitness_values": fitness_values,
-            "new_highs": new_highs
-            })
+                median_time = statistics.median(execution_times)
+                print(f'Median execution time: {median_time}')
 
-    
+                params_val = False
+                if "params" in scenario:
+                    params_val =True
+                
+                new_highs = count_new_best(fitness_values)
+                data["items"].append({
+                "item_name": item,
+                "median_execution_time": median_time,
+                "duration":duration_magpie ,
+                "patch_contents": patch_contents,
+                "number_of_retries": retries,
+                "number_of_steps": max_patch,
+                "best_fitness": best_fitness,
+                "reference_fitness": ref_fitness,
+                "params": params_val,
+                "fitness_values": fitness_values,
+                "new_highs": new_highs,
+                "new_highs_ratio": new_highs / len(fitness_values) if len(fitness_values) > 0 else "N/A"
+                })
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            print(f"Erroneeous in {erroneous}")
+            with open(f'{main_directory}/performance_data.json', 'w') as file:
+                json.dump(data, file, indent=4)  
+            return -1
+    print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
     if len(sys.argv) != 7:

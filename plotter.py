@@ -21,7 +21,8 @@ def prepare_dataframes(data):
     original_row = pd.DataFrame([{'item_name': 'original',
                                   'median_execution_time': data['original']['median_execution_time'],
                                   'params': None,
-                                  'new_highs': None}])
+                                  'new_highs': None,
+                                  'item_name_orig':'original'}])
     
     # Combine the original row with the items
     df_complete = pd.concat([df_items, original_row], ignore_index=True)
@@ -94,10 +95,9 @@ def analyze_retry_ranks(df, save_path, params):
     name=""
     if params:
         name = "_params"
-    print(df)
+    
     # Rank retries within each item_name_orig based on execution time
     df['execution_rank_per_item'] = df.groupby('item_name_orig')['median_execution_time'].rank(method='dense', ascending=True)
-    print(df['execution_rank_per_item'])
     # Calculate the average rank for each number_of_retries across all item_name_orig
     average_rank_per_retry = df.groupby('number_of_retries').agg({
         'execution_rank_per_item': 'mean'
@@ -194,17 +194,24 @@ def main(json_path):
     # Load and prepare data
     data = load_data(json_path)
     df_false, df_true = prepare_dataframes(data)
+    #if df_false has more than one row
+    if df_false.shape[0] > 1:
+        analyze_and_plot_means(df_false, save_path, False)
+        df_false = rank_and_visualize(df_false, save_path, False)
+        analyze_retry_ranks(df_false, save_path, False)
+    else :
+        print("No data for params=False")
+    if df_true.shape[0] > 1:
+        analyze_and_plot_means(df_true, save_path, True)
+        df_true = rank_and_visualize(df_true, save_path,True )
+        analyze_retry_ranks(df_true, save_path, True)
+    else:
+        print("No data for params=True")
+    
 
-    # Perform rankings and visualizations
-    df_true = rank_and_visualize(df_true, save_path,True )
-    df_false = rank_and_visualize(df_false, save_path, False)
-    # Analyze and visualize by retries
-    analyze_retry_ranks(df_false, save_path, False)
-    analyze_retry_ranks(df_true, save_path, True)
 
-    analyze_and_plot_means(df_false, save_path, False)
-    analyze_and_plot_means(df_true, save_path, True)
 
+    
 if __name__ == "__main__":
     if len(sys.argv) != 2:
         print("Usage: python plotter.py <json path>")

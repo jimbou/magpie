@@ -861,7 +861,7 @@ class BasicSoftware(AbstractSoftware):
             
             if m:
                 temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
-                print(f"All weights: -{temp}-")
+                # print(f"All weights: -{temp}-")
                 custom = sum(temp) / len(temp)
                 print(f"Custom weights: -{custom}-")
             else:
