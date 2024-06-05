@@ -150,7 +150,9 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     for item in perf_items:
         #get time before execution
         for retries_num  in range(1,6):
+
             new_string = f"{scenario }_{item}.txt"
+            print(f"Running {new_string}")
             scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
             scenario_path=update_retries(scenario_path_base,retries_num)
             command = f"python3.11 magpie local_search --scenario {scenario_path}"
