@@ -272,6 +272,7 @@ class BasicSoftware(AbstractSoftware):
                     exec_result = self.exec_cmd(shlex.split(setup_cmd),
                                                 timeout=timeout,
                                                 lengthout=lengthout)
+                    
                     run_result.status = exec_result.status
                     run_result.last_exec = exec_result
                     if run_result.status == 'SUCCESS':
@@ -317,6 +318,8 @@ class BasicSoftware(AbstractSoftware):
                 exec_result = self.exec_cmd(shlex.split(test_cmd),
                                             timeout=timeout,
                                             lengthout=lengthout)
+                
+                
                 run_result.status = exec_result.status
                 run_result.last_exec = exec_result
                 if run_result.status == 'SUCCESS':

@@ -253,7 +253,9 @@ class BasicAlgorithm(AbstractAlgorithm):
             if run.status != 'SUCCESS':
                 step = run.status.split('_')[0].lower()
                 self.report['stop'] = f'failed to {step} target software'
+                print(run.status, run)
                 return
+
             warmup_values.append(run.fitness)
         if self.config['warmup_strategy'] == 'last':
             current_fitness = warmup_values[-1]

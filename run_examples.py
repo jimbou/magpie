@@ -134,7 +134,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items =['time', 'weights']
+    
     erroneous=[]
     execution_times = []
     result = run_command(compile_command, f"examples/{name1}/necessary")
@@ -155,7 +155,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     for item in perf_items:
         #get time before execution
         try:
-            for retries_num  in range(1,2):
+            for retries_num  in range(1,6):
 
                 new_string = f"{scenario }_{item}.txt"
                 print(f"Running {new_string} for retry {retries_num}")
