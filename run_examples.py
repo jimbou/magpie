@@ -140,7 +140,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     result = run_command(compile_command, f"examples/{name1}/necessary")
     for _ in range(10):
         start = time.time()
-        result = run_command(f"./{name3}", f'examples/{name1}/necessary')
+        result = run_command(f"{name3}", f'examples/{name1}/necessary')
         end = time.time()
         duration = end - start  
         execution_times.append(float(duration))
@@ -234,7 +234,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 execution_times = []
                 for _ in range(10):
                     start = time.time()
-                    result = run_command(f'./{name3}',)
+                    result = run_command(f'{name3}',)
                     end = time.time()
                     duration = end - start  
                     execution_times.append(float(duration))
