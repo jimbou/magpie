@@ -1,0 +1,553 @@
+2024-06-05 11:44:59,928	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 2866372197309345
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = False
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 30
+default_lengthout = 10000.0
+diff_method = unified
+trust_local_filesystem = True
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/triangle-c
+target_files = 
+	triangle.c.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = bash init_slow.sh
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = 
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = make test_triangle run_triangle
+compile_timeout = 
+compile_lengthout = 
+test_cmd = ./test_triangle
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat  ./run_triangle
+run_timeout = 1
+run_lengthout = 
+retries = 4
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_time
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = FirstImprovement
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 100
+max_time = 60
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-06-05 11:44:59,928	[DEBUG]	
+2024-06-05 11:44:59,928	[INFO]	==== SEARCH: FirstImprovement ====
+2024-06-05 11:44:59,928	[INFO]	~~~~ WARMUP ~~~~
+2024-06-05 11:45:00,600	[DEBUG]	EXEC>  SUCCESS 0.073229155
+2024-06-05 11:45:00,600	[INFO]	WARM    SUCCESS               0.073229 (--) [0 edit(s)]  
+2024-06-05 11:45:01,166	[DEBUG]	EXEC>  SUCCESS 0.07059915249999998
+2024-06-05 11:45:01,166	[INFO]	WARM    SUCCESS               0.070599 (--) [0 edit(s)]  
+2024-06-05 11:45:01,781	[DEBUG]	EXEC>  SUCCESS 0.0730874475
+2024-06-05 11:45:01,782	[INFO]	WARM    SUCCESS               0.073087 (--) [0 edit(s)]  
+2024-06-05 11:45:01,782	[INFO]	REF     SUCCESS               0.073087 (--) [0 edit(s)]  
+2024-06-05 11:45:01,782	[INFO]	
+2024-06-05 11:45:01,782	[INFO]	~~~~ START ~~~~
+2024-06-05 11:45:02,502	[DEBUG]	EXEC>  SUCCESS 0.103406965
+2024-06-05 11:45:02,503	[INFO]	1       SUCCESS               0.103407 (141.48%) [1 edit(s)]  
+2024-06-05 11:45:02,503	[DEBUG]	patch(1)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 26), ('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:02,688	[INFO]	2       TEST_CODE_ERROR       None (--) [1 edit(s)]  
+2024-06-05 11:45:02,688	[DEBUG]	patch(2)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 22), ('triangle.c.xml', 'stmt', 16))"
+2024-06-05 11:45:03,305	[DEBUG]	EXEC>  SUCCESS 0.0717700825
+2024-06-05 11:45:03,305	[INFO]	3       SUCCESS              *0.071770 (98.20%) [1 edit(s)]  
+2024-06-05 11:45:03,305	[DEBUG]	patch(3)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12))"
+--- before: triangle.c
++++ after: triangle.c
+@@ -25,7 +25,11 @@
+ 
+   if(b > c) {
+     tmp = b;
+-    b = c;
++    if(b > c) {
++      tmp = b;
++      b = c;
++      c = tmp;
++    }
+     c = tmp;
+   }
+ 
+
+2024-06-05 11:45:03,306	[INFO]	4       SUCCESS               0.073087 (100.00%) [0 edit(s)] [cached] 
+2024-06-05 11:45:03,306	[DEBUG]	patch(4)=""
+2024-06-05 11:45:03,489	[INFO]	5       TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:03,490	[DEBUG]	patch(5)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 27), ('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:03,635	[INFO]	6       TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:03,635	[DEBUG]	patch(6)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 6))"
+2024-06-05 11:45:03,817	[INFO]	7       TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:03,817	[DEBUG]	patch(7)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:03,845	[INFO]	8       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-05 11:45:03,845	[DEBUG]	patch(8)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 4), ('triangle.c.xml', 'stmt', 15))"
+2024-06-05 11:45:03,981	[INFO]	9       TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:03,982	[DEBUG]	patch(9)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 16), ('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:04,097	[INFO]	10      TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:04,097	[DEBUG]	patch(10)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 21))"
+2024-06-05 11:45:04,250	[INFO]	11      TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:04,250	[DEBUG]	patch(11)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 34), ('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:04,424	[INFO]	12      TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-05 11:45:04,424	[DEBUG]	patch(12)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 19), ('triangle.c.xml', 'stmt', 6))"
+2024-06-05 11:45:05,092	[DEBUG]	EXEC>  SUCCESS 0.0757176425
+2024-06-05 11:45:05,092	[INFO]	13      SUCCESS               0.075718 (103.60%) [2 edit(s)]  
+2024-06-05 11:45:05,092	[DEBUG]	patch(13)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 35), ('triangle.c.xml', 'stmt', 6))"
+2024-06-05 11:45:05,700	[DEBUG]	EXEC>  SUCCESS 0.07061633750000001
+2024-06-05 11:45:05,700	[INFO]	14      SUCCESS              *0.070616 (96.62%) [2 edit(s)]  
+2024-06-05 11:45:05,700	[DEBUG]	patch(14)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16))"
+--- before: triangle.c
++++ after: triangle.c
+@@ -18,6 +18,10 @@
+   }
+ 
+   if(a > c) {
++    if(a + b <= c)/*auto*/{
++     
++      return INVALID;
++    }/*auto*/
+     tmp = a;
+     a = c;
+     c = tmp;
+@@ -25,7 +29,11 @@
+ 
+   if(b > c) {
+     tmp = b;
+-    b = c;
++    if(b > c) {
++      tmp = b;
++      b = c;
++      c = tmp;
++    }
+     c = tmp;
+   }
+ 
+
+2024-06-05 11:45:05,702	[INFO]	15      SUCCESS               0.071770 (98.20%) [1 edit(s)] [cached] 
+2024-06-05 11:45:05,702	[DEBUG]	patch(15)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12))"
+2024-06-05 11:45:06,359	[DEBUG]	EXEC>  SUCCESS 0.0712336375
+2024-06-05 11:45:06,360	[INFO]	16      SUCCESS               0.071234 (97.46%) [1 edit(s)]  
+2024-06-05 11:45:06,360	[DEBUG]	patch(16)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16))"
+2024-06-05 11:45:06,542	[INFO]	17      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:06,542	[DEBUG]	patch(17)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 24), ('triangle.c.xml', 'stmt', 6))"
+2024-06-05 11:45:06,578	[INFO]	18      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-05 11:45:06,578	[DEBUG]	patch(18)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 2))"
+2024-06-05 11:45:07,193	[DEBUG]	EXEC>  SUCCESS 0.0708577125
+2024-06-05 11:45:07,193	[INFO]	19      SUCCESS               0.070858 (96.95%) [3 edit(s)]  
+2024-06-05 11:45:07,193	[DEBUG]	patch(19)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 2), ('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:07,195	[INFO]	20      COMPILE_CODE_ERROR    None (--) [3 edit(s)] [cached] 
+2024-06-05 11:45:07,195	[DEBUG]	patch(20)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 2))"
+2024-06-05 11:45:07,229	[INFO]	21      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-05 11:45:07,229	[DEBUG]	patch(21)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 27), ('triangle.c.xml', 'stmt', 1))"
+2024-06-05 11:45:07,264	[INFO]	22      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-05 11:45:07,265	[DEBUG]	patch(22)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 0), ('triangle.c.xml', 'stmt', 18))"
+2024-06-05 11:45:07,947	[DEBUG]	EXEC>  SUCCESS 0.087850755
+2024-06-05 11:45:07,948	[INFO]	23      SUCCESS               0.087851 (120.20%) [3 edit(s)]  
+2024-06-05 11:45:07,948	[DEBUG]	patch(23)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 24), ('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:08,575	[DEBUG]	EXEC>  SUCCESS 0.0707934925
+2024-06-05 11:45:08,575	[INFO]	24      SUCCESS               0.070793 (96.86%) [3 edit(s)]  
+2024-06-05 11:45:08,575	[DEBUG]	patch(24)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 14), ('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:08,812	[INFO]	25      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:08,813	[DEBUG]	patch(25)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 19), ('triangle.c.xml', 'stmt', 7))"
+2024-06-05 11:45:09,449	[DEBUG]	EXEC>  SUCCESS 0.0713237875
+2024-06-05 11:45:09,449	[INFO]	26      SUCCESS               0.071324 (97.59%) [3 edit(s)]  
+2024-06-05 11:45:09,449	[DEBUG]	patch(26)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 33), ('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:09,493	[INFO]	27      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-05 11:45:09,493	[DEBUG]	patch(27)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 6), ('triangle.c.xml', 'stmt', 15))"
+2024-06-05 11:45:10,119	[DEBUG]	EXEC>  SUCCESS 0.074422155
+2024-06-05 11:45:10,119	[INFO]	28      SUCCESS               0.074422 (101.83%) [3 edit(s)]  
+2024-06-05 11:45:10,120	[DEBUG]	patch(28)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 30), ('triangle.c.xml', 'stmt', 15))"
+2024-06-05 11:45:10,854	[DEBUG]	EXEC>  SUCCESS 0.072499025
+2024-06-05 11:45:10,855	[INFO]	29      SUCCESS               0.072499 (99.19%) [3 edit(s)]  
+2024-06-05 11:45:10,855	[DEBUG]	patch(29)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 0), ('triangle.c.xml', 'stmt', 2))"
+2024-06-05 11:45:11,829	[DEBUG]	EXEC>  SUCCESS 0.1429380525
+2024-06-05 11:45:11,830	[INFO]	30      SUCCESS               0.142938 (195.57%) [3 edit(s)]  
+2024-06-05 11:45:11,830	[DEBUG]	patch(30)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 10), ('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:12,174	[DEBUG]	EXEC>  SUCCESS 0.0015834999999999998
+2024-06-05 11:45:12,175	[INFO]	31      SUCCESS              *0.001583 (2.17%) [3 edit(s)]  
+2024-06-05 11:45:12,175	[DEBUG]	patch(31)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3))"
+--- before: triangle.c
++++ after: triangle.c
+@@ -8,7 +8,7 @@
+ int classify_triangle(double a, double b, double c) {
+   double tmp;
+ 
+-  delay();
++  
+ 
+   // Sort the sides so that a <= b <= c
+   if(a > b) {
+@@ -18,6 +18,10 @@
+   }
+ 
+   if(a > c) {
++    if(a + b <= c)/*auto*/{
++     
++      return INVALID;
++    }/*auto*/
+     tmp = a;
+     a = c;
+     c = tmp;
+@@ -25,7 +29,11 @@
+ 
+   if(b > c) {
+     tmp = b;
+-    b = c;
++    if(b > c) {
++      tmp = b;
++      b = c;
++      c = tmp;
++    }
+     c = tmp;
+   }
+ 
+
+2024-06-05 11:45:12,388	[INFO]	32      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:12,388	[DEBUG]	patch(32)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 10), ('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:12,760	[DEBUG]	EXEC>  SUCCESS 0.0017544074999999999
+2024-06-05 11:45:12,760	[INFO]	33      SUCCESS               0.001754 (2.40%) [4 edit(s)]  
+2024-06-05 11:45:12,761	[DEBUG]	patch(33)="SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 15), ('triangle.c.xml', 'stmt', 9))"
+2024-06-05 11:45:13,081	[DEBUG]	EXEC>  SUCCESS 0.0014315450000000002
+2024-06-05 11:45:13,082	[INFO]	34      SUCCESS              *0.001432 (1.96%) [2 edit(s)]  
+2024-06-05 11:45:13,082	[DEBUG]	patch(34)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3))"
+--- before: triangle.c
++++ after: triangle.c
+@@ -8,7 +8,7 @@
+ int classify_triangle(double a, double b, double c) {
+   double tmp;
+ 
+-  delay();
++  
+ 
+   // Sort the sides so that a <= b <= c
+   if(a > b) {
+@@ -18,6 +18,10 @@
+   }
+ 
+   if(a > c) {
++    if(a + b <= c)/*auto*/{
++     
++      return INVALID;
++    }/*auto*/
+     tmp = a;
+     a = c;
+     c = tmp;
+
+2024-06-05 11:45:13,360	[DEBUG]	EXEC>  SUCCESS 0.0014942074999999997
+2024-06-05 11:45:13,361	[INFO]	35      SUCCESS               0.001494 (2.04%) [1 edit(s)]  
+2024-06-05 11:45:13,361	[DEBUG]	patch(35)="SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:13,651	[DEBUG]	EXEC>  SUCCESS 0.0014952725
+2024-06-05 11:45:13,651	[INFO]	36      SUCCESS               0.001495 (2.05%) [3 edit(s)]  
+2024-06-05 11:45:13,651	[DEBUG]	patch(36)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 34), ('triangle.c.xml', 'stmt', 16))"
+2024-06-05 11:45:13,652	[INFO]	37      SUCCESS               0.071234 (97.46%) [1 edit(s)] [cached] 
+2024-06-05 11:45:13,652	[DEBUG]	patch(37)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16))"
+2024-06-05 11:45:13,824	[INFO]	38      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:13,825	[DEBUG]	patch(38)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 11), ('triangle.c.xml', 'stmt', 22))"
+2024-06-05 11:45:14,171	[DEBUG]	EXEC>  SUCCESS 0.0015150049999999998
+2024-06-05 11:45:14,171	[INFO]	39      SUCCESS               0.001515 (2.07%) [3 edit(s)]  
+2024-06-05 11:45:14,171	[DEBUG]	patch(39)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 4))"
+2024-06-05 11:45:14,313	[INFO]	40      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:14,313	[DEBUG]	patch(40)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 17))"
+2024-06-05 11:45:14,480	[INFO]	41      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:14,480	[DEBUG]	patch(41)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 8), ('triangle.c.xml', 'stmt', 22))"
+2024-06-05 11:45:14,757	[DEBUG]	EXEC>  SUCCESS 0.0015671575
+2024-06-05 11:45:14,757	[INFO]	42      SUCCESS               0.001567 (2.14%) [3 edit(s)]  
+2024-06-05 11:45:14,757	[DEBUG]	patch(42)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 1))"
+2024-06-05 11:45:14,931	[INFO]	43      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:14,931	[DEBUG]	patch(43)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 10))"
+2024-06-05 11:45:15,103	[INFO]	44      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:15,103	[DEBUG]	patch(44)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:15,279	[INFO]	45      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:15,280	[DEBUG]	patch(45)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 10), ('triangle.c.xml', 'stmt', 17))"
+2024-06-05 11:45:15,425	[INFO]	46      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:15,425	[DEBUG]	patch(46)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 17), ('triangle.c.xml', 'stmt', 20))"
+2024-06-05 11:45:15,631	[INFO]	47      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:15,631	[DEBUG]	patch(47)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 16))"
+2024-06-05 11:45:15,803	[INFO]	48      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:15,803	[DEBUG]	patch(48)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 6), ('triangle.c.xml', 'stmt', 10))"
+2024-06-05 11:45:15,804	[INFO]	49      SUCCESS               0.001515 (2.07%) [3 edit(s)] [cached] 
+2024-06-05 11:45:15,804	[DEBUG]	patch(49)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 4))"
+2024-06-05 11:45:15,841	[INFO]	50      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-05 11:45:15,841	[DEBUG]	patch(50)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 0), ('triangle.c.xml', 'stmt', 6))"
+2024-06-05 11:45:16,006	[INFO]	51      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:16,006	[DEBUG]	patch(51)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 17), ('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:16,169	[INFO]	52      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:16,169	[DEBUG]	patch(52)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 20), ('triangle.c.xml', 'stmt', 22))"
+2024-06-05 11:45:16,370	[INFO]	53      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-05 11:45:16,371	[DEBUG]	patch(53)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 24), ('triangle.c.xml', 'stmt', 21))"
+2024-06-05 11:45:16,715	[DEBUG]	EXEC>  SUCCESS 0.001301795
+2024-06-05 11:45:16,715	[INFO]	54      SUCCESS              *0.001302 (1.78%) [3 edit(s)]  
+2024-06-05 11:45:16,715	[DEBUG]	patch(54)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8))"
+--- before: triangle.c
++++ after: triangle.c
+@@ -8,7 +8,7 @@
+ int classify_triangle(double a, double b, double c) {
+   double tmp;
+ 
+-  delay();
++  
+ 
+   // Sort the sides so that a <= b <= c
+   if(a > b) {
+@@ -18,6 +18,10 @@
+   }
+ 
+   if(a > c) {
++    if(a + b <= c)/*auto*/{
++     
++      return INVALID;
++    }/*auto*/
+     tmp = a;
+     a = c;
+     c = tmp;
+@@ -35,6 +39,11 @@
+   }/*auto*/
+   if(a == b && b == c)/*auto*/{
+    
++    if(a > c) {
++      tmp = a;
++      a = c;
++      c = tmp;
++    }
+     return EQUILATERAL;
+   }/*auto*/
+   if(a == b || b == c)/*auto*/{
+
+2024-06-05 11:45:17,340	[DEBUG]	EXEC>  SUCCESS 0.07063551
+2024-06-05 11:45:17,340	[INFO]	55      SUCCESS               0.070636 (96.65%) [2 edit(s)]  
+2024-06-05 11:45:17,340	[DEBUG]	patch(55)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:17,710	[DEBUG]	EXEC>  SUCCESS 0.0015200825
+2024-06-05 11:45:17,710	[INFO]	56      SUCCESS               0.001520 (2.08%) [4 edit(s)]  
+2024-06-05 11:45:17,710	[DEBUG]	patch(56)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 31), ('triangle.c.xml', 'stmt', 12))"
+2024-06-05 11:45:18,026	[DEBUG]	EXEC>  SUCCESS 0.0013827225
+2024-06-05 11:45:18,026	[INFO]	57      SUCCESS               0.001383 (1.89%) [4 edit(s)]  
+2024-06-05 11:45:18,026	[DEBUG]	patch(57)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 25), ('triangle.c.xml', 'stmt', 0))"
+2024-06-05 11:45:18,067	[INFO]	58      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:18,067	[DEBUG]	patch(58)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 6), ('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:18,069	[INFO]	59      SUCCESS               0.001432 (1.96%) [2 edit(s)] [cached] 
+2024-06-05 11:45:18,069	[DEBUG]	patch(59)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:18,207	[INFO]	60      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:18,207	[DEBUG]	patch(60)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 9), ('triangle.c.xml', 'stmt', 18))"
+2024-06-05 11:45:18,351	[INFO]	61      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:18,351	[DEBUG]	patch(61)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 22), ('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:18,627	[DEBUG]	EXEC>  SUCCESS 0.0014348574999999998
+2024-06-05 11:45:18,627	[INFO]	62      SUCCESS               0.001435 (1.96%) [2 edit(s)]  
+2024-06-05 11:45:18,627	[DEBUG]	patch(62)="SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:18,904	[DEBUG]	EXEC>  SUCCESS 0.0014261100000000002
+2024-06-05 11:45:18,904	[INFO]	63      SUCCESS               0.001426 (1.95%) [4 edit(s)]  
+2024-06-05 11:45:18,904	[DEBUG]	patch(63)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 33), ('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:19,104	[INFO]	64      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:19,104	[DEBUG]	patch(64)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 12))"
+2024-06-05 11:45:19,300	[INFO]	65      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:19,300	[DEBUG]	patch(65)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 10))"
+2024-06-05 11:45:19,476	[INFO]	66      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:19,476	[DEBUG]	patch(66)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 15), ('triangle.c.xml', 'stmt', 18))"
+2024-06-05 11:45:19,513	[INFO]	67      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:19,513	[DEBUG]	patch(67)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 2))"
+2024-06-05 11:45:19,546	[INFO]	68      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:19,547	[DEBUG]	patch(68)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 0))"
+2024-06-05 11:45:19,731	[INFO]	69      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:19,732	[DEBUG]	patch(69)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 17), ('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:19,925	[INFO]	70      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:19,925	[DEBUG]	patch(70)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:20,086	[INFO]	71      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:20,086	[DEBUG]	patch(71)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:20,448	[DEBUG]	EXEC>  SUCCESS 0.001526825
+2024-06-05 11:45:20,449	[INFO]	72      SUCCESS               0.001527 (2.09%) [4 edit(s)]  
+2024-06-05 11:45:20,449	[DEBUG]	patch(72)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 0))"
+2024-06-05 11:45:20,809	[DEBUG]	EXEC>  SUCCESS 0.01769683
+2024-06-05 11:45:20,810	[INFO]	73      SUCCESS               0.017697 (24.21%) [4 edit(s)]  
+2024-06-05 11:45:20,810	[DEBUG]	patch(73)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 25), ('triangle.c.xml', 'stmt', 3))"
+2024-06-05 11:45:21,097	[DEBUG]	EXEC>  SUCCESS 0.00146161
+2024-06-05 11:45:21,098	[INFO]	74      SUCCESS               0.001462 (2.00%) [4 edit(s)]  
+2024-06-05 11:45:21,098	[DEBUG]	patch(74)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 25), ('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:21,273	[INFO]	75      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:21,273	[DEBUG]	patch(75)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 9))"
+2024-06-05 11:45:21,310	[INFO]	76      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:21,310	[DEBUG]	patch(76)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 4), ('triangle.c.xml', 'stmt', 2))"
+2024-06-05 11:45:21,348	[INFO]	77      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:21,348	[DEBUG]	patch(77)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 2), ('triangle.c.xml', 'stmt', 4))"
+2024-06-05 11:45:21,542	[INFO]	78      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:21,543	[DEBUG]	patch(78)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 21), ('triangle.c.xml', 'stmt', 20))"
+2024-06-05 11:45:21,585	[INFO]	79      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:21,585	[DEBUG]	patch(79)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 2), ('triangle.c.xml', 'stmt', 15))"
+2024-06-05 11:45:21,955	[DEBUG]	EXEC>  SUCCESS 0.0014852700000000001
+2024-06-05 11:45:21,955	[INFO]	80      SUCCESS               0.001485 (2.03%) [4 edit(s)]  
+2024-06-05 11:45:21,955	[DEBUG]	patch(80)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 17), ('triangle.c.xml', 'stmt', 10))"
+2024-06-05 11:45:22,000	[INFO]	81      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:22,000	[DEBUG]	patch(81)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 13), ('triangle.c.xml', 'stmt', 1))"
+2024-06-05 11:45:22,002	[INFO]	82      TEST_CODE_ERROR       None (--) [4 edit(s)] [cached] 
+2024-06-05 11:45:22,002	[DEBUG]	patch(82)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 12))"
+2024-06-05 11:45:22,166	[INFO]	83      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:22,166	[DEBUG]	patch(83)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 6), ('triangle.c.xml', 'stmt', 18))"
+2024-06-05 11:45:22,314	[INFO]	84      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:22,314	[DEBUG]	patch(84)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 14), ('triangle.c.xml', 'stmt', 9))"
+2024-06-05 11:45:22,480	[INFO]	85      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:22,480	[DEBUG]	patch(85)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 24), ('triangle.c.xml', 'stmt', 7))"
+2024-06-05 11:45:22,768	[DEBUG]	EXEC>  SUCCESS 0.0015398850000000002
+2024-06-05 11:45:22,768	[INFO]	86      SUCCESS               0.001540 (2.11%) [4 edit(s)]  
+2024-06-05 11:45:22,768	[DEBUG]	patch(86)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 4))"
+2024-06-05 11:45:22,770	[INFO]	87      TEST_CODE_ERROR       None (--) [4 edit(s)] [cached] 
+2024-06-05 11:45:22,770	[DEBUG]	patch(87)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 9))"
+2024-06-05 11:45:22,803	[INFO]	88      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-05 11:45:22,803	[DEBUG]	patch(88)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 16), ('triangle.c.xml', 'stmt', 1))"
+2024-06-05 11:45:22,944	[INFO]	89      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:22,944	[DEBUG]	patch(89)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 22))"
+2024-06-05 11:45:23,142	[INFO]	90      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-06-05 11:45:23,142	[DEBUG]	patch(90)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:23,144	[INFO]	91      SUCCESS              +0.001302 (1.78%) [4 edit(s)] [cached] 
+2024-06-05 11:45:23,144	[DEBUG]	patch(91)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 12), ('triangle.c.xml', 'stmt', 12))"
+2024-06-05 11:45:23,326	[INFO]	92      TEST_CODE_ERROR       None (--) [5 edit(s)]  
+2024-06-05 11:45:23,326	[DEBUG]	patch(92)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 12), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 14))"
+2024-06-05 11:45:23,328	[INFO]	93      SUCCESS              +0.001302 (1.78%) [5 edit(s)] [cached] 
+2024-06-05 11:45:23,329	[DEBUG]	patch(93)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 12), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21))"
+2024-06-05 11:45:23,494	[INFO]	94      TEST_CODE_ERROR       None (--) [6 edit(s)]  
+2024-06-05 11:45:23,495	[DEBUG]	patch(94)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 12), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:23,496	[INFO]	95      TEST_CODE_ERROR       None (--) [6 edit(s)] [cached] 
+2024-06-05 11:45:23,496	[DEBUG]	patch(95)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 12), ('triangle.c.xml', 'stmt', 12)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 5))"
+2024-06-05 11:45:23,497	[INFO]	96      SUCCESS              +0.001302 (1.78%) [4 edit(s)] [cached] 
+2024-06-05 11:45:23,497	[DEBUG]	patch(96)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21))"
+2024-06-05 11:45:23,498	[INFO]	97      SUCCESS              +0.001302 (1.78%) [5 edit(s)] [cached] 
+2024-06-05 11:45:23,498	[DEBUG]	patch(97)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 15), ('triangle.c.xml', 'stmt', 11))"
+2024-06-05 11:45:23,499	[INFO]	98      TEST_CODE_ERROR       None (--) [6 edit(s)] [cached] 
+2024-06-05 11:45:23,499	[DEBUG]	patch(98)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 15), ('triangle.c.xml', 'stmt', 11)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 19))"
+2024-06-05 11:45:23,830	[DEBUG]	EXEC>  SUCCESS 0.001618265
+2024-06-05 11:45:23,831	[INFO]	99      SUCCESS               0.001618 (2.21%) [6 edit(s)]  
+2024-06-05 11:45:23,831	[DEBUG]	patch(99)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 15), ('triangle.c.xml', 'stmt', 11)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 8))"
+2024-06-05 11:45:24,015	[INFO]	100     TEST_CODE_ERROR       None (--) [6 edit(s)]  
+2024-06-05 11:45:24,015	[DEBUG]	patch(100)="SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 21), ('triangle.c.xml', 'stmt', 21)) | SrcmlStmtReplacement(('triangle.c.xml', 'stmt', 15), ('triangle.c.xml', 'stmt', 11)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 21))"
+2024-06-05 11:45:24,017	[INFO]	~~~~ END ~~~~
+2024-06-05 11:45:24,017	[INFO]	
+2024-06-05 11:45:24,017	[INFO]	==== REPORT ====
+2024-06-05 11:45:24,017	[INFO]	Termination: step budget
+2024-06-05 11:45:24,017	[INFO]	Retries: 4
+2024-06-05 11:45:24,017	[INFO]	Log file: /home/jim/magpie/_magpie_logs/triangle-c_1717584299.log
+2024-06-05 11:45:24,017	[INFO]	Patch file: _magpie_logs/triangle-c_1717584299.patch
+2024-06-05 11:45:24,017	[INFO]	Diff file: _magpie_logs/triangle-c_1717584299.diff
+2024-06-05 11:45:24,018	[INFO]	Reference fitness: 0.073087
+2024-06-05 11:45:24,018	[INFO]	Best fitness: 0.001302
+2024-06-05 11:45:24,018	[INFO]	
+2024-06-05 11:45:24,019	[INFO]	==== BEST PATCH ====
+SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 22), ('triangle.c.xml', 'stmt', 16)) | SrcmlStmtDeletion(('triangle.c.xml', 'stmt', 3)) | SrcmlStmtInsertion(('triangle.c.xml', '_inter_block', 32), ('triangle.c.xml', 'stmt', 8))
+2024-06-05 11:45:24,019	[INFO]	
+2024-06-05 11:45:24,020	[INFO]	==== DIFF ====
+[1m--- before: triangle.c[0m
+[1m+++ after: triangle.c[0m
+[36m@@ -8,7 +8,7 @@[0m
+ int classify_triangle(double a, double b, double c) {
+   double tmp;
+ 
+[31m-  delay();[0m
+[32m+  [0m
+ 
+   // Sort the sides so that a <= b <= c
+   if(a > b) {
+[36m@@ -18,6 +18,10 @@[0m
+   }
+ 
+   if(a > c) {
+[32m+    if(a + b <= c)/*auto*/{[0m
+[32m+     [0m
+[32m+      return INVALID;[0m
+[32m+    }/*auto*/[0m
+     tmp = a;
+     a = c;
+     c = tmp;
+[36m@@ -35,6 +39,11 @@[0m
+   }/*auto*/
+   if(a == b && b == c)/*auto*/{
+    
+[32m+    if(a > c) {[0m
+[32m+      tmp = a;[0m
+[32m+      a = c;[0m
+[32m+      c = tmp;[0m
+[32m+    }[0m
+     return EQUILATERAL;
+   }/*auto*/
+   if(a == b || b == c)/*auto*/{
+
