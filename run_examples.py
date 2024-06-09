@@ -134,11 +134,13 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    
+    perf_items = ['perf_cycles',
+        "perf_cache_references", "perf_cache_misses", "perf_branches",
+        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
     erroneous=[]
     execution_times = []
     result = run_command(compile_command, f"examples/{name1}/necessary")
-    for _ in range(10):
+    for _ in range(20):
         start = time.time()
         result = run_command(f"{name3}", f'examples/{name1}/necessary')
         end = time.time()
@@ -232,7 +234,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
                 execution_times = []
-                for _ in range(10):
+                for _ in range(20):
                     start = time.time()
                     result = run_command(f'{name3}',)
                     end = time.time()
