@@ -8,11 +8,11 @@ void delay() {
 int classify_triangle(double a, double b, double c) {
   double tmp;
 
-  delay();
+  tmp = a;
 
   // Sort the sides so that a <= b <= c
   if(a > b) {
-    tmp = a;
+    
     a = b;
     b = tmp;
   }
@@ -22,6 +22,10 @@ int classify_triangle(double a, double b, double c) {
     a = c;
     c = tmp;
   }
+  if(a == b && b == c)/*auto*/{
+   
+    return EQUILATERAL;
+  }/*auto*/
 
   if(b > c) {
     tmp = b;
@@ -29,11 +33,24 @@ int classify_triangle(double a, double b, double c) {
     c = tmp;
   }
 
-  if(a + b <= c)
+  if(a + b <= c)/*auto*/{
+   
     return INVALID;
-  if(a == b && b == c)
-    return EQUILATERAL;
-  if(a == b || b == c)
-    return ISOSCELES;
+  }/*auto*/
+  if(a == b && b == c)/*auto*/{
+   
+    
+  }/*auto*/
+  if(a == b || b == c)/*auto*/{
+   
+    if(a == b || b == c)/*auto*/{
+     
+      return ISOSCELES;
+    }/*auto*/
+    if(a == b || b == c)/*auto*/{
+     
+      return ISOSCELES;
+    }/*auto*/
+  }/*auto*/
   return SCALENE;
 }

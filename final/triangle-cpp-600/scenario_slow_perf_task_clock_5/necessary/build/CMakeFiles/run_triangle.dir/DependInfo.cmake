@@ -8,12 +8,12 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jim/magpie/examples/triangle-cpp/necessary/run_triangle.cpp" "CMakeFiles/run_triangle.dir/run_triangle.cpp.o" "gcc" "CMakeFiles/run_triangle.dir/run_triangle.cpp.o.d"
+  "/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_task_clock_5/necessary/run_triangle.cpp" "CMakeFiles/run_triangle.dir/run_triangle.cpp.o" "gcc" "CMakeFiles/run_triangle.dir/run_triangle.cpp.o.d"
   )
 
 # Targets to which this target links.
 set(CMAKE_TARGET_LINKED_INFO_FILES
-  "/home/jim/magpie/examples/triangle-cpp/necessary/build/CMakeFiles/triangle.dir/DependInfo.cmake"
+  "/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_task_clock_5/necessary/build/CMakeFiles/triangle.dir/DependInfo.cmake"
   )
 
 # Fortran module output directory.

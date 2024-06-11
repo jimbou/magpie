@@ -1,7 +1,7 @@
 CMakeFiles/triangle.dir/triangle.cpp.o: \
- /home/jim/magpie/examples/triangle-cpp/necessary/triangle.cpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cpu_clock_4/necessary/triangle.cpp \
  /usr/include/stdc-predef.h \
- /home/jim/magpie/examples/triangle-cpp/necessary/triangle.hpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cpu_clock_4/necessary/triangle.hpp \
  /usr/include/time.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/jim/magpie/examples/triangle-cpp/necessary/triangle.cpp" "CMakeFiles/triangle.dir/triangle.cpp.o" "gcc" "CMakeFiles/triangle.dir/triangle.cpp.o.d"
+  "/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_instructions_2/necessary/triangle.cpp" "CMakeFiles/triangle.dir/triangle.cpp.o" "gcc" "CMakeFiles/triangle.dir/triangle.cpp.o.d"
   )
 
 # Targets to which this target links.

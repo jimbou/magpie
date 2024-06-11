@@ -1,5 +1,5 @@
 CMakeFiles/standalone.dir/standalone.cpp.o: \
- /home/jim/magpie/examples/triangle-cpp/necessary/standalone.cpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_time_5/necessary/standalone.cpp \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -57,7 +57,7 @@ CMakeFiles/standalone.dir/standalone.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/struct_rwlock.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/c++/11/bits/std_abs.h \
- /home/jim/magpie/examples/triangle-cpp/necessary/triangle.hpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_time_5/necessary/triangle.hpp \
  /usr/include/time.h /usr/include/x86_64-linux-gnu/bits/time.h \
  /usr/include/x86_64-linux-gnu/bits/timex.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_tm.h \

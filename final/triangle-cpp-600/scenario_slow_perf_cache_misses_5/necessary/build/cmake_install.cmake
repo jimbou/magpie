@@ -1,4 +1,4 @@
-# Install script for directory: /home/jim/magpie/examples/triangle-cpp/necessary
+# Install script for directory: /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_misses_5/necessary
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/jim/magpie/examples/triangle-cpp/necessary/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_misses_5/necessary/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

@@ -1,7 +1,7 @@
 CMakeFiles/run_triangle.dir/run_triangle.cpp.o: \
- /home/jim/magpie/examples/triangle-cpp/necessary/run_triangle.cpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cycles_5/necessary/run_triangle.cpp \
  /usr/include/stdc-predef.h \
- /home/jim/magpie/examples/triangle-cpp/necessary/triangle.hpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cycles_5/necessary/triangle.hpp \
  /usr/include/time.h /usr/include/features.h \
  /usr/include/features-time64.h \
  /usr/include/x86_64-linux-gnu/bits/wordsize.h \

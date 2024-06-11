@@ -1,5 +1,5 @@
 CMakeFiles/test_triangle.dir/test_triangle.cpp.o: \
- /home/jim/magpie/examples/triangle-cpp/necessary/test_triangle.cpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/test_triangle.cpp \
  /usr/include/stdc-predef.h /usr/include/stdio.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/features.h /usr/include/features-time64.h \
@@ -24,7 +24,7 @@ CMakeFiles/test_triangle.dir/test_triangle.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
  /usr/include/x86_64-linux-gnu/bits/floatn-common.h \
- /home/jim/magpie/examples/triangle-cpp/necessary/triangle.hpp \
+ /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/triangle.hpp \
  /usr/include/time.h /usr/include/x86_64-linux-gnu/bits/time.h \
  /usr/include/x86_64-linux-gnu/bits/timex.h \
  /usr/include/x86_64-linux-gnu/bits/types/struct_timeval.h \

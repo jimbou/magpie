@@ -53,10 +53,10 @@ RM = /usr/bin/cmake -E rm -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/jim/magpie/examples/triangle-cpp/necessary
+CMAKE_SOURCE_DIR = /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/jim/magpie/examples/triangle-cpp/necessary/build
+CMAKE_BINARY_DIR = /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build
 
 # Include any dependencies generated for this target.
 include CMakeFiles/triangle.dir/depend.make
@@ -72,16 +72,16 @@ include CMakeFiles/triangle.dir/flags.make
 CMakeFiles/triangle.dir/triangle.cpp.o: CMakeFiles/triangle.dir/flags.make
 CMakeFiles/triangle.dir/triangle.cpp.o: ../triangle.cpp
 CMakeFiles/triangle.dir/triangle.cpp.o: CMakeFiles/triangle.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jim/magpie/examples/triangle-cpp/necessary/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/triangle.dir/triangle.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/triangle.dir/triangle.cpp.o -MF CMakeFiles/triangle.dir/triangle.cpp.o.d -o CMakeFiles/triangle.dir/triangle.cpp.o -c /home/jim/magpie/examples/triangle-cpp/necessary/triangle.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/triangle.dir/triangle.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/triangle.dir/triangle.cpp.o -MF CMakeFiles/triangle.dir/triangle.cpp.o.d -o CMakeFiles/triangle.dir/triangle.cpp.o -c /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/triangle.cpp
 
 CMakeFiles/triangle.dir/triangle.cpp.i: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/triangle.dir/triangle.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jim/magpie/examples/triangle-cpp/necessary/triangle.cpp > CMakeFiles/triangle.dir/triangle.cpp.i
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/triangle.cpp > CMakeFiles/triangle.dir/triangle.cpp.i
 
 CMakeFiles/triangle.dir/triangle.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/triangle.dir/triangle.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jim/magpie/examples/triangle-cpp/necessary/triangle.cpp -o CMakeFiles/triangle.dir/triangle.cpp.s
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/triangle.cpp -o CMakeFiles/triangle.dir/triangle.cpp.s
 
 # Object files for target triangle
 triangle_OBJECTS = \
@@ -93,7 +93,7 @@ triangle_EXTERNAL_OBJECTS =
 libtriangle.a: CMakeFiles/triangle.dir/triangle.cpp.o
 libtriangle.a: CMakeFiles/triangle.dir/build.make
 libtriangle.a: CMakeFiles/triangle.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jim/magpie/examples/triangle-cpp/necessary/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libtriangle.a"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libtriangle.a"
 	$(CMAKE_COMMAND) -P CMakeFiles/triangle.dir/cmake_clean_target.cmake
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/triangle.dir/link.txt --verbose=$(VERBOSE)
 
@@ -106,6 +106,6 @@ CMakeFiles/triangle.dir/clean:
 .PHONY : CMakeFiles/triangle.dir/clean
 
 CMakeFiles/triangle.dir/depend:
-	cd /home/jim/magpie/examples/triangle-cpp/necessary/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jim/magpie/examples/triangle-cpp/necessary /home/jim/magpie/examples/triangle-cpp/necessary /home/jim/magpie/examples/triangle-cpp/necessary/build /home/jim/magpie/examples/triangle-cpp/necessary/build /home/jim/magpie/examples/triangle-cpp/necessary/build/CMakeFiles/triangle.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build /home/jim/magpie/final/triangle-cpp-600/scenario_slow_perf_cache_references_3/necessary/build/CMakeFiles/triangle.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/triangle.dir/depend
 

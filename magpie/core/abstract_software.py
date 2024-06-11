@@ -178,6 +178,7 @@ class AbstractSoftware(abc.ABC):
         env['KPTR_RESTRICT'] = '0'
 
         try:
+            # print("CMD:", cmd)
             with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, env=env, start_new_session=True) as sprocess:
                 if lengthout > 0:
                     stdout_size = 0
@@ -243,6 +244,7 @@ class AbstractSoftware(abc.ABC):
             
             for i in range(retries):  
                 start = time.time()
+                # print("CMD:", cmd)
                 with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, env=env, start_new_session=True) as sprocess:      
                     #print("RETRY:", i)
                     if lengthout > 0:
@@ -334,7 +336,7 @@ class AbstractSoftware(abc.ABC):
             for i in range(retries):    
                 # print("RETRY from record:", i)
                 start = time.time()
-                print("CMD:", cmd)
+                # print("CMD:", cmd)
                 process = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE)
                 stdout, stderr = process.communicate()
                 stdout =b""

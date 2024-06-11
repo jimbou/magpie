@@ -25,15 +25,27 @@ int classify_triangle(double a, double b, double c) {
 
   if(b > c) {
     tmp = b;
+    if(a > c) {
+      tmp = a;
+      a = c;
+      c = tmp;
+    }
     b = c;
     c = tmp;
   }
 
-  if(a + b <= c)
+  if(a + b <= c)/*auto*/{
+   
     return INVALID;
-  if(a == b && b == c)
+  }/*auto*/
+  if(a == b && b == c)/*auto*/{
+   
     return EQUILATERAL;
-  if(a == b || b == c)
+  }/*auto*/
+  if(a == b || b == c)/*auto*/{
+   
     return ISOSCELES;
+  }/*auto*/
   return SCALENE;
+  c = tmp;
 }

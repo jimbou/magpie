@@ -110,6 +110,7 @@ def run_command(command, directory =None):
     """ Helper function to run a shell command and return its output. """
     
     return subprocess.run(command, shell=True, text=True, capture_output=True, cwd=directory)
+# 
     
 def create_directory_with_suffix(base_path):
     """ Create a directory with an incrementing number suffix if it already exists. """
@@ -121,7 +122,54 @@ def create_directory_with_suffix(base_path):
     os.makedirs(new_path)
     return new_path
 
-def main(name1, scenario ,name3, compile_command, improved_file, main_directory):
+def load_parameters(param_file):
+    """ Load parameters from a .params file and return them as a dictionary. """
+    params = {}
+    with open(param_file, 'r') as file:
+        for line in file:
+            key, value = line.split(' := ')
+            params[key.strip()] = value.strip().strip("'")
+    return params
+
+def build_command(params, cmd):
+    """ Build the command based on the loaded parameters. """
+    cmd = [cmd]
+    # Define mappings from parameter names to command line flags
+    flag_mappings = {
+        'luby': '-luby',
+        'rnd-init': '-no-rnd-init',
+        'gc-frac': '-gc-frac',
+        'rinc': '-rinc',
+        'var-decay': '-var-decay',
+        'cla-decay': '-cla-decay',
+        'rnd-freq': '-rnd-freq',
+        'rnd-seed': '-rnd-seed',
+        'phase-saving': '-phase-saving',
+        'ccmin-mode': '-ccmin-mode',
+        'rfirst': '-rfirst',
+        'pre': '-pre',
+        'verb': '-verb',
+        'rcheck': '-no-rcheck',
+        'asymm': '-no-asymm',
+        'elim': '-elim',
+        'simp-gc-frac': '-simp-gc-frac',
+        'sub-lim': '-sub-lim',
+        'cl-lim': '-cl-lim',
+        'grow': '-grow'
+    }
+
+    for key, value in params.items():
+        if key in flag_mappings:
+            if value.lower() == 'true':
+                cmd.append(flag_mappings[key])
+            elif value.lower() == 'false':
+                if "no-" not in flag_mappings[key]:
+                    cmd.append('-no-' + flag_mappings[key][1:])
+            else:
+                cmd.append(flag_mappings[key] + '=' + value)
+    return cmd
+
+def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
     # perf_items = [
     #     'time', 'perf_time', 'perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
@@ -134,13 +182,20 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = ["energy"]
+    perf_items = [ 'time','perf_time',"weights", "energy"]
     erroneous=[]
     execution_times = []
+    run_com =name3
+    if params_file != "":
+        params = load_parameters(f'examples/{name1}/necessary/{params_file}')
+        run_com = build_command(params, name3)
+        run_com= " ".join(run_com)
+        print(run_com)
+
     result = run_command(compile_command, f"examples/{name1}/necessary")
     for _ in range(20):
         start = time.time()
-        result = run_command(f"{name3}", f'examples/{name1}/necessary')
+        result = run_command(run_com, f'examples/{name1}/necessary')
         end = time.time()
         duration = end - start  
         execution_times.append(float(duration))
@@ -162,22 +217,23 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
                 scenario_path=update_retries(scenario_path_base,retries_num)
                 command = f"python3.11 magpie local_search --scenario {scenario_path}"
+                duration_magpie = 0
                 if item != "weights":
-                    start = time.time()
+                    start_mag_w = time.perf_counter()
                     result1 = run_command(command)
-                    end = time.time()
-                    duration_magpie = end - start  
-                    print(f"Duration: {duration}")
+                    end_mag_w = time.perf_counter()
+                    duration_magpie = end_mag_w - start_mag_w  
+                    print(f"Duration: {duration_magpie}")
                     result1 =result1.stderr
                 else: 
                     print(command)
-                    start = time.time()
+                    start_mag = time.perf_counter()
                     process = subprocess.Popen(command, shell=True,stderr=subprocess.PIPE)
                     stdout, result1 = process.communicate()
                     result1 =result1.decode(magpie.settings.output_encoding)
-                    end = time.time()
-                    duration_magpie = end - start  
-                    print(f"Duration: {duration}")
+                    end_mag = time.perf_counter()
+                    duration_magpie = end_mag - start_mag  
+                    print(f"Duration magpie: {duration_magpie}")
                     
 
                 # Parse output for file paths
@@ -185,7 +241,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 log_path = None
                 patch_path = None
                 diff_path = None
-                # print(result.stderr)
                 for line in result1.splitlines():
                     if "Log file:" in line:
                         log_path = line.split()[-1]
@@ -199,7 +254,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                     print (result1)
                     erroneous.append(item)
                     continue
-
                 # Subdirectory for the current item
                 item_directory = os.path.join(main_directory, scenario+"_"+item)
                 item_directory = item_directory +"_"+str(retries_num)
@@ -215,7 +269,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 with open(patch_path, 'r') as file:
                     patch_contents = file.read()
                 diff_name = os.path.basename(diff_path)
-
                 retries, max_patch, best_fitness, ref_fitness, fitness_values = extract_data_from_log(log_path)
                 if retries is not None and max_patch is not None:
                     print("Number of Retries:", retries)
@@ -231,11 +284,17 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
                 #print(result.stderr)
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
+                if params_file != "":
+                    params = load_parameters(f'{item_directory}/necessary/{params_file}')
+                    run_com2 = build_command(params, name3)
+                    run_com2= " ".join(run_com2)
+                    print(run_com2)
                 execution_times = []
                 for _ in range(20):
                     start = time.time()
-                    result = run_command(f'{name3}',)
+                    result = run_command(run_com2, f"{item_directory}/necessary")
                     end = time.time()
+                    print(result.stderr)
                     duration = end - start  
                     execution_times.append(float(duration))
                 
@@ -271,17 +330,17 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory)
     print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
-    if len(sys.argv) != 7:
-        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file>")
+    if len(sys.argv) != 8:
+        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file>")
     else:
         main_directory = f"{sys.argv[1]}_run"
         main_directory = create_directory_with_suffix(main_directory)
         if sys.argv[2] != "":
             print("Executing with normal scenario")
-            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory)
+            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7] )
         if sys.argv[3] != "":
             print("Executing with params scenario")
-            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory)
+            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7])
 
         with open(f'{main_directory}/performance_data.json', 'w') as file:
             json.dump(data, file, indent=4)
