@@ -347,17 +347,23 @@ class BasicSoftware(AbstractSoftware):
                         continue
                     run_cmd = self.run_cmd.strip()
                     if '{INST}' in self.run_cmd:
+                        
                         run_cmd = run_cmd.replace('{INST}', inst)
                     else:
                         run_cmd = f'{run_cmd} {inst}'
                     if '{PARAMS}' in self.run_cmd:
+                        # print(f"Run command: {self.run_cmd}")
                         run_cmd = run_cmd.replace('{PARAMS}', cli)
+                        # print(f"Run command: {run_cmd}")
+
                     else:
                         run_cmd = f'{run_cmd} {cli}'
                     #print(f"Running command: {run_cmd}")
                     #shlex.split(run_cmd)
                     #self.run_command(run_cmd+" "+cli)
                     #if run_cmd contains "./run_custom.sh"
+                    # print(f"Run command: {run_cmd}")
+                    # print(f"CLI: {cli}")
                     if run_cmd.find("./run_custom.sh") != -1:
                          exec_result = self.exec_cmd_record(run_cmd+" "+cli,  
                                                 timeout=timeout,

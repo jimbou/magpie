@@ -23,7 +23,7 @@ def main(json_path, path, compile_command, run_command):
     # Calculate the median execution time
     median_time = (end_time - start_time)/20
     print(f"triangle-c original : {median_time}")
-
+    os.chdir(f"../../../final/triangle-c-600")
     items = data['items']
     for item in items:
         # Create the directory name
