@@ -155,7 +155,17 @@ def build_command(params, cmd):
         'simp-gc-frac': '-simp-gc-frac',
         'sub-lim': '-sub-lim',
         'cl-lim': '-cl-lim',
-        'grow': '-grow'
+        'grow': '-grow',
+        'RESTARTS': 'RESTARTS',
+        'LUBYFACTOR': 'LUBYFACTOR',
+        'FIXEDPERIOD': 'FIXEDPERIOD',
+        'PHASE': 'PHASE',
+        'CLADECAY': 'CLADECAY',
+        'INITCONFLICTBOUND': 'INITCONFLICTBOUND',
+        'VARDECAY': 'VARDECAY',
+        'CONFLICTBOUNDINCFACTOR': 'CONFLICTBOUNDINCFACTOR',
+        'SIMP': 'SIMP',
+        'CLEANING': 'CLEANING'
     }
 
     for key, value in params.items():
@@ -182,8 +192,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ 'time','perf_time','perf_instructions', 'perf_cycles',
-        "perf_cache_references", "perf_cache_misses", "perf_branches"]
+    perf_items = [ "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults"]
     erroneous=[]
     execution_times = []
     run_com =name3
@@ -281,7 +290,9 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
 
                 
                 patch_command= f"patch {improved_file} ../{diff_name}"
+                cp_command = f"cp {improved_file} ../"
                 result = run_command(patch_command, f"{item_directory}/necessary")
+                result = run_command(cp_command, f"{item_directory}/necessary")
                 #print(result.stderr)
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
@@ -300,7 +311,8 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     duration = end - start  
                     execution_times.append(float(duration))
                 
-            
+                #remove the final_destination directory
+                shutil.rmtree(final_destination)
                 median_time = statistics.median(execution_times)
                 print(f'Median execution time: {median_time}')
 

@@ -76,12 +76,12 @@ class Variant:
             tofile = f'after: {renamed}'
             s1 = other.models[filename].dump().splitlines(keepends=True)
             #store the s1 in a test file called test_file-s1.txt
-            # with open("test_file_s1.txt", "w") as f:
-            #     f.writelines(s1)
+            with open("test_file_s1.txt", "w") as f:
+                f.writelines(s1)
             #do the same for s2
 
             s2 = self.models[filename].dump().splitlines(keepends=True)
-            # with open("test_file_s2.txt", "w") as f:
-            #     f.writelines(s2)
+            with open("test_file_s2.txt", "w") as f:
+                f.writelines(s2)
             diffs += diff_method(s1, s2, fromfile=fromfile, tofile=tofile)
         return ''.join(diffs)

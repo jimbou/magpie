@@ -1,0 +1,57 @@
+# You can override the included template(s) by including variable overrides
+# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
+# Secret Detection customization: https://docs.gitlab.com/ee/user/application_security/secret_detection/#customizing-settings
+# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
+# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
+# Note that environment variables can be set in several places
+# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=WARN -Dorg.slf4j.simpleLogger.showDateTime=true -Djava.awt.headless=true"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version -DinstallAtEnd=true -DdeployAtEnd=true"
+
+maven39-java11-sonar:
+  image: maven:3.9.4-eclipse-temurin-11-alpine
+  stage: build
+  only:
+  - master
+  script:
+  - mvn $MAVEN_CLI_OPTS clean org.jacoco:jacoco-maven-plugin:prepare-agent --settings
+    settings.xml deploy jacoco:report
+  - mvn $MAVEN_CLI_OPTS sonar:sonar
+  cache:
+    paths:
+    - ".m2/repository"
+
+maven39-java11:
+  image: maven:3.9.4-eclipse-temurin-11-alpine
+  stage: build
+  except:
+  - master
+  script:
+  - mvn $MAVEN_CLI_OPTS clean package -Dmaven.javadoc.skip=true -Djacoco.skip=true
+  cache:
+    paths:
+    - ".m2/repository"
+
+maven39-java17:
+  image: maven:3.9.4-eclipse-temurin-17-alpine
+  stage: test
+  script:
+  - mvn $MAVEN_CLI_OPTS clean package -Dmaven.javadoc.skip=true -Djacoco.skip=true
+  allow_failure: true
+
+jars-j17:
+    image: dleberre/dlb-ant
+    stage: build
+    script: 
+      - ant -Drelease=NIGHTLY sat
+    artifacts:
+       paths:
+        - dist/NIGHTLY/*.jar
+       expire_in: 4 weeks
+
+sast:
+  stage: test
+
+include:
+- template: Security/SAST.gitlab-ci.yml
