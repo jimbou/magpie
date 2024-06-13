@@ -974,6 +974,9 @@ if len(sys.argv) == 3:
     file2 = sys.argv[2]
     #print(f"Filename 1: {file1}")
     #print(f"Filename 2: {file2}")
+elif len(sys.argv) == 2 and sys.argv[1] =="error":
+    print(f"Custom Metric: 999999999999")
+    sys.stderr.write(f"Custom Metric: 999999999999")
 else:
     print("Error: Two filenames must be provided.")
     sys.exit(1)  # Exit the script with an error code

@@ -12,9 +12,20 @@
 # Assign arguments to variables
 command="$*"
 
-taskset -c 0 perf record  -g -F 10000  -e cycles:u -- $command
+taskset -c 0 timeout 40s perf record  -g -F 10000  -e cycles:u -- $command
 
-perf report  --stdio > report1.txt
-perf annotate --stdio > report2.txt
+# Check the exit status of the timeout command
+if [ $? -eq 124 ]; then
+  echo "Program did not finish in 40 seconds and was terminated."
+  #python3 read_total.py error
+  exit 1
+else
+  echo "Program finished within the time limit."
+  perf report  --stdio > report1.txt
+  perf annotate --stdio > report2.txt
+  python3 read_total.py report1.txt report2.txt
+fi
+
+
+
 #echo "All files have been created."
-python3 read_total.py report1.txt report2.txt

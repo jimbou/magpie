@@ -1,0 +1,50 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -175,7 +175,7 @@
+     watches[~c[0]].push(Watcher(cr, c[1]));
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt()) /*auto*/{
+-      learnts_literals += c.size();
++      const Clause& c = ca[cr];
+     }/*auto*/
+     else            /*auto*/{
+       clauses_literals += c.size();
+@@ -191,7 +191,7 @@
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+-        watches.smudge(~c[0]);
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         watches.smudge(~c[1]);
+     }
+ 
+@@ -387,6 +387,7 @@
+     }else
+         /*auto*/{
+             i = j = out_learnt.size();
++            return l_False;
+         }/*auto*/
+ 
+     max_literals += out_learnt.size();
+@@ -559,7 +560,8 @@
+             for (int k = 2; k < c.size(); k++)
+                 /*auto*/{
+                     if (value(c[k]) != l_False){
+-                    c[1] = c[k]; c[k] = false_lit;
++                    c[1] = c[k];
++                    Clause& c = ca[cr]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
+                     goto NextClause; }
+                 }/*auto*/
+@@ -768,10 +770,7 @@
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:

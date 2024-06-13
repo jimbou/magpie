@@ -1,0 +1,66 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -203,6 +203,13 @@
+     else            /*auto*/{
+     
+            clauses_literals -= c.size();
++           for (int j = 1; j < c.size(); j++)
++               /*auto*/{
++                   if (level(var(c[j])) > 0)
++                   /*auto*/{
++                       seen[var(c[j])] = 1;
++                   }/*auto*/
++               }/*auto*/
+     
+     }/*auto*/ }
+ 
+@@ -478,22 +485,7 @@
+ 
+     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
+         Var x = var(trail[i]);
+-        if (seen[x]){
+-            if (reason(x) == CRef_Undef){
+-                assert(level(x) > 0);
+-                out_conflict.push(~trail[i]);
+-            }else{
+-                Clause& c = ca[reason(x)];
+-                for (int j = 1; j < c.size(); j++)
+-                    /*auto*/{
+-                        if (level(var(c[j])) > 0)
+-                        /*auto*/{
+-                            seen[var(c[j])] = 1;
+-                        }/*auto*/
+-                    }/*auto*/
+-            }
+-            seen[x] = 0;
+-        }
++        
+     }
+ 
+     seen[var(p)] = 0;
+@@ -636,6 +628,7 @@
+         if (satisfied(c))
+             /*auto*/{
+                 removeClause(cs[i]);
++                int curr_restarts = 0;
+             }/*auto*/
+         else
+             /*auto*/{
+@@ -783,16 +776,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){

@@ -1,0 +1,53 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -429,7 +429,7 @@
+     analyze_stack.clear(); analyze_stack.push(p);
+     int top = analyze_toclear.size();
+     while (analyze_stack.size() > 0){
+-        assert(reason(var(analyze_stack.last())) != CRef_Undef);
++        
+         Clause& c = ca[reason(var(analyze_stack.last()))]; analyze_stack.pop();
+ 
+         for (int i = 1; i < c.size(); i++){
+@@ -477,6 +477,7 @@
+     seen[var(p)] = 1;
+ 
+     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
++        analyzeFinal(~p, conflict);
+         Var x = var(trail[i]);
+         if (seen[x]){
+             if (reason(x) == CRef_Undef){
+@@ -684,10 +685,7 @@
+ 
+     // Remove satisfied clauses:
+     removeSatisfied(learnts);
+-    if (remove_satisfied)        // Can be turned off.
+-        /*auto*/{
+-            removeSatisfied(clauses);
+-        }/*auto*/
++    
+     checkGarbage();
+     rebuildOrderHeap();
+ 
+@@ -761,11 +759,7 @@
+ 
+         }else{
+             // NO CONFLICT
+-            if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+-                // Reached bound on number of conflicts:
+-                progress_estimate = progressEstimate();
+-                cancelUntil(0);
+-                return l_Undef; }
++            
+ 
+             // Simplify the set of problem clauses:
+             if (decisionLevel() == 0 && !simplify())
+@@ -872,7 +866,7 @@
+ 
+     max_learnts               = nClauses() * learntsize_factor;
+     learntsize_adjust_confl   = learntsize_adjust_start_confl;
+-    learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
++    
+     lbool   status            = l_Undef;
+ 
+     if (verbosity >= 1){
