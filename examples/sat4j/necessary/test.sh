@@ -6,8 +6,8 @@ my_test() {
     FILENAME=$1
     EXPECTED=$2
     java -jar dist/CUSTOM/sat4j-sat.jar $FILENAME $ARGV > /dev/null
-    # RETURN=$?
-    echo "RETURN:" $RETURN
+    RETURN=$?
+    # echo "RETURN:" $RETURN
     if [ $RETURN -ne $((EXPECTED)) ]; then
         echo "FAILED ON FILE:" $FILENAME
         echo "GOT:" $RETURN

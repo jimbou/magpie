@@ -192,7 +192,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ "weights"]
+    perf_items = [ 'perf_time',"weights","energy"]
     erroneous=[]
     execution_times = []
     run_com =name3
@@ -203,7 +203,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
         print(run_com)
 
     result = run_command(compile_command, f"examples/{name1}/necessary")
-    for _ in range(20):
+    for _ in range(1):
         start = time.time()
         result = run_command(run_com, f'examples/{name1}/necessary')
         end = time.time()
@@ -220,7 +220,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     for item in perf_items:
         #get time before execution
         try:
-            for retries_num  in range(1,6):
+            for retries_num  in range(1,2):
 
                 new_string = f"{scenario }_{item}.txt"
                 print(f"Running {new_string} for retry {retries_num}")
@@ -303,7 +303,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     run_com2= " ".join(run_com2)
                     print(run_com2)
                 execution_times = []
-                for _ in range(20):
+                for _ in range(1):
                     start = time.time()
                     result = run_command(run_com2, f"{item_directory}/necessary")
                     end = time.time()
