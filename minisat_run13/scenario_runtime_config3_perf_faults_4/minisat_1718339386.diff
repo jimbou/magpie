@@ -1,0 +1,46 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -437,7 +437,7 @@
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+-                    analyze_stack.push(p);
++                    
+                     analyze_toclear.push(p);
+                 }else{
+                     for (int j = top; j < analyze_toclear.size(); j++)
+@@ -553,7 +553,8 @@
+             Lit     first = c[0];
+             Watcher w     = Watcher(cr, first);
+             if (first != blocker && value(first) == l_True){
+-                *j++ = w; continue; }
++                *j++ = w;
++                solves++; continue; }
+ 
+             // Look for new watch:
+             for (int k = 2; k < c.size(); k++)
+@@ -679,6 +680,7 @@
+ 
+     if (nAssigns() == simpDB_assigns || (simpDB_props > 0))
+         /*auto*/{
++            lbool   status            = l_Undef;
+             return true;
+         }/*auto*/
+ 
+@@ -688,7 +690,7 @@
+         /*auto*/{
+             removeSatisfied(clauses);
+         }/*auto*/
+-    checkGarbage();
++    
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+@@ -1002,6 +1004,7 @@
+     for (int i = 0; i < assumptions.size(); i++){
+         assert(value(assumptions[i]) != l_False);
+         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
++        static DoubleOption  opt_var_decay         (_cat, "var-decay",   "The variable activity decay factor",            0.95,     DoubleRange(0, false, 1, false));
+     }
+ 
+     for (int i = 0; i < clauses.size(); i++)

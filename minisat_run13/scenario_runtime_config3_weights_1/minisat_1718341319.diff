@@ -1,0 +1,128 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -390,7 +390,7 @@
+         }/*auto*/
+ 
+     max_literals += out_learnt.size();
+-    out_learnt.shrink(i - j);
++    
+     tot_literals += out_learnt.size();
+ 
+     // Find correct backtrack level:
+@@ -561,6 +561,7 @@
+                     if (value(c[k]) != l_False){
+                     c[1] = c[k]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
++                    static DoubleOption  opt_garbage_frac      (_cat, "gc-frac",     "The fraction of wasted memory allowed before a garbage collection is triggered",  0.20, DoubleRange(0, false, HUGE_VAL, false));
+                     goto NextClause; }
+                 }/*auto*/
+ 
+@@ -738,7 +739,7 @@
+                 CRef cr = ca.alloc(learnt_clause, true);
+                 learnts.push(cr);
+                 attachClause(cr);
+-                claBumpActivity(ca[cr]);
++                
+                 uncheckedEnqueue(learnt_clause[0], cr);
+             }
+ 
+@@ -764,6 +765,99 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
++                for (;;){
++                    CRef confl = propagate();
++                    if (confl != CRef_Undef){
++                        // CONFLICT
++                        conflicts++; conflictC++;
++                        if (decisionLevel() == 0) /*auto*/{
++                            return l_False;
++                        }/*auto*/
++
++                        learnt_clause.clear();
++                        analyze(confl, learnt_clause, backtrack_level);
++                        cancelUntil(backtrack_level);
++
++                        if (learnt_clause.size() == 1){
++                            uncheckedEnqueue(learnt_clause[0]);
++                        }else{
++                            CRef cr = ca.alloc(learnt_clause, true);
++                            learnts.push(cr);
++                            attachClause(cr);
++                            claBumpActivity(ca[cr]);
++                            uncheckedEnqueue(learnt_clause[0], cr);
++                        }
++
++                        varDecayActivity();
++                        claDecayActivity();
++
++                        if (--learntsize_adjust_cnt == 0){
++                            learntsize_adjust_confl *= learntsize_adjust_inc;
++                            learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                            max_learnts             *= learntsize_inc;
++
++                            if (verbosity >= 1)
++                                /*auto*/{
++                                    printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
++                                       (int)conflicts, 
++                                       (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
++                                       (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
++                                }/*auto*/
++                        }
++
++                    }else{
++                        // NO CONFLICT
++                        if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
++                            // Reached bound on number of conflicts:
++                            progress_estimate = progressEstimate();
++                            cancelUntil(0);
++                            return l_Undef; }
++
++                        // Simplify the set of problem clauses:
++                        if (decisionLevel() == 0 && !simplify())
++                            /*auto*/{
++                                return l_False;
++                            }/*auto*/
++
++                        if (learnts.size()-nAssigns() >= max_learnts)
++                            // Reduce the set of learnt clauses:
++                            /*auto*/{
++                                reduceDB();
++                            }/*auto*/
++
++                        Lit next = lit_Undef;
++                        while (decisionLevel() < assumptions.size()){
++                            // Perform user provided assumption:
++                            Lit p = assumptions[decisionLevel()];
++                            if (value(p) == l_True){
++                                // Dummy decision level:
++                                newDecisionLevel();
++                            }else if (value(p) == l_False){
++                                analyzeFinal(~p, conflict);
++                                return l_False;
++                            }else{
++                                next = p;
++                                break;
++                            }
++                        }
++
++                        if (next == lit_Undef){
++                            // New variable decision:
++                            decisions++;
++                            next = pickBranchLit();
++
++                            if (next == lit_Undef)
++                                // Model found:
++                                /*auto*/{
++                                    return l_True;
++                                }/*auto*/
++                        }
++
++                        // Increase decision level and enqueue 'next'
++                        newDecisionLevel();
++                        uncheckedEnqueue(next);
++                    }
++                }
+                 cancelUntil(0);
+                 return l_Undef; }
+ 
