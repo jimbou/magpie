@@ -165,7 +165,10 @@ def build_command(params, cmd):
         'VARDECAY': 'VARDECAY',
         'CONFLICTBOUNDINCFACTOR': 'CONFLICTBOUNDINCFACTOR',
         'SIMP': 'SIMP',
-        'CLEANING': 'CLEANING'
+        'CLEANING': 'CLEANING',
+        'lbd-cut': '-lbd-cut',
+        'lbd-cut-max': '-lbd-cut-max',
+        'cp-increase ': '-cp-increase'
     }
 
     for key, value in params.items():
@@ -205,11 +208,15 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
 
     result = run_command(compile_command, f"examples/{name1}/necessary")
     for _ in range(20):
-        start = time.time()
+        start = time.perf_counter()
         result = run_command(run_com, f'examples/{name1}/necessary')
-        end = time.time()
+        end = time.perf_counter()
         duration = end - start  
         execution_times.append(float(duration))
+        #if the command returns error then add that to the erroneous list
+        
+
+
     
     median_time_orig = statistics.median(execution_times)
     data["original"]["median_execution_time"] = median_time_orig
@@ -305,12 +312,14 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     print(run_com2)
                 execution_times = []
                 for _ in range(20):
-                    start = time.time()
+                    start = time.perf_counter()
                     result = run_command(run_com2, f"{item_directory}/necessary")
-                    end = time.time()
+                    end = time.perf_counter()
                     print(result.stderr)
                     duration = end - start  
                     execution_times.append(float(duration))
+                    if result.returncode != 0:
+                        erroneous.append(f"{item}_{retries}_execution")
                 
                 #remove the final_destination directory
                 shutil.rmtree(final_destination)

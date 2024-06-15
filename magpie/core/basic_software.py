@@ -318,6 +318,10 @@ class BasicSoftware(AbstractSoftware):
                 exec_result = self.exec_cmd(shlex.split(test_cmd),
                                             timeout=timeout,
                                             lengthout=lengthout)
+                # exec_result=self.exec_cmd_record(test_cmd+" "+cli,  
+                #                                 timeout=timeout,
+                #                                 lengthout=lengthout,
+                #                                 retries=1)
                 
                 
                 run_result.status = exec_result.status

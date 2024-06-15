@@ -178,11 +178,13 @@ class AbstractSoftware(abc.ABC):
         env['KPTR_RESTRICT'] = '0'
 
         try:
-            # print("CMD:", cmd)
+            print("CMD:", cmd)
             with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, env=env, start_new_session=True) as sprocess:
+                
                 if lengthout > 0:
                     stdout_size = 0
                     stderr_size = 0
+                    
                     while sprocess.poll() is None:
                         end = time.time()
                         if end-start > timeout:
@@ -190,6 +192,7 @@ class AbstractSoftware(abc.ABC):
                             _, _ = sprocess.communicate()
                             return ExecResult(cmd, 'TIMEOUT', sprocess.returncode, stdout, stderr, end-start, stdout_size+stderr_size)
                         a = select.select([sprocess.stdout, sprocess.stderr], [], [], 1)[0]
+                       
                         if sprocess.stdout in a:
                             for _ in range(1024):
                                 if not select.select([sprocess.stdout], [], [], 0)[0]:
@@ -206,11 +209,13 @@ class AbstractSoftware(abc.ABC):
                             os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
                             _, _ = sprocess.communicate()
                             return ExecResult(cmd, 'LENGTHOUT', sprocess.returncode, stdout, stderr, end-start, stdout_size+stderr_size)
+                        
                     end = time.time()
                     stdout += sprocess.stdout.read()
                     stderr += sprocess.stderr.read()
                 else:
                     try:
+                        
                         stdout, stderr = sprocess.communicate(timeout=timeout)
                     except subprocess.TimeoutExpired:
                         os.killpg(os.getpgid(sprocess.pid), signal.SIGKILL)
@@ -220,6 +225,7 @@ class AbstractSoftware(abc.ABC):
                     end = time.time()
                 return ExecResult(cmd, 'SUCCESS', sprocess.returncode, stdout, stderr, end-start, len(stdout)+len(stderr))
         except FileNotFoundError:
+           
             return ExecResult(cmd, 'CLI_ERROR', -1, b'', b'', 0, 0)
 
     def exec_cmd_retries(self, cmd, timeout=15, env=None, shell=False, lengthout=1e6, retries=1):
@@ -244,7 +250,7 @@ class AbstractSoftware(abc.ABC):
             
             for i in range(retries):  
                 start = time.time()
-                # print("CMD:", cmd)
+                print("CMD:", cmd)
                 with subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=shell, env=env, start_new_session=True) as sprocess:      
                     #print("RETRY:", i)
                     if lengthout > 0:
@@ -336,9 +342,12 @@ class AbstractSoftware(abc.ABC):
             for i in range(retries):    
                 # print("RETRY from record:", i)
                 start = time.time()
-                # print("CMD:", cmd)
+                print("CMD:", cmd)
+                
                 process = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE)
+                
                 stdout, stderr = process.communicate()
+                
                 stdout =b""
                 end = time.time()
                 # if lengthout > 0:

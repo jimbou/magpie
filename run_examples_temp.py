@@ -204,9 +204,9 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
 
     result = run_command(compile_command, f"examples/{name1}/necessary")
     for _ in range(1):
-        start = time.time()
+        start = time.perf_counter()
         result = run_command(run_com, f'examples/{name1}/necessary')
-        end = time.time()
+        end = time.perf_counter()
         duration = end - start  
         execution_times.append(float(duration))
     
@@ -304,12 +304,14 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     print(run_com2)
                 execution_times = []
                 for _ in range(1):
-                    start = time.time()
+                    start = time.perf_counter()
                     result = run_command(run_com2, f"{item_directory}/necessary")
-                    end = time.time()
+                    end = time.perf_counter()
                     print(result.stderr)
                     duration = end - start  
                     execution_times.append(float(duration))
+                    if result.returncode != 0:
+                        erroneous.append(f"{item}_{retries}")
                 
                 #remove the final_destination directory
                 shutil.rmtree(final_destination)
