@@ -1,0 +1,44 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -1102,7 +1102,7 @@
+         // ltrail.size() changes due to propagation
+         // cannot cache that value.
+         while (this.qhead < ltrail.size()) {
+-            lstats.incPropagations();
++            
+             int p = ltrail.get(this.qhead++);
+             lslistener.propagating(toDimacs(p));
+             lorder.assignLiteral(p);
+@@ -1891,6 +1891,7 @@
+             status = search(assumps);
+             if (status == Lbool.UNDEFINED) {
+                 this.restarter.onRestart();
++                undoOne();
+                 this.slistener.restarting();
+             }
+         }
+@@ -1945,6 +1946,7 @@
+         if (this.learnts.isEmpty()) {
+             return;
+         }
++        this.claInc *= CLAUSE_RESCALE_FACTOR;
+         Map<String, Counter> learntTypes = new HashMap<>();
+         for (Iterator<Constr> it = this.learnts.iterator(); it.hasNext();) {
+             String type = it.next().getClass().getName();
+@@ -2088,7 +2090,7 @@
+     }
+ 
+     public void printStat(PrintWriter out, String prefix) {
+-        this.stats.printStat(out, prefix);
++        
+         double cputime = (System.currentTimeMillis() - this.timebegin) / 1000;
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+@@ -2227,6 +2229,7 @@
+     }
+ 
+     public IVecInt createBlockingClauseForCurrentModel() {
++        this.slistener.init(this);
+         IVecInt clause = new VecInt(decisions.size());
+         if (realNumberOfVariables() > nVars()) {
+             // we rely on the model projection in that case

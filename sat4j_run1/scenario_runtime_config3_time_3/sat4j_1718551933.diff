@@ -1,0 +1,49 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -699,13 +699,7 @@
+         int p = ILits.UNDEFINED;
+         if (conflictingLiteral != ILits.UNDEFINED) {
+             confl = this.voc.getReason(conflictingLiteral ^ 1);
+-            if (confl == null) {
+-                if (assumps.contains(toDimacs(conflictingLiteral ^ 1))) {
+-                    outLearnt.push(toDimacs(conflictingLiteral ^ 1));
+-                } // else the literal is resulting from propagation at decision
+-                  // level 0, so is not part of the explanation
+-                return outLearnt;
+-            }
++            
+             p = conflictingLiteral ^ 1;
+         }
+         while (confl == null && this.trail.size() > 0
+@@ -1444,30 +1438,7 @@
+             System.out.println(stb);
+         }
+         for (var i = 1; i <= nVars(); i++) {
+-            if (this.voc.belongsToPool(i)) {
+-                int p = this.voc.getFromPool(i);
+-                if (!this.voc.isUnassigned(p)) {
+-                    tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
+-                    this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+-                    reason = this.voc.getReason(p);
+-                    if (reason == null && this.voc.getLevel(p) > 0
+-                            // we consider literals propagated by learned
+-                            // clauses
+-                            // as decisions to allow blocking models by
+-                            // decisions.
+-                            || reason != null && reason.learnt()) {
+-                        this.decisions.push(tempmodel.last());
+-                        if (reason != null) {
+-                            this.assignmentOrigins[i
+-                                    - 1] = AssignmentOrigin.PROPAGATED_LEARNED;
+-                        }
+-                    } else {
+-                        this.implied.push(tempmodel.last());
+-                        this.assignmentOrigins[i
+-                                - 1] = AssignmentOrigin.PROPAGATED_ORIGINAL;
+-                    }
+-                }
+-            }
++            undoOne();
+         }
+         this.model = new int[tempmodel.size()];
+         tempmodel.copyTo(this.model);
