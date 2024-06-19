@@ -108,7 +108,7 @@ def extract_data_from_log(file_path):
 
 def run_command(command, directory =None):
     """ Helper function to run a shell command and return its output. """
-    
+    print(f"Running command: {command}")
     return subprocess.run(command, shell=True, text=True, capture_output=True, cwd=directory)
 # 
     
@@ -165,18 +165,40 @@ def build_command(params, cmd):
         'VARDECAY': 'VARDECAY',
         'CONFLICTBOUNDINCFACTOR': 'CONFLICTBOUNDINCFACTOR',
         'SIMP': 'SIMP',
-        'CLEANING': 'CLEANING'
+        'CLEANING': 'CLEANING',
+        'lbd-cut': '-lbd-cut',
+        'lbd-cut-max': '-lbd-cut-max',
+        'cp-increase ': '-cp-increase',
+        'P': '-P',
+        'I': '-I',
+        'K': '-K',
+        'M': '-M',
+        'V': '-V',
+        'N': '-N',
+        'U': '-U',
+        'B': '-B',
+        'num-decimal-places': '-num-decimal-places'
+
     }
 
     for key, value in params.items():
         if key in flag_mappings:
-            if value.lower() == 'true':
-                cmd.append(flag_mappings[key])
-            elif value.lower() == 'false':
-                if "no-" not in flag_mappings[key]:
-                    cmd.append('-no-' + flag_mappings[key][1:])
+            if key in [ 'P', 'I', 'K', 'M', 'V', 'N', 'U', 'B','num-decimal-places']:
+
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    pass
+                else:
+                    cmd.append(flag_mappings[key] + ' ' + value)
             else:
-                cmd.append(flag_mappings[key] + '=' + value)
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    if "no-" not in flag_mappings[key]:
+                        cmd.append('-no-' + flag_mappings[key][1:])
+                else:
+                    cmd.append(flag_mappings[key] + '=' + value)
     return cmd
 
 def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
@@ -192,7 +214,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ 'perf_time',"weights","energy"]
+    perf_items = [ 'time']
     erroneous=[]
     execution_times = []
     run_com =name3
@@ -206,6 +228,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     for _ in range(1):
         start = time.perf_counter()
         result = run_command(run_com, f'examples/{name1}/necessary')
+        print(result.stderr)
         end = time.perf_counter()
         duration = end - start  
         execution_times.append(float(duration))
@@ -294,6 +317,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 result = run_command(patch_command, f"{item_directory}/necessary")
                 result = run_command(cp_command, f"{item_directory}/necessary")
                 #print(result.stderr)
+                print(f"running {compile_command}")
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
                 run_com2 =name3

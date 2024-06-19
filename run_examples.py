@@ -168,18 +168,36 @@ def build_command(params, cmd):
         'CLEANING': 'CLEANING',
         'lbd-cut': '-lbd-cut',
         'lbd-cut-max': '-lbd-cut-max',
-        'cp-increase ': '-cp-increase'
+        'cp-increase ': '-cp-increase',
+        'P': '-P',
+        'I': '-I',
+        'K': '-K',
+        'M': '-M',
+        'V': '-V',
+        'N': '-N',
+        'U': '-U',
+        'B': '-B',
+        'num-decimal-places': '-num-decimal-places'
+
     }
 
     for key, value in params.items():
         if key in flag_mappings:
-            if value.lower() == 'true':
-                cmd.append(flag_mappings[key])
-            elif value.lower() == 'false':
-                if "no-" not in flag_mappings[key]:
-                    cmd.append('-no-' + flag_mappings[key][1:])
+            if key in [ 'P', 'I', 'K', 'M', 'V', 'N', 'U', 'B','num-decimal-places']:
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    pass
+                else:
+                    cmd.append(flag_mappings[key] + ' ' + value)
             else:
-                cmd.append(flag_mappings[key] + '=' + value)
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    if "no-" not in flag_mappings[key]:
+                        cmd.append('-no-' + flag_mappings[key][1:])
+                else:
+                    cmd.append(flag_mappings[key] + '=' + value)
     return cmd
 
 def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
