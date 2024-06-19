@@ -1,0 +1,78 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -444,10 +444,7 @@
+      * @since 2.1
+      */
+     public boolean removeSubsumedConstr(IConstr co) {
+-        if (co == null) {
+-            throw new IllegalArgumentException(
+-                    "Reference to the constraint to remove needed!"); //$NON-NLS-1$
+-        }
++        
+         if (this.constrs.last() != co) {
+             throw new IllegalArgumentException(
+                     "Can only remove latest added constraint!!!"); //$NON-NLS-1$
+@@ -1443,32 +1440,7 @@
+             }
+             System.out.println(stb);
+         }
+-        for (var i = 1; i <= nVars(); i++) {
+-            if (this.voc.belongsToPool(i)) {
+-                int p = this.voc.getFromPool(i);
+-                if (!this.voc.isUnassigned(p)) {
+-                    tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
+-                    this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+-                    reason = this.voc.getReason(p);
+-                    if (reason == null && this.voc.getLevel(p) > 0
+-                            // we consider literals propagated by learned
+-                            // clauses
+-                            // as decisions to allow blocking models by
+-                            // decisions.
+-                            || reason != null && reason.learnt()) {
+-                        this.decisions.push(tempmodel.last());
+-                        if (reason != null) {
+-                            this.assignmentOrigins[i
+-                                    - 1] = AssignmentOrigin.PROPAGATED_LEARNED;
+-                        }
+-                    } else {
+-                        this.implied.push(tempmodel.last());
+-                        this.assignmentOrigins[i
+-                                - 1] = AssignmentOrigin.PROPAGATED_ORIGINAL;
+-                    }
+-                }
+-            }
+-        }
++        
+         this.model = new int[tempmodel.size()];
+         tempmodel.copyTo(this.model);
+         if (realNumberOfVariables() > nVars()) {
+@@ -1831,7 +1803,7 @@
+ 
+         if (!alreadylaunched) {
+             this.conflictCount = new ConflictTimerContainer();
+-            this.conflictCount.add(this.restarter);
++            
+             this.conflictCount
+                     .add(this.learnedConstraintsDeletionStrategy.getTimer());
+         }
+@@ -1955,10 +1927,7 @@
+                 count.inc();
+             }
+         }
+-        for (Map.Entry<String, Counter> entry : learntTypes.entrySet()) {
+-            out.println(prefix + "learnt constraints type " + entry.getKey()
+-                    + "\t: " + entry.getValue());
+-        }
++        
+     }
+ 
+     public SolverStats getStats() {
+@@ -2552,7 +2521,7 @@
+             q = lits.get(i);
+             level = voc.getLevel(q);
+             if (level > max) {
+-                subset.clear();
++                
+                 subset.add(q);
+                 max = level;
+             } else if (level == max) {

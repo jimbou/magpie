@@ -1,0 +1,51 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -453,7 +453,7 @@
+                     "Can only remove latest added constraint!!!"); //$NON-NLS-1$
+         }
+         Constr c = (Constr) co;
+-        c.remove(this);
++        
+         this.constrs.pop();
+         String type = c.getClass().getName();
+         this.constrTypes.get(type).dec();
+@@ -697,17 +697,7 @@
+         // propagation assigned the literal in the opposite direction
+         // trying to find a propagation
+         int p = ILits.UNDEFINED;
+-        if (conflictingLiteral != ILits.UNDEFINED) {
+-            confl = this.voc.getReason(conflictingLiteral ^ 1);
+-            if (confl == null) {
+-                if (assumps.contains(toDimacs(conflictingLiteral ^ 1))) {
+-                    outLearnt.push(toDimacs(conflictingLiteral ^ 1));
+-                } // else the literal is resulting from propagation at decision
+-                  // level 0, so is not part of the explanation
+-                return outLearnt;
+-            }
+-            p = conflictingLiteral ^ 1;
+-        }
++        
+         while (confl == null && this.trail.size() > 0
+                 && this.trailLim.size() > 0) {
+             p = this.trail.last();
+@@ -857,10 +847,7 @@
+             analyzetoclear.clear();
+             conflictToReduce.copyTo(analyzetoclear);
+             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
+-                if (voc.getReason(conflictToReduce.get(i)) == null
+-                        || !analyzeRemovable(conflictToReduce.get(i))) {
+-                    conflictToReduce.moveTo(j++, i);
+-                }
++                
+             }
+             conflictToReduce.shrink(i - j);
+             stats.incReducedliterals(i - j);
+@@ -1810,7 +1797,7 @@
+                     this.slistener.conflictFound(p);
+                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
+                             null, assumps, p);
+-                    this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
++                    this.voc.setTrailPosition(p, -1);
+                 } else {
+                     this.slistener.conflictFound(confl, decisionLevel(),
+                             this.trail.size());

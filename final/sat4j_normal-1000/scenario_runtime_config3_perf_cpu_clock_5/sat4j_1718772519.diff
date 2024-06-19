@@ -1,0 +1,61 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -325,7 +325,7 @@
+     }
+ 
+     public void setTimeoutOnConflicts(int count) {
+-        this.timeout = count;
++        
+         this.timeBasedTimeout = false;
+         this.undertimeout = true;
+     }
+@@ -1267,10 +1267,7 @@
+                         cancelUntil(this.rootLevel);
+                         return Lbool.UNDEFINED;
+                     }
+-                    if (this.needToReduceDB) {
+-                        reduceDB();
+-                        this.needToReduceDB = false;
+-                    }
++                    
+                     if (this.sharedConflict == null) {
+                         // New variable decision
+                         this.stats.incDecisions();
+@@ -1877,6 +1874,7 @@
+             this.restarter.init(this.params, this.stats);
+             this.timebegin = System.currentTimeMillis();
+         }
++        this.undertimeout = true;
+         this.needToReduceDB = false;
+         // this is used to allow the solver to be incomplete,
+         // when using a heuristics limited to a subset of variables
+@@ -2344,9 +2342,7 @@
+      */
+     public void backtrack(int[] reason) {
+         IVecInt clause = new VecInt(reason.length);
+-        for (int d : reason) {
+-            clause.push(LiteralsUtils.toInternal(d));
+-        }
++        
+         this.sharedConflict = this.dsfactory.createUnregisteredClause(clause);
+         learn(this.sharedConflict);
+     }
+@@ -2356,9 +2352,7 @@
+      */
+     public Lbool truthValue(int literal) {
+         var p = LiteralsUtils.toInternal(literal);
+-        if (this.voc.isFalsified(p)) {
+-            return Lbool.FALSE;
+-        }
++        
+         if (this.voc.isSatisfied(p)) {
+             return Lbool.TRUE;
+         }
+@@ -2424,6 +2418,7 @@
+     public void setLearnedConstraintsDeletionStrategy(ConflictTimer timer,
+             LearnedConstraintsEvaluationType evaluation) {
+         if (this.conflictCount != null) {
++            this.qhead = 0;
+             this.conflictCount.add(timer);
+             this.conflictCount
+                     .remove(this.learnedConstraintsDeletionStrategy.getTimer());

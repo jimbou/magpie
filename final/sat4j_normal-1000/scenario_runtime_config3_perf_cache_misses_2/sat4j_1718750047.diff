@@ -1,0 +1,68 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1325,7 +1326,7 @@
+                                 confl, assumps, ILits.UNDEFINED);
+                         return Lbool.FALSE;
+                     }
+-                    return Lbool.UNDEFINED;
++                    
+                 }
+                 int conflictTrailLevel = this.trail.size();
+                 // analyze conflict
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -1778,10 +1779,7 @@
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+-            for (int size = undos.size(); size > 0; size--) {
+-                undos.last().undo(p);
+-                undos.pop();
+-            }
++            
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+@@ -1859,7 +1857,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2109,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+@@ -2430,8 +2428,7 @@
+         }
+         switch (evaluation) {
+         case ACTIVITY:
+-            this.learnedConstraintsDeletionStrategy = new ActivityLCDS(this,
+-                    timer);
++            
+             break;
+         case LBD:
+             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,

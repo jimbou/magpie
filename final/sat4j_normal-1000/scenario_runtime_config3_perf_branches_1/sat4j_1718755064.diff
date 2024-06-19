@@ -1,0 +1,63 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -457,7 +457,7 @@
+         this.constrs.pop();
+         String type = c.getClass().getName();
+         this.constrTypes.get(type).dec();
+-        return true;
++        return this.verbose;
+     }
+ 
+     public void addAllClauses(IVec<IVecInt> clauses)
+@@ -1246,7 +1246,7 @@
+                             this);
+                     if (this.sharedConflict == null) {
+                         cancelUntil(this.rootLevel);
+-                        return Lbool.TRUE;
++                        return null;
+                     } else {
+                         if (decisionLevel() == rootLevel) {
+                             confl = this.sharedConflict;
+@@ -1422,6 +1422,18 @@
+                     for (var j = 0; j < reason.size(); j++) {
+                         r = reason.get(j);
+                         if (r != q) {
++                            TimerTask stopMe = new TimerTask() {
++                                @Override
++                                public void run() {
++                                    Solver.this.undertimeout = false;
++                                    synchronized (Solver.this) {
++                                        if (Solver.this.timer != null) {
++                                            Solver.this.timer.cancel();
++                                            Solver.this.timer = null;
++                                        }
++                                    }
++                                }
++                            };
+                             levels.add(this.voc.getLevel(r));
+                         }
+                     }
+@@ -2176,9 +2188,7 @@
+     }
+ 
+     public int[] findModel() throws TimeoutException {
+-        if (isSatisfiable()) {
+-            return model();
+-        }
++        double cputime = (System.currentTimeMillis() - this.timebegin) / 1000;
+         // DLB findbugs ok
+         // A zero length array would mean that the formula is a tautology.
+         return null;
+@@ -2423,11 +2433,7 @@
+      */
+     public void setLearnedConstraintsDeletionStrategy(ConflictTimer timer,
+             LearnedConstraintsEvaluationType evaluation) {
+-        if (this.conflictCount != null) {
+-            this.conflictCount.add(timer);
+-            this.conflictCount
+-                    .remove(this.learnedConstraintsDeletionStrategy.getTimer());
+-        }
++        
+         switch (evaluation) {
+         case ACTIVITY:
+             this.learnedConstraintsDeletionStrategy = new ActivityLCDS(this,

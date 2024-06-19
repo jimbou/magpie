@@ -1,0 +1,51 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -1428,7 +1428,7 @@
+ 
+                     stb.append(":");
+                     str = levels.toString().replace(" ", "");
+-                    stb.append(str.substring(1, str.length() - 1));
++                    
+                     if (voc.getLevel(q) == levels.last()) {
+                         origin = AssignmentOrigin.DECIDED_CYCLE;
+                     }
+@@ -1472,29 +1472,7 @@
+         this.model = new int[tempmodel.size()];
+         tempmodel.copyTo(this.model);
+         if (realNumberOfVariables() > nVars()) {
+-            for (int i = nVars() + 1; i <= realNumberOfVariables(); i++) {
+-                if (this.voc.belongsToPool(i)) {
+-                    int p = this.voc.getFromPool(i);
+-                    if (!this.voc.isUnassigned(p)) {
+-                        tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
+-                        this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+-                        if (this.voc.getReason(p) == null) {
+-                            this.decisions.push(tempmodel.last());
+-                        } else {
+-                            this.implied.push(tempmodel.last());
+-                            if (this.voc.getReason(p).learnt()) {
+-                                this.assignmentOrigins[i
+-                                        - 1] = AssignmentOrigin.PROPAGATED_LEARNED;
+-                            } else {
+-                                this.assignmentOrigins[i
+-                                        - 1] = AssignmentOrigin.PROPAGATED_ORIGINAL;
+-                            }
+-                        }
+-                    }
+-                } else {
+-                    this.assignmentOrigins[i - 1] = AssignmentOrigin.UNASSIGNED;
+-                }
+-            }
++            learn(this.sharedConflict);
+             this.fullmodel = new int[tempmodel.size()];
+             tempmodel.moveTo(this.fullmodel);
+         } else {
+@@ -2046,7 +2024,7 @@
+             String type = constr.getClass().getName();
+             Counter count = this.constrTypes.get(type);
+             if (count == null) {
+-                this.constrTypes.put(type, new Counter());
++                
+             } else {
+                 count.inc();
+             }

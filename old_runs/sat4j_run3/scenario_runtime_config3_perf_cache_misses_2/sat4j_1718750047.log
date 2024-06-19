@@ -1,0 +1,712 @@
+2024-06-18 23:34:08,108	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 9765865254959043
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = True
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 30
+default_lengthout = 1e6
+diff_method = unified
+trust_local_filesystem = True
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/sat4j
+target_files = org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = 
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = ant sat
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = ant sat
+compile_timeout = 
+compile_lengthout = 
+test_cmd = bash test.sh
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat -e cache-misses bash run_fixed.sh
+run_timeout = 
+run_lengthout = 
+retries = 2
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_cache_misses
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = FirstImprovement
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 1000
+max_time = 1000
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-06-18 23:34:08,108	[DEBUG]	
+2024-06-18 23:34:08,109	[INFO]	==== SEARCH: FirstImprovement ====
+2024-06-18 23:34:08,109	[INFO]	~~~~ WARMUP ~~~~
+2024-06-18 23:34:39,200	[DEBUG]	EXEC>  SUCCESS 1115791966.5
+2024-06-18 23:34:39,200	[INFO]	WARM    SUCCESS               1115791966.500000 (--) [0 edit(s)]  
+2024-06-18 23:35:02,724	[DEBUG]	EXEC>  SUCCESS 1109018722.5
+2024-06-18 23:35:02,724	[INFO]	WARM    SUCCESS               1109018722.500000 (--) [0 edit(s)]  
+2024-06-18 23:35:26,252	[DEBUG]	EXEC>  SUCCESS 1101528618.5
+2024-06-18 23:35:26,252	[INFO]	WARM    SUCCESS               1101528618.500000 (--) [0 edit(s)]  
+2024-06-18 23:35:26,252	[INFO]	REF     SUCCESS               1101528618.500000 (--) [0 edit(s)]  
+2024-06-18 23:35:26,252	[INFO]	
+2024-06-18 23:35:26,252	[INFO]	~~~~ START ~~~~
+2024-06-18 23:35:29,059	[INFO]	1       COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-06-18 23:35:29,059	[DEBUG]	patch(1)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 403), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 989))"
+2024-06-18 23:35:52,328	[DEBUG]	EXEC>  SUCCESS 1081516769.5
+2024-06-18 23:35:52,329	[INFO]	2       SUCCESS              *1081516769.500000 (98.18%) [1 edit(s)]  
+2024-06-18 23:35:52,329	[DEBUG]	patch(2)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -2111,7 +2111,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:35:55,252	[INFO]	3       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-18 23:35:55,252	[DEBUG]	patch(3)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 838), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 398))"
+2024-06-18 23:36:18,485	[DEBUG]	EXEC>  SUCCESS 1082493663.5
+2024-06-18 23:36:18,485	[INFO]	4       SUCCESS               1082493663.500000 (98.27%) [2 edit(s)]  
+2024-06-18 23:36:18,485	[DEBUG]	patch(4)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1055), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 527))"
+2024-06-18 23:36:18,499	[INFO]	5       SUCCESS               1101528618.500000 (100.00%) [0 edit(s)] [cached] 
+2024-06-18 23:36:18,500	[DEBUG]	patch(5)=""
+2024-06-18 23:36:21,307	[INFO]	6       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-18 23:36:21,307	[DEBUG]	patch(6)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1453), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 547))"
+2024-06-18 23:36:27,724	[INFO]	7       TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-06-18 23:36:27,724	[DEBUG]	patch(7)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 53), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 380))"
+2024-06-18 23:36:28,997	[INFO]	8       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-18 23:36:28,997	[DEBUG]	patch(8)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 540), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 509))"
+2024-06-18 23:36:31,845	[INFO]	9       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-18 23:36:31,845	[DEBUG]	patch(9)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1319), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 298))"
+2024-06-18 23:36:33,098	[INFO]	10      COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-18 23:36:33,098	[DEBUG]	patch(10)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1476), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 195))"
+2024-06-18 23:36:56,133	[DEBUG]	EXEC>  SUCCESS 1077288741.5
+2024-06-18 23:36:56,134	[INFO]	11      SUCCESS              *1077288741.500000 (97.80%) [2 edit(s)]  
+2024-06-18 23:36:56,134	[DEBUG]	patch(11)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -2111,7 +2112,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:36:56,154	[INFO]	12      SUCCESS               1081516769.500000 (98.18%) [1 edit(s)] [cached] 
+2024-06-18 23:36:56,154	[DEBUG]	patch(12)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364))"
+2024-06-18 23:36:59,089	[INFO]	13      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:36:59,089	[DEBUG]	patch(13)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 947), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 41))"
+2024-06-18 23:37:22,515	[DEBUG]	EXEC>  SUCCESS 1102981283.0
+2024-06-18 23:37:22,515	[INFO]	14      SUCCESS               1102981283.000000 (100.13%) [1 edit(s)]  
+2024-06-18 23:37:22,515	[DEBUG]	patch(14)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198))"
+2024-06-18 23:37:25,350	[INFO]	15      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:37:25,350	[DEBUG]	patch(15)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 358))"
+2024-06-18 23:37:28,147	[INFO]	16      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:37:28,147	[DEBUG]	patch(16)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 1006), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 240))"
+2024-06-18 23:37:30,959	[INFO]	17      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:37:30,959	[DEBUG]	patch(17)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 874), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 342))"
+2024-06-18 23:37:54,489	[DEBUG]	EXEC>  SUCCESS 1090896467.0
+2024-06-18 23:37:54,489	[INFO]	18      SUCCESS               1090896467.000000 (99.03%) [3 edit(s)]  
+2024-06-18 23:37:54,489	[DEBUG]	patch(18)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 649))"
+2024-06-18 23:37:55,761	[INFO]	19      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:37:55,761	[DEBUG]	patch(19)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 34), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 824))"
+2024-06-18 23:37:58,672	[INFO]	20      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:37:58,673	[DEBUG]	patch(20)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 200), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 791))"
+2024-06-18 23:38:01,404	[INFO]	21      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:01,404	[DEBUG]	patch(21)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 740), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495))"
+2024-06-18 23:38:02,664	[INFO]	22      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:02,664	[DEBUG]	patch(22)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 929), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 637))"
+2024-06-18 23:38:05,431	[INFO]	23      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:05,431	[DEBUG]	patch(23)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 788), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 144))"
+2024-06-18 23:38:08,218	[INFO]	24      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:08,218	[DEBUG]	patch(24)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 794), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 963))"
+2024-06-18 23:38:11,088	[INFO]	25      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:11,088	[DEBUG]	patch(25)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 34))"
+2024-06-18 23:38:12,375	[INFO]	26      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:38:12,375	[DEBUG]	patch(26)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 676), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 248))"
+2024-06-18 23:38:35,571	[DEBUG]	EXEC>  SUCCESS 1094511986.5
+2024-06-18 23:38:35,571	[INFO]	27      SUCCESS               1094511986.500000 (99.36%) [3 edit(s)]  
+2024-06-18 23:38:35,571	[DEBUG]	patch(27)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 855))"
+2024-06-18 23:38:58,483	[DEBUG]	EXEC>  SUCCESS 1080879355.0
+2024-06-18 23:38:58,483	[INFO]	28      SUCCESS               1080879355.000000 (98.13%) [3 edit(s)]  
+2024-06-18 23:38:58,483	[DEBUG]	patch(28)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 485), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 223))"
+2024-06-18 23:39:30,227	[DEBUG]	EXEC>  SUCCESS 1470175368.0
+2024-06-18 23:39:30,227	[INFO]	29      SUCCESS               1470175368.000000 (133.47%) [3 edit(s)]  
+2024-06-18 23:39:30,227	[DEBUG]	patch(29)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 509))"
+2024-06-18 23:39:32,977	[INFO]	30      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-18 23:39:32,977	[DEBUG]	patch(30)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 606), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 71))"
+2024-06-18 23:39:39,662	[INFO]	31      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-18 23:39:39,662	[DEBUG]	patch(31)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 312))"
+2024-06-18 23:40:02,761	[DEBUG]	EXEC>  SUCCESS 1070088041.0
+2024-06-18 23:40:02,761	[INFO]	32      SUCCESS              *1070088041.000000 (97.15%) [3 edit(s)]  
+2024-06-18 23:40:02,761	[DEBUG]	patch(32)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1859,7 +1860,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2112,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:40:25,882	[DEBUG]	EXEC>  SUCCESS 1111150605.0
+2024-06-18 23:40:25,882	[INFO]	33      SUCCESS               1111150605.000000 (100.87%) [2 edit(s)]  
+2024-06-18 23:40:25,882	[DEBUG]	patch(33)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741))"
+2024-06-18 23:40:49,050	[DEBUG]	EXEC>  SUCCESS 1088103234.0
+2024-06-18 23:40:49,050	[INFO]	34      SUCCESS               1088103234.000000 (98.78%) [4 edit(s)]  
+2024-06-18 23:40:49,050	[DEBUG]	patch(34)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 493))"
+2024-06-18 23:40:49,062	[INFO]	35      SUCCESS               1077288741.500000 (97.80%) [2 edit(s)] [cached] 
+2024-06-18 23:40:49,062	[DEBUG]	patch(35)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198))"
+2024-06-18 23:40:50,358	[INFO]	36      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-18 23:40:50,358	[DEBUG]	patch(36)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 658), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 617))"
+2024-06-18 23:41:13,398	[DEBUG]	EXEC>  SUCCESS 1079826472.5
+2024-06-18 23:41:13,398	[INFO]	37      SUCCESS               1079826472.500000 (98.03%) [2 edit(s)]  
+2024-06-18 23:41:13,399	[DEBUG]	patch(37)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741))"
+2024-06-18 23:41:16,296	[INFO]	38      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-18 23:41:16,296	[DEBUG]	patch(38)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 929), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 277))"
+2024-06-18 23:41:17,564	[INFO]	39      COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-06-18 23:41:17,564	[DEBUG]	patch(39)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 145))"
+2024-06-18 23:41:40,819	[DEBUG]	EXEC>  SUCCESS 1104316869.5
+2024-06-18 23:41:40,819	[INFO]	40      SUCCESS               1104316869.500000 (100.25%) [4 edit(s)]  
+2024-06-18 23:41:40,819	[DEBUG]	patch(40)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 738))"
+2024-06-18 23:42:03,934	[DEBUG]	EXEC>  SUCCESS 1070047327.0
+2024-06-18 23:42:03,934	[INFO]	41      SUCCESS              *1070047327.000000 (97.14%) [4 edit(s)]  
+2024-06-18 23:42:03,934	[DEBUG]	patch(41)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1778,10 +1779,7 @@
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+-            for (int size = undos.size(); size > 0; size--) {
+-                undos.last().undo(p);
+-                undos.pop();
+-            }
++            
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+@@ -1859,7 +1857,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2109,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:42:27,390	[DEBUG]	EXEC>  SUCCESS 1092245752.5
+2024-06-18 23:42:27,390	[INFO]	42      SUCCESS               1092245752.500000 (99.16%) [3 edit(s)]  
+2024-06-18 23:42:27,391	[DEBUG]	patch(42)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695))"
+2024-06-18 23:42:50,774	[DEBUG]	EXEC>  SUCCESS 1104803016.5
+2024-06-18 23:42:50,774	[INFO]	43      SUCCESS               1104803016.500000 (100.30%) [3 edit(s)]  
+2024-06-18 23:42:50,774	[DEBUG]	patch(43)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695))"
+2024-06-18 23:42:50,807	[INFO]	44      SUCCESS               1070088041.000000 (97.15%) [3 edit(s)] [cached] 
+2024-06-18 23:42:50,808	[DEBUG]	patch(44)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741))"
+2024-06-18 23:42:53,566	[INFO]	45      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:42:53,566	[DEBUG]	patch(45)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 567), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 920))"
+2024-06-18 23:43:16,549	[DEBUG]	EXEC>  SUCCESS 1086249535.0
+2024-06-18 23:43:16,549	[INFO]	46      SUCCESS               1086249535.000000 (98.61%) [5 edit(s)]  
+2024-06-18 23:43:16,549	[DEBUG]	patch(46)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 614))"
+2024-06-18 23:43:19,311	[INFO]	47      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:43:19,311	[DEBUG]	patch(47)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 667))"
+2024-06-18 23:43:22,140	[INFO]	48      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:43:22,140	[DEBUG]	patch(48)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 188), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 756))"
+2024-06-18 23:43:45,345	[DEBUG]	EXEC>  SUCCESS 1104920492.0
+2024-06-18 23:43:45,345	[INFO]	49      SUCCESS               1104920492.000000 (100.31%) [5 edit(s)]  
+2024-06-18 23:43:45,345	[DEBUG]	patch(49)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 252))"
+2024-06-18 23:43:48,208	[INFO]	50      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:43:48,208	[DEBUG]	patch(50)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 688), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 712))"
+2024-06-18 23:44:11,032	[DEBUG]	EXEC>  SUCCESS 1082430360.0
+2024-06-18 23:44:11,032	[INFO]	51      SUCCESS               1082430360.000000 (98.27%) [3 edit(s)]  
+2024-06-18 23:44:11,032	[DEBUG]	patch(51)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695))"
+2024-06-18 23:44:13,952	[INFO]	52      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:44:13,952	[DEBUG]	patch(52)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 533), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 950))"
+2024-06-18 23:44:16,720	[INFO]	53      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:44:16,720	[DEBUG]	patch(53)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 423), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 738))"
+2024-06-18 23:44:19,562	[INFO]	54      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:44:19,562	[DEBUG]	patch(54)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 272), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 913))"
+2024-06-18 23:44:42,606	[DEBUG]	EXEC>  SUCCESS 1097475432.5
+2024-06-18 23:44:42,606	[INFO]	55      SUCCESS               1097475432.500000 (99.63%) [5 edit(s)]  
+2024-06-18 23:44:42,606	[DEBUG]	patch(55)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1250), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 481))"
+2024-06-18 23:44:45,394	[INFO]	56      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:44:45,394	[DEBUG]	patch(56)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 534), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 582))"
+2024-06-18 23:44:48,225	[INFO]	57      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:44:48,225	[DEBUG]	patch(57)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 692), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 130))"
+2024-06-18 23:45:11,544	[DEBUG]	EXEC>  SUCCESS 1086834404.5
+2024-06-18 23:45:11,544	[INFO]	58      SUCCESS               1086834404.500000 (98.67%) [5 edit(s)]  
+2024-06-18 23:45:11,544	[DEBUG]	patch(58)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 884), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 499))"
+2024-06-18 23:45:34,735	[DEBUG]	EXEC>  SUCCESS 1083441165.5
+2024-06-18 23:45:34,735	[INFO]	59      SUCCESS               1083441165.500000 (98.36%) [5 edit(s)]  
+2024-06-18 23:45:34,735	[DEBUG]	patch(59)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 273))"
+2024-06-18 23:45:36,021	[INFO]	60      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:45:36,021	[DEBUG]	patch(60)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 10), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 708))"
+2024-06-18 23:45:38,792	[INFO]	61      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:45:38,792	[DEBUG]	patch(61)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 288))"
+2024-06-18 23:45:40,063	[INFO]	62      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:45:40,063	[DEBUG]	patch(62)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 668), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 21))"
+2024-06-18 23:46:03,307	[DEBUG]	EXEC>  SUCCESS 1094097035.0
+2024-06-18 23:46:03,307	[INFO]	63      SUCCESS               1094097035.000000 (99.33%) [5 edit(s)]  
+2024-06-18 23:46:03,308	[DEBUG]	patch(63)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 248))"
+2024-06-18 23:46:06,126	[INFO]	64      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:46:06,126	[DEBUG]	patch(64)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 592), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 157))"
+2024-06-18 23:46:08,900	[INFO]	65      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-06-18 23:46:08,900	[DEBUG]	patch(65)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 855), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 272))"
+2024-06-18 23:46:32,118	[DEBUG]	EXEC>  SUCCESS 1027451808.0
+2024-06-18 23:46:32,118	[INFO]	66      SUCCESS              *1027451808.000000 (93.28%) [5 edit(s)]  
+2024-06-18 23:46:32,119	[DEBUG]	patch(66)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -1778,10 +1779,7 @@
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+-            for (int size = undos.size(); size > 0; size--) {
+-                undos.last().undo(p);
+-                undos.pop();
+-            }
++            
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+@@ -1859,7 +1857,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2109,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:46:55,572	[DEBUG]	EXEC>  SUCCESS 1033401050.0
+2024-06-18 23:46:55,573	[INFO]	67      SUCCESS               1033401050.000000 (93.82%) [6 edit(s)]  
+2024-06-18 23:46:55,573	[DEBUG]	patch(67)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 478), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 693))"
+2024-06-18 23:47:19,202	[DEBUG]	EXEC>  SUCCESS 1040015892.5
+2024-06-18 23:47:19,202	[INFO]	68      SUCCESS               1040015892.500000 (94.42%) [4 edit(s)]  
+2024-06-18 23:47:19,202	[DEBUG]	patch(68)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622))"
+2024-06-18 23:47:42,690	[DEBUG]	EXEC>  SUCCESS 1053380338.0
+2024-06-18 23:47:42,691	[INFO]	69      SUCCESS               1053380338.000000 (95.63%) [4 edit(s)]  
+2024-06-18 23:47:42,691	[DEBUG]	patch(69)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622))"
+2024-06-18 23:47:45,572	[INFO]	70      COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-06-18 23:47:45,572	[DEBUG]	patch(70)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 791), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 190))"
+2024-06-18 23:48:08,732	[DEBUG]	EXEC>  SUCCESS 1030158817.5
+2024-06-18 23:48:08,732	[INFO]	71      SUCCESS               1030158817.500000 (93.52%) [6 edit(s)]  
+2024-06-18 23:48:08,732	[DEBUG]	patch(71)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 126))"
+2024-06-18 23:48:31,937	[DEBUG]	EXEC>  SUCCESS 1021038427.5
+2024-06-18 23:48:31,937	[INFO]	72      SUCCESS              *1021038427.500000 (92.69%) [6 edit(s)]  
+2024-06-18 23:48:31,937	[DEBUG]	patch(72)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1325,7 +1326,7 @@
+                                 confl, assumps, ILits.UNDEFINED);
+                         return Lbool.FALSE;
+                     }
+-                    return Lbool.UNDEFINED;
++                    
+                 }
+                 int conflictTrailLevel = this.trail.size();
+                 // analyze conflict
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -1778,10 +1779,7 @@
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+-            for (int size = undos.size(); size > 0; size--) {
+-                undos.last().undo(p);
+-                undos.pop();
+-            }
++            
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+@@ -1859,7 +1857,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2109,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+
+2024-06-18 23:48:55,589	[DEBUG]	EXEC>  SUCCESS 1043516687.5
+2024-06-18 23:48:55,590	[INFO]	73      SUCCESS               1043516687.500000 (94.73%) [7 edit(s)]  
+2024-06-18 23:48:55,590	[DEBUG]	patch(73)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 933))"
+2024-06-18 23:49:19,054	[DEBUG]	EXEC>  SUCCESS 1051811631.5
+2024-06-18 23:49:19,054	[INFO]	74      SUCCESS               1051811631.500000 (95.49%) [5 edit(s)]  
+2024-06-18 23:49:19,055	[DEBUG]	patch(74)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495))"
+2024-06-18 23:49:21,848	[INFO]	75      COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-06-18 23:49:21,848	[DEBUG]	patch(75)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 418), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 728))"
+2024-06-18 23:49:45,253	[DEBUG]	EXEC>  SUCCESS 1031058197.5
+2024-06-18 23:49:45,253	[INFO]	76      SUCCESS               1031058197.500000 (93.60%) [5 edit(s)]  
+2024-06-18 23:49:45,253	[DEBUG]	patch(76)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495))"
+2024-06-18 23:50:08,716	[DEBUG]	EXEC>  SUCCESS 1039856413.0
+2024-06-18 23:50:08,716	[INFO]	77      SUCCESS               1039856413.000000 (94.40%) [7 edit(s)]  
+2024-06-18 23:50:08,716	[DEBUG]	patch(77)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 913), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 676))"
+2024-06-18 23:50:10,065	[INFO]	78      COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-06-18 23:50:10,065	[DEBUG]	patch(78)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 974), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 973))"
+2024-06-18 23:50:33,574	[DEBUG]	EXEC>  SUCCESS 1038371640.5
+2024-06-18 23:50:33,574	[INFO]	79      SUCCESS               1038371640.500000 (94.27%) [7 edit(s)]  
+2024-06-18 23:50:33,574	[DEBUG]	patch(79)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 718))"
+2024-06-18 23:50:34,924	[INFO]	80      COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-06-18 23:50:34,924	[DEBUG]	patch(80)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 428), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 32))"
+2024-06-18 23:50:36,260	[INFO]	81      COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-06-18 23:50:36,261	[DEBUG]	patch(81)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 21), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 997))"
+2024-06-18 23:50:59,164	[DEBUG]	EXEC>  SUCCESS 1090671744.0
+2024-06-18 23:50:59,164	[INFO]	82      SUCCESS               1090671744.000000 (99.01%) [5 edit(s)]  
+2024-06-18 23:50:59,164	[DEBUG]	patch(82)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495))"
+2024-06-18 23:51:22,417	[DEBUG]	EXEC>  SUCCESS 1021012831.5
+2024-06-18 23:51:22,417	[INFO]	83      SUCCESS              *1021012831.500000 (92.69%) [7 edit(s)]  
+2024-06-18 23:51:22,417	[DEBUG]	patch(83)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -632,6 +632,7 @@
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
++                prevConfl = confl;
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+@@ -1325,7 +1326,7 @@
+                                 confl, assumps, ILits.UNDEFINED);
+                         return Lbool.FALSE;
+                     }
+-                    return Lbool.UNDEFINED;
++                    
+                 }
+                 int conflictTrailLevel = this.trail.size();
+                 // analyze conflict
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -1778,10 +1779,7 @@
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+-            for (int size = undos.size(); size > 0; size--) {
+-                undos.last().undo(p);
+-                undos.pop();
+-            }
++            
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+@@ -1859,7 +1857,7 @@
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+-                this.undertimeout = true;
++                
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+@@ -2111,7 +2109,7 @@
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+-            stb.append(o.toString());
++            this.trail.pop();
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+@@ -2430,8 +2428,7 @@
+         }
+         switch (evaluation) {
+         case ACTIVITY:
+-            this.learnedConstraintsDeletionStrategy = new ActivityLCDS(this,
+-                    timer);
++            
+             break;
+         case LBD:
+             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
+
+2024-06-18 23:51:23,737	[INFO]	84      COMPILE_CODE_ERROR    None (--) [8 edit(s)]  
+2024-06-18 23:51:23,737	[DEBUG]	patch(84)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 67), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 49))"
+2024-06-18 23:51:46,874	[DEBUG]	EXEC>  SUCCESS 1029017309.0
+2024-06-18 23:51:46,874	[INFO]	85      SUCCESS               1029017309.000000 (93.42%) [8 edit(s)]  
+2024-06-18 23:51:46,874	[DEBUG]	patch(85)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 1180), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 506))"
+2024-06-18 23:51:53,323	[INFO]	86      TEST_CODE_ERROR       None (--) [8 edit(s)]  
+2024-06-18 23:51:53,323	[DEBUG]	patch(86)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 201))"
+2024-06-18 23:51:56,024	[INFO]	87      COMPILE_CODE_ERROR    None (--) [8 edit(s)]  
+2024-06-18 23:51:56,024	[DEBUG]	patch(87)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 520))"
+2024-06-18 23:52:19,495	[DEBUG]	EXEC>  SUCCESS 1044999072.0
+2024-06-18 23:52:19,496	[INFO]	88      SUCCESS               1044999072.000000 (94.87%) [8 edit(s)]  
+2024-06-18 23:52:19,496	[DEBUG]	patch(88)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 329), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 178))"
+2024-06-18 23:52:19,537	[INFO]	~~~~ END ~~~~
+2024-06-18 23:52:19,537	[INFO]	
+2024-06-18 23:52:19,537	[INFO]	==== REPORT ====
+2024-06-18 23:52:19,537	[INFO]	Termination: time budget
+2024-06-18 23:52:19,537	[INFO]	Retries: 2
+2024-06-18 23:52:19,538	[INFO]	Log file: /home/jim/magpie/_magpie_logs/sat4j_1718750047.log
+2024-06-18 23:52:19,538	[INFO]	Patch file: _magpie_logs/sat4j_1718750047.patch
+2024-06-18 23:52:19,538	[INFO]	Diff file: _magpie_logs/sat4j_1718750047.diff
+2024-06-18 23:52:19,538	[INFO]	Reference fitness: 1101528618.500000
+2024-06-18 23:52:19,538	[INFO]	Best fitness: 1021012831.500000
+2024-06-18 23:52:19,538	[INFO]	
+2024-06-18 23:52:19,540	[INFO]	==== BEST PATCH ====
+SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 845), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 364)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 198)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 741)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 695)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 622)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 495)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 952))
+2024-06-18 23:52:19,540	[INFO]	
+2024-06-18 23:52:19,540	[INFO]	==== DIFF ====
+[1m--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java[0m
+[1m+++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java[0m
+[36m@@ -632,6 +632,7 @@[0m
+             // select next reason to look at
+             do {
+                 p = this.trail.last();
+[32m+                prevConfl = confl;[0m
+                 confl = this.voc.getReason(p);
+                 undoOne();
+             } while (!seen[p >> 1]);
+[36m@@ -1325,7 +1326,7 @@[0m
+                                 confl, assumps, ILits.UNDEFINED);
+                         return Lbool.FALSE;
+                     }
+[31m-                    return Lbool.UNDEFINED;[0m
+[32m+                    [0m
+                 }
+                 int conflictTrailLevel = this.trail.size();
+                 // analyze conflict
+[36m@@ -1578,7 +1579,7 @@[0m
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+[31m-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);[0m
+[32m+        [0m
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+[36m@@ -1778,10 +1779,7 @@[0m
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
+             assert undos != null;
+[31m-            for (int size = undos.size(); size > 0; size--) {[0m
+[31m-                undos.last().undo(p);[0m
+[31m-                undos.pop();[0m
+[31m-            }[0m
+[32m+            [0m
+         }
+         // push previously learned literals
+         for (IteratorInt iterator = this.learnedLiterals.iterator(); iterator
+[36m@@ -1859,7 +1857,7 @@[0m
+         } else {
+             if (!global || !alreadylaunched) {
+                 firstTimeGlobal = true;
+[31m-                this.undertimeout = true;[0m
+[32m+                [0m
+                 ConflictTimer conflictTimeout = new ConflictTimerAdapter(this,
+                         (int) this.timeout) {
+ 
+[36m@@ -2111,7 +2109,7 @@[0m
+         stb.append("\n"); //$NON-NLS-1$
+         for (Object o : objs) {
+             stb.append(prefix);
+[31m-            stb.append(o.toString());[0m
+[32m+            this.trail.pop();[0m
+             stb.append("\n"); //$NON-NLS-1$
+         }
+         stb.append(prefix);
+[36m@@ -2430,8 +2428,7 @@[0m
+         }
+         switch (evaluation) {
+         case ACTIVITY:
+[31m-            this.learnedConstraintsDeletionStrategy = new ActivityLCDS(this,[0m
+[31m-                    timer);[0m
+[32m+            [0m
+             break;
+         case LBD:
+             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
+
