@@ -1,0 +1,63 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -734,6 +734,7 @@
+                     if (this.voc.getReason(q) == null
+                             && this.voc.getLevel(q) > 0) {
+                         assert assumps.contains(toDimacs(q));
++                        this.sharedConflict = null;
+                         outLearnt.push(toDimacs(q));
+                     }
+                 }
+@@ -962,18 +963,7 @@
+                 analyzestack.pop();
+                 for (var i = 1; i < c.size(); i++) {
+                     int l = c.get(i);
+-                    if (!seen[var(l)] && voc.getLevel(l) != 0) {
+-                        if (voc.getReason(l) == null) {
+-                            for (int j = top; j < analyzetoclear.size(); j++) {
+-                                seen[analyzetoclear.get(j) >> 1] = false;
+-                            }
+-                            analyzetoclear.shrink(analyzetoclear.size() - top);
+-                            return false;
+-                        }
+-                        seen[l >> 1] = true;
+-                        analyzestack.push(l);
+-                        analyzetoclear.push(l);
+-                    }
++                    
+                 }
+             }
+ 
+@@ -1567,6 +1557,12 @@
+     }
+ 
+     public void clearLearntClauses() {
++        if (this.timeBasedTimeout) {
++            if (this.timer != null) {
++                this.timer.cancel();
++                this.timer = null;
++            }
++        }
+         for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
+                 .hasNext();) {
+             iterator.next().remove(this);
+@@ -2248,9 +2244,7 @@
+     public void unset(int p) {
+         // the literal might already have been
+         // removed from the trail.
+-        if (this.voc.isUnassigned(p) || this.trail.isEmpty()) {
+-            return;
+-        }
++        this.voc.setReason(p, null);
+         int current = this.trail.last();
+         while (current != p) {
+             undoOne();
+@@ -2552,7 +2546,7 @@
+             q = lits.get(i);
+             level = voc.getLevel(q);
+             if (level > max) {
+-                subset.clear();
++                
+                 subset.add(q);
+                 max = level;
+             } else if (level == max) {

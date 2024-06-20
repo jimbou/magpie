@@ -14,7 +14,7 @@ if [ $# -eq 0 ]; then
   exit 1
 fi
 # The command to execute is the first argument
-user_command=$1
+user_command=$@
 sleep 1
 energy_value1=$(cat "$energy_file")
 # Read the energy value

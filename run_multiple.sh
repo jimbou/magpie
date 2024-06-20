@@ -10,5 +10,8 @@ sudo python3.11 run_examples.py sat4j "" scenario_runtime_config1 "bash run_fixe
 sudo python3.11 run_examples.py sat4j "" scenario_runtime_config3 "bash run_fixed.sh" "ant sat" org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java ""
 sudo python3.11 run_examples.py minisat_hack "" scenario_runtime_config1 "bash run_fixed.sh" "" minisat_advanced.params minisat_advanced.params
 sudo python3.11 run_examples.py minisat_hack "" scenario_runtime_config3 "bash run_fixed.sh" "./build.sh" sources/core/Solver.cc ""
+sudo python3.11 run_examples.py weka "" scenario_runtime_config1 "bash run_fixed.sh" "" weka.params weka.params
+sudo python3.11 run_examples.py weka "" scenario_runtime_config3 "bash run_fixed.sh" "ant compile" src/main/java/weka/classifiers/trees/RandomForest.java weka.params ""
+sudo python3.11 run_examples.py zlib "" scenario_runtime_config1 "bash run_fixed.sh" "" zlib.params zlib.params
 
 sources/core/Solver.cc.xml

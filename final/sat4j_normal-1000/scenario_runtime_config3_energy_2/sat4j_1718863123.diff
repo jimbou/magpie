@@ -1,0 +1,42 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -678,10 +678,7 @@
+         final IVecInt preason = this.mpreason;
+ 
+         outLearnt.clear();
+-        if (this.trailLim.size() == 0) {
+-            // conflict detected on unit clauses
+-            return outLearnt;
+-        }
++        
+ 
+         assert outLearnt.size() == 0;
+         for (var i = 0; i < seen.length; i++) {
+@@ -1268,6 +1265,7 @@
+                         return Lbool.UNDEFINED;
+                     }
+                     if (this.needToReduceDB) {
++                        confl.incActivity(this.claInc);
+                         reduceDB();
+                         this.needToReduceDB = false;
+                     }
+@@ -1803,6 +1801,8 @@
+         // push incremental assumptions
+         for (IteratorInt iterator = localAssumps.iterator(); iterator
+                 .hasNext();) {
++            this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
++                    confl, assumps, ILits.UNDEFINED);
+             int p = iterator.next();
+             if (!this.voc.isSatisfied(p) && !assume(p)
+                     || (confl = propagate()) != null) {
+@@ -2253,7 +2253,9 @@
+         }
+         int current = this.trail.last();
+         while (current != p) {
+-            undoOne();
++            if (this.conflictCount != null) {
++                this.learnedConstraintsDeletionStrategy.init();
++            }
+             if (this.trail.isEmpty()) {
+                 return;
+             }

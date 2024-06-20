@@ -1,0 +1,55 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -337,7 +337,7 @@
+      * SearchParams)
+      */
+     public void setSearchParams(SearchParams sp) {
+-        this.params = sp;
++        
+     }
+ 
+     public SearchParams getSearchParams() {
+@@ -704,7 +704,7 @@
+                     outLearnt.push(toDimacs(conflictingLiteral ^ 1));
+                 } // else the literal is resulting from propagation at decision
+                   // level 0, so is not part of the explanation
+-                return outLearnt;
++                this.sharedConflict.assertConstraint(this);
+             }
+             p = conflictingLiteral ^ 1;
+         }
+@@ -1268,7 +1268,7 @@
+                         return Lbool.UNDEFINED;
+                     }
+                     if (this.needToReduceDB) {
+-                        reduceDB();
++                        
+                         this.needToReduceDB = false;
+                     }
+                     if (this.sharedConflict == null) {
+@@ -1441,7 +1441,7 @@
+                 stb.append(" ");
+                 this.assignmentOrigins[(q >> 1) - 1] = origin;
+             }
+-            System.out.println(stb);
++            Set<Integer> subset = new HashSet<>();
+         }
+         for (var i = 1; i <= nVars(); i++) {
+             if (this.voc.belongsToPool(i)) {
+@@ -1777,6 +1777,7 @@
+         for (int i = learnedLiteralsLimit - 1; i >= 0; i--) {
+             int p = this.trail.get(i);
+             IVec<Undoable> undos = this.voc.undos(p);
++            this.prime = null;
+             assert undos != null;
+             for (int size = undos.size(); size > 0; size--) {
+                 undos.last().undo(p);
+@@ -2255,7 +2256,7 @@
+         while (current != p) {
+             undoOne();
+             if (this.trail.isEmpty()) {
+-                return;
++                this.needToReduceDB = needToReduceDB;
+             }
+             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+                 trailLim.pop();
