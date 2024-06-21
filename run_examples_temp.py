@@ -181,17 +181,25 @@ def build_command(params, cmd):
         'level': 'level',
         'wbits': 'wbits',
         'memLevel': 'memLevel',
-        'strategy': 'strategy'
+        'strategy': 'strategy',
+        'search_steps':'-search_steps',
+        'restarts':'-restarts',
+        'repeats':'-repeats',
+        'noise':'-noise',
+        'static_noise':'-static_noise',
+        'lowmemory':'-lowmemory'
 
     }
 
     for key, value in params.items():
         if key in flag_mappings:
-            if key in [ 'P', 'I', 'K', 'M', 'V', 'N', 'U', 'B','num-decimal-places']:
+            if key in [ 'P', 'I', 'K', 'M', 'V', 'N', 'U', 'B','num-decimal-places','static_noise','lowmemory', 'search_steps', 'restarts', 'repeats', 'noise']:
 
                 if value.lower() == 'true':
                     cmd.append(flag_mappings[key])
                 elif value.lower() == 'false':
+                    pass
+                elif value.lower() == 'none':
                     pass
                 else:
                     cmd.append(flag_mappings[key] + ' ' + value)
@@ -218,7 +226,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ 'energy']
+    perf_items = [ 'perf_time','energy', 'weights']
     erroneous=[]
     execution_times = []
     run_com =name3
