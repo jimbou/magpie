@@ -14,4 +14,7 @@ sudo python3.11 run_examples.py weka "" scenario_runtime_config1 "bash run_fixed
 sudo python3.11 run_examples.py weka "" scenario_runtime_config3 "bash run_fixed.sh" "ant compile" src/main/java/weka/classifiers/trees/RandomForest.java weka.params ""
 sudo python3.11 run_examples.py zlib "" scenario_runtime_config1 "bash run_fixed.sh" "" zlib.params zlib.params
 
+sudo python3.11 run_examples.py lpg "" scenario_runtime_config1 "bash run_fixed.sh" "" lpg.params lpg.params
+sudo python3.11 run_examples.py scipy "" scenario_runtime_config1 "bash run_fixed.sh" "" scipy.params scipy.params
+
 sources/core/Solver.cc.xml

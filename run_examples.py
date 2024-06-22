@@ -187,7 +187,12 @@ def build_command(params, cmd):
         'repeats':'-repeats',
         'noise':'-noise',
         'static_noise':'-static_noise',
-        'lowmemory':'-lowmemory'
+        'lowmemory':'-lowmemory',
+        'method':'--method',
+        'jac':'--jac',
+        'tol':'--tol',
+        'disp':'--disp',
+        'maxiter':'--maxiter'
 
     }
 
@@ -203,6 +208,11 @@ def build_command(params, cmd):
                     pass
                 else:
                     cmd.append(flag_mappings[key] + ' ' + value)
+            elif key in ['method', 'jac', 'tol', 'disp', 'maxiter']:
+                if value.lower() == 'none' or value.lower() == None or value.lower() == 'false':
+                    pass
+                else:
+                    cmd.append(flag_mappings[key] + '=' + value)
             else:
                 if value.lower() == 'true':
                     cmd.append(flag_mappings[key])
