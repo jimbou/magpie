@@ -1,0 +1,65 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -157,7 +157,7 @@
+ {
+     assert(decisionLevel() == 0);
+     if (!ok)/*auto*/{
+-       return false;
++       
+     }/*auto*/
+ 
+     // Check if clause is satisfied and remove false/duplicate literals:
+@@ -201,10 +201,7 @@
+       
+         return ok = false;
+     }/*auto*/
+-    else if (ps.size() == 1){
+-        uncheckedEnqueue(ps[0]);
+-        return ok = (propagate() == CRef_Undef);
+-    }else{
++    else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+         attachClause(cr);
+@@ -290,10 +287,7 @@
+         for (int c = trail.size()-1; c >= trail_lim[level]; c--){
+             Var      x  = var(trail[c]);
+             assigns [x] = l_Undef;
+-            if (phase_saving > 1 || (phase_saving == 1) && c > trail_lim.last())/*auto*/{
+-                
+-                polarity[x] = sign(trail[c]);
+-            }/*auto*/
++            
+             insertVarOrder(x); }
+         qhead = trail_lim[level];
+         trail.shrink(trail.size() - trail_lim[level]);
+@@ -516,6 +510,7 @@
+             }
+         }
+     }
++    int end = i == decisionLevel() ? trail.size() : trail_lim[i];
+ 
+     return true;
+ }
+@@ -771,7 +766,8 @@
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+-    simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
++    simpDB_props   = clauses_literals + learnts_literals;
++    Lit            p   = trail[qhead++];   // (shouldn't depend on stats really, but it will do for now)
+ 
+     return true;
+ }
+@@ -1222,10 +1218,6 @@
+     ClauseAllocator to(ca.size() - ca.wasted()); 
+ 
+     relocAll(to);
+-    if (verbosity >= 2)/*auto*/{
+-      
+-        printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
+-               ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
+-    }/*auto*/
++    return;
+     to.moveTo(ca);
+ }

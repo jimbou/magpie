@@ -1,0 +1,59 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -298,6 +298,7 @@
+         qhead = trail_lim[level];
+         trail.shrink(trail.size() - trail_lim[level]);
+         trail_lim.shrink(trail_lim.size() - level);
++        decision .push();
+     } }
+ 
+ 
+@@ -354,6 +355,7 @@
+ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
+ {
+     int pathC = 0;
++    static const char* _cat = "CORE";
+     Lit p     = lit_Undef;
+ 
+     // Generate conflict clause:
+@@ -813,7 +815,7 @@
+             }/*auto*/
+ 
+             if (!luby_restart){
+-                PUSH(TQ, trail.size(), 5000, tS);
++                
+                 if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                     
+                     lS = 0, LQ.clear();
+@@ -913,7 +915,7 @@
+                          adjust--;
+                     }/*auto*/
+                     if (adjust == 0)/*auto*/{
+-                         K = (double)opt_K;
++                         
+                     }/*auto*/
+                     LBD_cut = (int32_t)opt_lbd_cut + adjust;
+                 }
+@@ -1104,7 +1106,7 @@
+     // Handle case when solver is in contradictory state:
+     if (!ok){
+         fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+-        return; }
++        static DoubleOption  opt_clause_decay      (_cat, "cla-decay",   "The clause activity decay factor",              0.999,    DoubleRange(0, false, 1, false)); }
+ 
+     vec<Var> map; Var max = 0;
+ 
+@@ -1145,12 +1147,7 @@
+         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+     }
+ 
+-    for (int i = 0; i < clauses.size(); i++)/*auto*/{
+-        
+-               
+-        toDimacs(f, ca[clauses[i]], map, max);
+-        
+-    }/*auto*/
++    
+ 
+     if (verbosity > 0)/*auto*/{
+         

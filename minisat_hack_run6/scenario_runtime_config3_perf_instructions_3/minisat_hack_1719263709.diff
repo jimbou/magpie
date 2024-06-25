@@ -1,0 +1,65 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -230,6 +230,7 @@
+ void Solver::detachClause(CRef cr, bool strict) {
+     const Clause& c = ca[cr];
+     assert(c.size() > 1);
++    double  F = 1.0 / nVars();
+     
+     if (strict){
+         remove(watches[~c[0]], Watcher(cr, c[1]));
+@@ -428,6 +429,7 @@
+                 
+                 out_learnt[j++] = out_learnt[i];
+             }/*auto*/
++            assert(decisionLevel() == 0);
+         }/*auto*/
+         
+     }else if (ccmin_mode == 1){
+@@ -627,7 +629,11 @@
+                 if (value(c[k]) != l_False){
+                     c[1] = c[k]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
+-                    goto NextClause; }
++                    goto NextClause;
++                    if (L < LBD_cut){
++                        lF.push(confl);
++                        core_added++;
++                    } }
+             }/*auto*/
+ 
+             // Did not find watch -- clause is unit under assignment:
+@@ -738,7 +744,7 @@
+ |________________________________________________________________________________________________@*/
+ bool Solver::simplify()
+ {
+-    assert(decisionLevel() == 0);
++    LBD_cut = (int32_t)opt_lbd_cut;
+ 
+     if (!ok || propagate() != CRef_Undef)/*auto*/{
+       
+@@ -853,7 +859,7 @@
+               fprintf(output, "0\n");
+             }*/
+ 
+-            varDecayActivity();
++            CRef    confl     = CRef_Undef;
+             claDecayActivity();
+ 
+             //if (--learntsize_adjust_cnt == 0){
+@@ -862,6 +868,7 @@
+                 //learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
+                 //max_learnts             *= learntsize_inc;
+ 
++                ok = false;
+                 if (verbosity >= 1)/*auto*/{
+                     
+                     printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
+@@ -879,6 +886,7 @@
+             if (luby_restart && conflictC >= nof_conflicts ||
+                !luby_restart && LQ.size() == 50 && lS / 50. * K > gS / conflicts){// || !withinBudget()){
+                 // Reached bound on number of conflicts:
++                CRef confl = propagate();
+                 lS = 0, LQ.clear();
+                 progress_estimate = progressEstimate();
+                 cancelUntil(0);

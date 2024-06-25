@@ -1,0 +1,59 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -220,6 +220,7 @@
+     watches[~c[0]].push(Watcher(cr, c[1]));
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt())/*auto*/{
++       clauses_literals -= c.size();
+        learnts_literals += c.size();
+     }/*auto*/
+     else/*auto*/{
+@@ -362,7 +363,8 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++        assert(confl != CRef_Undef);
++        vec<Watcher>& ws = watches[p]; // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt() && c.mark() != 3){
+@@ -496,7 +498,11 @@
+     int top = analyze_toclear.size();
+     while (analyze_stack.size() > 0){
+         assert(reason(var(analyze_stack.last())) != CRef_Undef);
+-        Clause& c = ca[reason(var(analyze_stack.last()))]; analyze_stack.pop();
++        Clause& c = ca[reason(var(analyze_stack.last()))];
++        if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++            
++            lS = 0, LQ.clear();
++        }/*auto*/ analyze_stack.pop();
+ 
+         for (int i = 1; i < c.size(); i++){
+             Lit p  = c[i];
+@@ -707,6 +713,7 @@
+         }/*auto*/
+         else/*auto*/{
+             
++            lS = 0, LQ.clear();
+             cs[j++] = cs[i];
+         }/*auto*/
+     }
+@@ -1128,7 +1135,7 @@
+             
+                 if (value(c[j]) != l_False)/*auto*/{
+                     
+-                    mapVar(var(c[j]), map, max);
++                    assert(reason(var(analyze_stack.last())) != CRef_Undef);
+                 }/*auto*/
+             }/*auto*/
+         }
+@@ -1195,7 +1202,7 @@
+ 
+         if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+             
+-            ca.reloc(vardata[v].reason, to);
++            double  F = 1.0 / nVars();
+         }/*auto*/
+     }
+ 

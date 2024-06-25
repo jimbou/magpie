@@ -1,0 +1,43 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -668,7 +668,7 @@
+     ClauseAllocator& ca;
+     reduceDB_lt(ClauseAllocator& ca_) : ca(ca_) {}
+     bool operator () (CRef x, CRef y) { 
+-        return /*ca[x].size() > 2 && (ca[y].size() == 2 ||*/ ca[x].activity() < ca[y].activity(); } 
++         } 
+ };
+ void Solver::reduceDB()
+ {
+@@ -813,11 +813,8 @@
+             }/*auto*/
+ 
+             if (!luby_restart){
+-                PUSH(TQ, trail.size(), 5000, tS);
+-                if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+-                    
+-                    lS = 0, LQ.clear();
+-                }/*auto*/
++                
++                
+             }
+ 
+             learnt_clause.clear();
+@@ -1043,9 +1040,14 @@
+     if (status == l_True){
+         // Extend & copy model:
+         model.growTo(nVars());
+-        for (int i = 0; i < nVars(); i++)/*auto*/{
+-             model[i] = value(i);
+-        }/*auto*/
++        while (status == l_Undef){
++            double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
++            status = search(rest_base * restart_first);
++            if (!withinBudget())/*auto*/{
++                 break;
++            }/*auto*/
++            curr_restarts++;
++        }
+     }else if (status == l_False && conflict.size() == 0)/*auto*/{
+       
+         ok = false;

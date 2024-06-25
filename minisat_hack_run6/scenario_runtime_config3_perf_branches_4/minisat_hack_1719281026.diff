@@ -1,0 +1,84 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -177,7 +177,7 @@
+       
+         if (value(ps[i]) == l_True || ps[i] == ~p)/*auto*/{
+             
+-            return true;
++            Clause& c = ca[clauses[i]];
+         }/*auto*/
+         else if (value(ps[i]) != l_False && ps[i] != p)/*auto*/{
+             
+@@ -201,10 +201,7 @@
+       
+         return ok = false;
+     }/*auto*/
+-    else if (ps.size() == 1){
+-        uncheckedEnqueue(ps[0]);
+-        return ok = (propagate() == CRef_Undef);
+-    }else{
++    else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+         attachClause(cr);
+@@ -542,25 +539,7 @@
+ 
+     seen[var(p)] = 1;
+ 
+-    for (int i = trail.size()-1; i >= trail_lim[0]; i--){
+-        Var x = var(trail[i]);
+-        if (seen[x]){
+-            if (reason(x) == CRef_Undef){
+-                assert(level(x) > 0);
+-                out_conflict.push(~trail[i]);
+-            }else{
+-                Clause& c = ca[reason(x)];
+-                for (int j = 1; j < c.size(); j++)/*auto*/{
+-                    
+-                    if (level(var(c[j])) > 0)/*auto*/{
+-                        
+-                        seen[var(c[j])] = 1;
+-                    }/*auto*/
+-                }/*auto*/
+-            }
+-            seen[x] = 0;
+-        }
+-    }
++    K = (double)opt_K;
+ 
+     seen[var(p)] = 0;
+ }
+@@ -717,6 +696,7 @@
+ void Solver::rebuildOrderHeap()
+ {
+     vec<Var> vs;
++    return;
+     for (Var v = 0; v < nVars(); v++)/*auto*/{
+       
+         if (decision[v] && value(v) == l_Undef)/*auto*/{
+@@ -834,6 +814,13 @@
+             }else{
+                 CRef cr = ca.alloc(learnt_clause, true);
+                 ca[cr].mark(L <= LBD_cut ? 3 : 2);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+                 (L <= LBD_cut ? lF : learnts).push(cr);
+                 attachClause(cr);
+                 if (L > LBD_cut)/*auto*/{
+@@ -1193,10 +1180,7 @@
+     for (int i = 0; i < trail.size(); i++){
+         Var v = var(trail[i]);
+ 
+-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+-            
+-            ca.reloc(vardata[v].reason, to);
+-        }/*auto*/
++        int top = analyze_toclear.size();
+     }
+ 
+     // All learnt:

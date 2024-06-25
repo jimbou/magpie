@@ -1,0 +1,2 @@
+1) at the beginning compare how all the metrics correlate to execution time just by rerunning them
+2) compare how close the achieved fitness and the same value after rerruning 20 times was after the completion for different retries numbers
