@@ -94,8 +94,11 @@ REGEXES=(
 temp_file=$(mktemp)
 
 # JSON file to store the medians
-json_file="medians.json"
+json_file="medians_all.json"
 echo "{" > "$json_file"
+
+json_file2="medians.json"
+echo "{" > "$json_file2"
 
 # Run each command 20 times and capture the output
 for i in "${!PREFIXES[@]}"; do
@@ -103,19 +106,21 @@ for i in "${!PREFIXES[@]}"; do
     regex="${REGEXES[i]}"
     metric_name="${METRICS[i]}"
     results=()
-    for j in {1..3}; do
+    for j in {1..21}; do
 
         #if prefix == time
         if [ "$prefix" == "time" ]; then
            /usr/bin/time -f "%e" $COMMAND >"$temp_file" 2>&1
             #make the metric the contents of the tmp file
             metric=$(cat "$temp_file")
+            echo $metric
             
         else
             $prefix $COMMAND >"$temp_file" 2>&1
             
             metric=$(grep -oP "$regex" "$temp_file")
-            
+            metric=$(echo $metric | tr -d ' ' | awk '{printf "%.8f", $1}')
+            metric=$(echo $metric | tr , .)
 
         fi
         # Run the command, redirect both stdout and stderr to the temp file
@@ -126,8 +131,7 @@ for i in "${!PREFIXES[@]}"; do
         #transform commas to dots
         # echo $metric
         #remove and spaces and make them float  with 8 decimal points
-        metric=$(echo $metric | tr -d ' ' | awk '{printf "%.8f", $1}')
-        metric=$(echo $metric | tr , .)
+        
         # metric=${metric//,/} # Remove commas if present
         results+=($metric)
     done
@@ -135,16 +139,20 @@ for i in "${!PREFIXES[@]}"; do
     # Calculate median
     IFS=$'\n' sorted=($(sort -n <<<"${results[*]}"))
     unset IFS
-    median=${sorted[1]} # Fetching the 11th item in a sorted 20 item list
+    median=${sorted[10]} # Fetching the 11th item in a sorted 20 item list
 
+    results_string=$(IFS=,; echo "${results[*]}")
+    echo "\"$metric_name\": [$results_string]," >> "$json_file"
     # Save to JSON
-    echo "\"$metric_name\": $median," >> "$json_file"
+    echo "\"$metric_name\": $median," >> "$json_file2"
 done
 
 # Properly close JSON file
 sed -i '$ s/,$//' "$json_file" # Remove trailing comma
 echo "}" >> "$json_file"
 
+sed -i '$ s/,$//' "$json_file2" # Remove trailing comma
+echo "}" >> "$json_file2"
 # Clean up temporary file
 rm "$temp_file"
 rm perf.data
