@@ -11,12 +11,12 @@
 
 # Assign arguments to variables
 command="$*"
-
-taskset -c 0 timeout 40s perf record  -g -F 4000  -e cycles:u -- $command
+echo $command
+taskset -c 0 timeout 20s perf record  -g -F 2000  -e cycles:u -- $command
 
 # Check the exit status of the timeout command
 if [ $? -eq 124 ]; then
-  echo "Program did not finish in 40 seconds and was terminated."
+  echo "Program did not finish in 20 seconds and was terminated."
   #python3 read_total.py error
   exit 1
 else
