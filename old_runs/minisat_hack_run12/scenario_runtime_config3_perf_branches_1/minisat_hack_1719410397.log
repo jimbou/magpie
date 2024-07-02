@@ -1,0 +1,242 @@
+2024-06-26 14:59:58,046	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 313608358785961
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = True
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 30
+default_lengthout = 1e6
+diff_method = unified
+trust_local_filesystem = True
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/minisat_hack
+target_files = sources/core/Solver.cc.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = 
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = ./build.sh
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = ./build.sh
+compile_timeout = 
+compile_lengthout = 
+test_cmd = ./test.sh
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat -e branches bash run_fixed.sh
+run_timeout = 
+run_lengthout = 
+retries = 1
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_branches
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = FirstImprovement
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 1000
+max_time = 70
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-06-26 14:59:58,047	[DEBUG]	
+2024-06-26 14:59:58,047	[INFO]	==== SEARCH: FirstImprovement ====
+2024-06-26 14:59:58,047	[INFO]	~~~~ WARMUP ~~~~
+2024-06-26 15:00:12,829	[DEBUG]	EXEC>  SUCCESS 2638880691.0
+2024-06-26 15:00:12,829	[INFO]	WARM    SUCCESS               2638880691.000000 (--) [0 edit(s)]  
+2024-06-26 15:00:22,664	[DEBUG]	EXEC>  SUCCESS 2638836372.0
+2024-06-26 15:00:22,664	[INFO]	WARM    SUCCESS               2638836372.000000 (--) [0 edit(s)]  
+2024-06-26 15:00:32,511	[DEBUG]	EXEC>  SUCCESS 2638875376.0
+2024-06-26 15:00:32,511	[INFO]	WARM    SUCCESS               2638875376.000000 (--) [0 edit(s)]  
+2024-06-26 15:00:32,511	[INFO]	REF     SUCCESS               2638875376.000000 (--) [0 edit(s)]  
+2024-06-26 15:00:32,511	[INFO]	
+2024-06-26 15:00:32,511	[INFO]	~~~~ START ~~~~
+2024-06-26 15:00:42,403	[DEBUG]	EXEC>  SUCCESS 2638791550.0
+2024-06-26 15:00:42,403	[INFO]	1       SUCCESS              *2638791550.000000 (100.00%) [1 edit(s)]  
+2024-06-26 15:00:42,403	[DEBUG]	patch(1)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387))"
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -1005,9 +1005,7 @@
+ {
+     model.clear();
+     conflict.clear();
+-    if (!ok)/*auto*/{
+-       return l_False;
+-    }/*auto*/
++    
+ 
+     solves++;
+ 
+
+2024-06-26 15:00:52,193	[DEBUG]	EXEC>  SUCCESS 2638205154.0
+2024-06-26 15:00:52,193	[INFO]	2       SUCCESS              *2638205154.000000 (99.97%) [2 edit(s)]  
+2024-06-26 15:00:52,193	[DEBUG]	patch(2)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364))"
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -590,7 +590,7 @@
+ {
+     CRef    confl     = CRef_Undef;
+     int     num_props = 0;
+-    watches.cleanAll();
++    Lit next = lit_Undef;
+ 
+     while (qhead < trail.size()){
+         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
+@@ -1005,9 +1005,7 @@
+ {
+     model.clear();
+     conflict.clear();
+-    if (!ok)/*auto*/{
+-       return l_False;
+-    }/*auto*/
++    
+ 
+     solves++;
+ 
+
+2024-06-26 15:00:55,211	[INFO]	3       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:00:55,211	[DEBUG]	patch(3)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 323), ('sources/core/Solver.cc.xml', 'stmt', 169))"
+2024-06-26 15:00:58,217	[INFO]	4       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:00:58,217	[DEBUG]	patch(4)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 442))"
+2024-06-26 15:01:01,217	[INFO]	5       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:01:01,217	[DEBUG]	patch(5)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtInsertion(('sources/core/Solver.cc.xml', '_inter_block', 465), ('sources/core/Solver.cc.xml', 'stmt', 80))"
+2024-06-26 15:01:01,222	[INFO]	6       SUCCESS               2638791550.000000 (100.00%) [1 edit(s)] [cached] 
+2024-06-26 15:01:01,222	[DEBUG]	patch(6)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387))"
+2024-06-26 15:01:04,238	[INFO]	7       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:01:04,238	[DEBUG]	patch(7)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtInsertion(('sources/core/Solver.cc.xml', '_inter_block', 35), ('sources/core/Solver.cc.xml', 'stmt', 246))"
+2024-06-26 15:01:14,008	[DEBUG]	EXEC>  SUCCESS 2639225787.0
+2024-06-26 15:01:14,008	[INFO]	8       SUCCESS               2639225787.000000 (100.01%) [1 edit(s)]  
+2024-06-26 15:01:14,008	[DEBUG]	patch(8)="SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364))"
+2024-06-26 15:01:17,005	[INFO]	9       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:01:17,006	[DEBUG]	patch(9)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 41))"
+2024-06-26 15:01:26,838	[DEBUG]	EXEC>  SUCCESS 2640540891.0
+2024-06-26 15:01:26,838	[INFO]	10      SUCCESS               2640540891.000000 (100.06%) [3 edit(s)]  
+2024-06-26 15:01:26,838	[DEBUG]	patch(10)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 190), ('sources/core/Solver.cc.xml', 'stmt', 31))"
+2024-06-26 15:01:31,512	[INFO]	11      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-06-26 15:01:31,512	[DEBUG]	patch(11)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 369))"
+2024-06-26 15:01:34,538	[INFO]	12      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:01:34,538	[DEBUG]	patch(12)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtInsertion(('sources/core/Solver.cc.xml', '_inter_block', 184), ('sources/core/Solver.cc.xml', 'stmt', 318))"
+2024-06-26 15:01:37,539	[INFO]	13      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:01:37,539	[DEBUG]	patch(13)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 375))"
+2024-06-26 15:01:47,452	[DEBUG]	EXEC>  SUCCESS 2638585369.0
+2024-06-26 15:01:47,452	[INFO]	14      SUCCESS               2638585369.000000 (99.99%) [3 edit(s)]  
+2024-06-26 15:01:47,452	[DEBUG]	patch(14)="SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364)) | SrcmlStmtInsertion(('sources/core/Solver.cc.xml', '_inter_block', 581), ('sources/core/Solver.cc.xml', 'stmt', 10))"
+2024-06-26 15:01:47,459	[INFO]	~~~~ END ~~~~
+2024-06-26 15:01:47,459	[INFO]	
+2024-06-26 15:01:47,459	[INFO]	==== REPORT ====
+2024-06-26 15:01:47,459	[INFO]	Termination: time budget
+2024-06-26 15:01:47,459	[INFO]	Retries: 1
+2024-06-26 15:01:47,459	[INFO]	Log file: /home/dbouras/magpie/_magpie_logs/minisat_hack_1719410397.log
+2024-06-26 15:01:47,459	[INFO]	Patch file: _magpie_logs/minisat_hack_1719410397.patch
+2024-06-26 15:01:47,460	[INFO]	Diff file: _magpie_logs/minisat_hack_1719410397.diff
+2024-06-26 15:01:47,460	[INFO]	Reference fitness: 2638875376.000000
+2024-06-26 15:01:47,460	[INFO]	Best fitness: 2638205154.000000
+2024-06-26 15:01:47,460	[INFO]	
+2024-06-26 15:01:47,460	[INFO]	==== BEST PATCH ====
+SrcmlStmtDeletion(('sources/core/Solver.cc.xml', 'stmt', 387)) | SrcmlStmtReplacement(('sources/core/Solver.cc.xml', 'stmt', 216), ('sources/core/Solver.cc.xml', 'stmt', 364))
+2024-06-26 15:01:47,461	[INFO]	
+2024-06-26 15:01:47,461	[INFO]	==== DIFF ====
+[1m--- before: sources/core/Solver.cc[0m
+[1m+++ after: sources/core/Solver.cc[0m
+[36m@@ -590,7 +590,7 @@[0m
+ {
+     CRef    confl     = CRef_Undef;
+     int     num_props = 0;
+[31m-    watches.cleanAll();[0m
+[32m+    Lit next = lit_Undef;[0m
+ 
+     while (qhead < trail.size()){
+         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
+[36m@@ -1005,9 +1005,7 @@[0m
+ {
+     model.clear();
+     conflict.clear();
+[31m-    if (!ok)/*auto*/{[0m
+[31m-       return l_False;[0m
+[31m-    }/*auto*/[0m
+[32m+    [0m
+ 
+     solves++;
+ 
+

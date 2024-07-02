@@ -8,5 +8,7 @@ cd $SHDIR
 cd sources/simp
 make clean
 
-make rs
-cp -f minisat_HACK_999ED_CSSC_static ../..
+make rs V=1
+chmod +x minisat_HACK_999ED_CSSC_static
+cp -f minisat_HACK_999ED_CSSC_static ../../
+

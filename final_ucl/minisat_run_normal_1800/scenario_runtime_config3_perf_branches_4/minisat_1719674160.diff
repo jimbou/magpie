@@ -1,0 +1,48 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -525,6 +525,19 @@
+     CRef    confl     = CRef_Undef;
+     int     num_props = 0;
+     watches.cleanAll();
++    if (--learntsize_adjust_cnt == 0){
++        learntsize_adjust_confl *= learntsize_adjust_inc;
++        learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++        max_learnts             *= learntsize_inc;
++
++        if (verbosity >= 1)
++            /*auto*/{
++                printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
++                   (int)conflicts, 
++                   (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
++                   (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
++            }/*auto*/
++    }
+ 
+     while (qhead < trail.size()){
+         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
+@@ -584,7 +597,7 @@
+         ws.shrink(i - j);
+     }
+     propagations += num_props;
+-    simpDB_props -= num_props;
++    
+ 
+     return confl;
+ }
+@@ -639,7 +652,7 @@
+             }/*auto*/
+         else
+             /*auto*/{
+-                cs[j++] = cs[i];
++                
+             }/*auto*/
+     }
+     cs.shrink(i - j);
+@@ -991,6 +1004,7 @@
+                     }/*auto*/
+                 }/*auto*/
+         }
++               fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+         
+     }/*auto*/
+ 

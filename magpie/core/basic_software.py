@@ -297,6 +297,7 @@ class BasicSoftware(AbstractSoftware):
                 exec_result = self.exec_cmd(shlex.split(compile_cmd),
                                             timeout=timeout,
                                             lengthout=lengthout)
+                # print(exec_result.stdout.decode(magpie.settings.output_encoding))                            
                 run_result.status = exec_result.status
                 run_result.last_exec = exec_result
                 if run_result.status == 'SUCCESS':
@@ -323,7 +324,7 @@ class BasicSoftware(AbstractSoftware):
                 #                                 lengthout=lengthout,
                 #                                 retries=1)
                 
-                
+                # print(exec_result.stdout.decode(magpie.settings.output_encoding))
                 run_result.status = exec_result.status
                 run_result.last_exec = exec_result
                 if run_result.status == 'SUCCESS':
@@ -378,6 +379,8 @@ class BasicSoftware(AbstractSoftware):
                                                     timeout=timeout,
                                                     lengthout=lengthout,
                                                     retries=retries)
+                    # print(exec_result.stderr.decode(magpie.settings.output_encoding))
+                    
                     run_result.status = exec_result.status
                     run_result.last_exec = exec_result
                     if run_result.status == 'SUCCESS':
@@ -508,7 +511,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m =  re.findall(r'\s*([0-9.,]+)\s+seconds time elapsed\s*', stderr)
             if m:
-                elapsed_times = [round(float(time.strip().replace(',', '.')),8) for time in m]
+                elapsed_times = [round(float(time.strip().replace(',', '')),8) for time in m]
                 #print(f"Elapsed times: -{elapsed_times}- seconds")
                 # Calculate the average if more than one time is found
                 elapsed_time = sum(elapsed_times) / len(elapsed_times)
@@ -529,7 +532,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+cycles\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 cycles = sum(temp) / len(temp)
                 print(f"Cycles: -{cycles}- cycles")
             else:
@@ -549,7 +552,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+instructions\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 insts = sum(temp) / len(temp)
                 print(f"Perf instructions: -{insts}- instructions")
             else:
@@ -569,7 +572,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+cache-references\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 cache_refs = sum(temp) / len(temp)
                 print(f"cache-references: -{cache_refs}")
             else:
@@ -589,7 +592,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+cache-misses\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 misses = sum(temp) / len(temp)
                 print(f"Misses: -{misses}-")
             else:
@@ -609,7 +612,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+branches\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 branches = sum(temp) / len(temp)
                 print(f"Branches: -{branches}- branches")
             else:
@@ -629,7 +632,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+branch-misses\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 branch_misses = sum(temp) / len(temp)
                 print(f"branch-misses: -{branch_misses}- branch-misses")
             else:
@@ -649,7 +652,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+msec cpu-clock\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),4) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),4) for val in m]
                 clocks = sum(temp) / len(temp)
                 print(f"clocks: -{clocks}- msec")
             else:
@@ -669,7 +672,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+msec task-clock\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),4) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),4) for val in m]
                 task_clock = sum(temp) / len(temp)
                 print(f"task_clock: -{task_clock}- msec")
             else:
@@ -689,7 +692,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+faults\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 faults = sum(temp) / len(temp)
                 print(f"faults: -{faults}- ")
             else:
@@ -709,7 +712,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+major-faults\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 maj_faults = sum(temp) / len(temp)
                 print(f"major faults: -{maj_faults}-")
             else:
@@ -729,7 +732,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+minor-faults\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 min_faults = sum(temp) / len(temp)
                 print(f"minor faults: -{min_faults}-")
             else:
@@ -749,7 +752,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+cs\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 cs = sum(temp) / len(temp)
                 print(f"contex switchs: -{cs}- ")
             else:
@@ -769,7 +772,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+migrations\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 migrations = sum(temp) / len(temp)
                 print(f"migrations: -{migrations}- ")
             else:
@@ -789,7 +792,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+L1-dcache-loads\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 l1_loads = sum(temp) / len(temp)
                 print(f"l1_loads: -{l1_loads}- ")
             else:
@@ -809,7 +812,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+L1-dcache-load-misses\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 L1_misses = sum(temp) / len(temp)
                 print(f"L1_misses: -{L1_misses}-")
             else:
@@ -829,7 +832,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+dTLB-loads\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 dtlb_loads = sum(temp) / len(temp)
                 print(f"dtlb_loads: -{dtlb_loads}-")
             else:
@@ -849,7 +852,7 @@ class BasicSoftware(AbstractSoftware):
             #m = re.findall('(.*) seconds time elapsed', stderr)
             m = re.findall(r'\s*([0-9,]+)\s+dTLB-load-misses\s*', stderr)
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 dtlb_misses = sum(temp) / len(temp)
                 print(f"dtlb_misses: -{dtlb_misses}-")
             else:
@@ -873,7 +876,7 @@ class BasicSoftware(AbstractSoftware):
             m = re.findall(pattern, stderr)
             
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 # print(f"All weights: -{temp}-")
                 custom = sum(temp) / len(temp)
                 print(f"Custom weights: -{custom}-")
@@ -900,7 +903,7 @@ class BasicSoftware(AbstractSoftware):
             print(f"STDERR: {stderr}")
             
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 energy = sum(temp) / len(temp)
                 print(f"Rapl energy: -{energy}-")
             else:
@@ -926,7 +929,7 @@ class BasicSoftware(AbstractSoftware):
             print(f"STDERR: {stderr}")
             
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 energy_ram = sum(temp) / len(temp)
                 print(f"Rapl energy_ram: -{energy_ram}-")
             else:
@@ -952,7 +955,7 @@ class BasicSoftware(AbstractSoftware):
             print(f"STDERR: {stderr}")
             
             if m:
-                temp = [round(float(val.strip().replace(',', '.')),3) for val in m]
+                temp = [round(float(val.strip().replace(',', '')),3) for val in m]
                 energy_uncore = sum(temp) / len(temp)
                 print(f"Rapl energy_uncore: -{energy_uncore}-")
             else:

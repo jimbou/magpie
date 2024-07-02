@@ -25,7 +25,8 @@ LFLAGS    ?= -Wall
 COPTIMIZE ?= -O3
 
 CFLAGS    += -I$(MROOT) -D __STDC_LIMIT_MACROS -D __STDC_FORMAT_MACROS
-LFLAGS    += -lz
+LFLAGS    += -L/usr/lib -L/usr/lib64 -L/lib -L/lib64 -lz -lstdc++ -lm -lc
+
 
 .PHONY : s p d r rs clean 
 

@@ -10,7 +10,8 @@ import magpie.settings
 #python3.11 run_examples.py triangle-c scenario scenario_params run_triangle "make run_triangle" triangle.c
 data = {
     "original": {
-        "median_execution_time": 0
+        "median_execution_time": 0,
+        "search_type": ""
     },
     "items": []
 }
@@ -52,14 +53,14 @@ def extract_data_from_log(file_path):
     # Regular expression to find the number of retries
     retries_pattern = re.compile(r"Retries:\s+(\d+)")
     # Regular expression to find all occurrences of "patch(xxx)="
-    patch_numbers_pattern = re.compile(r"patch\((\d+)\)=")
+    patch_numbers_pattern = re.compile(r"patch\((\d+)(?:-(\d+))?\)=")
     #fitness if float
     best_fitness_pattern = re.compile(r"Best fitness:\s+(\d+(?:\.\d+)?)")
 
 
     ref_fitness_pattern = re.compile(r"Reference fitness:\s+(\d+(?:\.\d+)?)")
 
-    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")   
+    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+(?:-\d+)?\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")  
 
 
 
@@ -88,7 +89,17 @@ def extract_data_from_log(file_path):
                 ref_fitness = float(ref_fitness_match.group(1))
 
             # Find all patch numbers and determine the maximum
-            patch_numbers = [int(num) for num in patch_numbers_pattern.findall(file_content)]
+            patch_numbers=[]
+            num_matches = patch_numbers_pattern.findall(file_content)
+            for match in num_matches:
+                if match[1]:  # If the second group is not empty, it's a range
+                    first = int(match[0])
+                    second = int(match[1])
+                    result = first * 10 + second
+                else:  # Otherwise, it's a single number
+                    result = int(match[0])
+                patch_numbers.append(result)
+    
             if patch_numbers:
                 max_patch_number = max(patch_numbers)
             
@@ -223,7 +234,7 @@ def build_command(params, cmd):
                     cmd.append(flag_mappings[key] + '=' + value)
     return cmd
 
-def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
+def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file,search_type='local_search'):
     # perf_items = [
     #     'time', 'perf_time', 'perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
@@ -236,7 +247,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ 'perf_time','energy', 'weights']
+    perf_items = [ 'time']
     erroneous=[]
     execution_times = []
     run_com =name3
@@ -257,6 +268,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     
     median_time_orig = statistics.median(execution_times)
     data["original"]["median_execution_time"] = median_time_orig
+    data["original"]["search_type"]= search_type
     print(f'Median execution time: {median_time_orig}')
 
     # Main directory for this run
@@ -271,7 +283,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 print(f"Running {new_string} for retry {retries_num}")
                 scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
                 scenario_path=update_retries(scenario_path_base,retries_num)
-                command = f"python3.11 magpie local_search --scenario {scenario_path}"
+                command = f"python3.11 magpie {search_type} --scenario {scenario_path}"
                 
                 if item != "weights":
                     start_mag_w = time.perf_counter()
@@ -385,6 +397,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 })
                 with open(f'{main_directory}/performance_data_temp.json', 'w') as file:
                     json.dump(data, file, indent=4)
+            time.sleep(2)
         except Exception as e:
             print(f"An error occurred: {e}")
             print(f"Erroneeous in {erroneous}")
@@ -394,17 +407,17 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
-    if len(sys.argv) != 8:
-        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file>")
+    if len(sys.argv) != 9:
+        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file> <search_type>")
     else:
         main_directory = f"{sys.argv[1]}_run"
         main_directory = create_directory_with_suffix(main_directory)
         if sys.argv[2] != "":
             print("Executing with normal scenario")
-            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7] )
+            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7],sys.argv[8] )
         if sys.argv[3] != "":
             print("Executing with params scenario")
-            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7])
+            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7],sys.argv[8])
 
         with open(f'{main_directory}/performance_data.json', 'w') as file:
             json.dump(data, file, indent=4)

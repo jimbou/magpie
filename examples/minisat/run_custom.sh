@@ -12,7 +12,7 @@
 # Assign arguments to variables
 command="$*"
 
-taskset -c 0 timeout 40s perf record  -g -F 10000  -e cycles:u -- $command
+taskset -c 0 timeout 40s perf record  -g -F 300  -e cycles:u -- $command
 
 # Check the exit status of the timeout command
 if [ $? -eq 124 ]; then

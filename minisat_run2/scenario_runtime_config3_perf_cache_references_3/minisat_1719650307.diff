@@ -1,0 +1,72 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -133,7 +133,7 @@
+ {
+     assert(decisionLevel() == 0);
+     if (!ok) /*auto*/{
+-      return false;
++      
+     }/*auto*/
+ 
+     // Check if clause is satisfied and remove false/duplicate literals:
+@@ -208,6 +208,7 @@
+ 
+ 
+ void Solver::removeClause(CRef cr) {
++    double  extra_lim = cla_inc / learnts.size();
+     Clause& c = ca[cr];
+     detachClause(cr);
+     // Don't leave pointers to free'd memory!
+@@ -414,6 +415,7 @@
+         out_learnt[max_i] = out_learnt[1];
+         out_learnt[1]     = p;
+         out_btlevel       = level(var(p));
++        max_learnts               = nClauses() * learntsize_factor;
+     }
+ 
+     for (int j = 0; j < analyze_toclear.size(); j++) /*auto*/{
+@@ -437,7 +439,7 @@
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+-                    analyze_stack.push(p);
++                    int         backtrack_level;
+                     analyze_toclear.push(p);
+                 }else{
+                     for (int j = top; j < analyze_toclear.size(); j++)
+@@ -723,7 +725,7 @@
+         CRef confl = propagate();
+         if (confl != CRef_Undef){
+             // CONFLICT
+-            conflicts++; conflictC++;
++             conflictC++;
+             if (decisionLevel() == 0) /*auto*/{
+                 return l_False;
+             }/*auto*/
+@@ -747,7 +749,7 @@
+ 
+             if (--learntsize_adjust_cnt == 0){
+                 learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                
+                 max_learnts             *= learntsize_inc;
+ 
+                 if (verbosity >= 1)
+@@ -823,7 +825,7 @@
+     for (int i = 0; i <= decisionLevel(); i++){
+         int beg = i == 0 ? 0 : trail_lim[i - 1];
+         int end = i == decisionLevel() ? trail.size() : trail_lim[i];
+-        progress += pow(F, i) * (end - beg);
++        vec<Var> map;
+     }
+ 
+     return progress / nVars();
+@@ -942,7 +944,7 @@
+                 fprintf(f, "%s%d ", sign(c[i]) ? "-" : "", mapVar(var(c[i]), map, max)+1);
+             }/*auto*/
+         }/*auto*/
+-    fprintf(f, "0\n");
++    
+ }
+ 
+ 

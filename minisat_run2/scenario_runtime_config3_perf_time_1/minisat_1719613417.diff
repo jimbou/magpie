@@ -1,0 +1,66 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -131,7 +131,7 @@
+ 
+ bool Solver::addClause_(vec<Lit>& ps)
+ {
+-    assert(decisionLevel() == 0);
++    
+     if (!ok) /*auto*/{
+       return false;
+     }/*auto*/
+@@ -437,7 +437,7 @@
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+-                    analyze_stack.push(p);
++                    
+                     analyze_toclear.push(p);
+                 }else{
+                     for (int j = top; j < analyze_toclear.size(); j++)
+@@ -633,14 +633,17 @@
+     int i, j;
+     for (i = j = 0; i < cs.size(); i++){
+         Clause& c = ca[cs[i]];
+-        if (satisfied(c))
+-            /*auto*/{
+-                removeClause(cs[i]);
+-            }/*auto*/
+-        else
+-            /*auto*/{
+-                cs[j++] = cs[i];
+-            }/*auto*/
++        for (i = j = 0; i < cs.size(); i++){
++            Clause& c = ca[cs[i]];
++            if (satisfied(c))
++                /*auto*/{
++                    removeClause(cs[i]);
++                }/*auto*/
++            else
++                /*auto*/{
++                    cs[j++] = cs[i];
++                }/*auto*/
++        }
+     }
+     cs.shrink(i - j);
+ }
+@@ -748,7 +751,7 @@
+             if (--learntsize_adjust_cnt == 0){
+                 learntsize_adjust_confl *= learntsize_adjust_inc;
+                 learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
+-                max_learnts             *= learntsize_inc;
++                CRef confl = propagate();
+ 
+                 if (verbosity >= 1)
+                     /*auto*/{
+@@ -961,9 +964,7 @@
+ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
+ {
+     // Handle case when solver is in contradictory state:
+-    if (!ok){
+-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+-        return; }
++    return true;
+ 
+     vec<Var> map; Var max = 0;
+ 

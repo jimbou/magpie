@@ -1,0 +1,39 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -132,9 +132,7 @@
+ bool Solver::addClause_(vec<Lit>& ps)
+ {
+     assert(decisionLevel() == 0);
+-    if (!ok) /*auto*/{
+-      return false;
+-    }/*auto*/
++    
+ 
+     // Check if clause is satisfied and remove false/duplicate literals:
+     sort(ps);
+@@ -602,7 +600,7 @@
+     ClauseAllocator& ca;
+     reduceDB_lt(ClauseAllocator& ca_) : ca(ca_) {}
+     bool operator () (CRef x, CRef y) { 
+-        return ca[x].size() > 2 && (ca[y].size() == 2 || ca[x].activity() < ca[y].activity()); } 
++        return false; } 
+ };
+ void Solver::reduceDB()
+ {
+@@ -717,7 +715,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    static DoubleOption  opt_restart_inc       (_cat, "rinc",        "Restart interval increase factor", 2, DoubleRange(1, false, HUGE_VAL, false));
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -786,6 +784,7 @@
+                 if (value(p) == l_True){
+                     // Dummy decision level:
+                     newDecisionLevel();
++                    model.growTo(nVars());
+                 }else if (value(p) == l_False){
+                     analyzeFinal(~p, conflict);
+                     return l_False;

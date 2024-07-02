@@ -4,7 +4,7 @@
 # Function to run a Python script and check for errors
 run_python_script() {
     # echo python3 run_updated.py  $@
-    /home/jim/magpie/.venv/bin/python run_updated.py  $@
+    python3 run_updated.py  $@
     if [ $? -ne 0 ]; then
         echo "Error: Failed to execute $1" >&2
         exit 1

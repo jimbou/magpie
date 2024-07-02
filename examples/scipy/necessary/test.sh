@@ -65,7 +65,7 @@ done
 my_test() {
     FILENAME1=$1
     EXPECTED=$2
-   /home/jim/magpie/.venv/bin/python run_updated.py $FILENAME1 $ARGV  
+   python3 run_updated.py $FILENAME1 $ARGV  
     RETURN=$?
     echo "RETURN1:" $RETURN
     if [ $RETURN -ne $((EXPECTED)) ]; then

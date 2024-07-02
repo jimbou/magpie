@@ -1,0 +1,228 @@
+2024-06-26 15:42:26,112	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 1950321540834122
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = True
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 30
+default_lengthout = 1e6
+diff_method = unified
+trust_local_filesystem = True
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/sat4j
+target_files = org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = 
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = ant sat
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = ant sat
+compile_timeout = 
+compile_lengthout = 
+test_cmd = bash test.sh
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat -e branch-misses bash run_fixed.sh
+run_timeout = 
+run_lengthout = 
+retries = 1
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_branch_misses
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = FirstImprovement
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 1000
+max_time = 100
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-06-26 15:42:26,112	[DEBUG]	
+2024-06-26 15:42:26,112	[INFO]	==== SEARCH: FirstImprovement ====
+2024-06-26 15:42:26,113	[INFO]	~~~~ WARMUP ~~~~
+2024-06-26 15:42:52,473	[DEBUG]	EXEC>  SUCCESS 647291200.0
+2024-06-26 15:42:52,473	[INFO]	WARM    SUCCESS               647291200.000000 (--) [0 edit(s)]  
+2024-06-26 15:43:10,620	[DEBUG]	EXEC>  SUCCESS 654370181.0
+2024-06-26 15:43:10,620	[INFO]	WARM    SUCCESS               654370181.000000 (--) [0 edit(s)]  
+2024-06-26 15:43:28,993	[DEBUG]	EXEC>  SUCCESS 652718939.0
+2024-06-26 15:43:28,993	[INFO]	WARM    SUCCESS               652718939.000000 (--) [0 edit(s)]  
+2024-06-26 15:43:28,993	[INFO]	REF     SUCCESS               652718939.000000 (--) [0 edit(s)]  
+2024-06-26 15:43:28,993	[INFO]	
+2024-06-26 15:43:28,993	[INFO]	~~~~ START ~~~~
+2024-06-26 15:43:32,165	[INFO]	1       COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-06-26 15:43:32,165	[DEBUG]	patch(1)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 450), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 120))"
+2024-06-26 15:43:50,278	[DEBUG]	EXEC>  SUCCESS 651677580.0
+2024-06-26 15:43:50,278	[INFO]	2       SUCCESS              *651677580.000000 (99.84%) [1 edit(s)]  
+2024-06-26 15:43:50,278	[DEBUG]	patch(2)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -1294,7 +1294,7 @@
+                                         .solutionFound((this.fullmodel != null)
+                                                 ? this.fullmodel
+                                                 : this.model, this);
+-                                return Lbool.TRUE;
++                                this.trailLim.clear();
+                             } else {
+                                 confl = preventTheSameDecisionsToBeMade();
+                                 this.lastConflictMeansUnsat = false;
+
+2024-06-26 15:43:51,668	[INFO]	3       COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-06-26 15:43:51,668	[DEBUG]	patch(3)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 199), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 680))"
+2024-06-26 15:44:10,336	[DEBUG]	EXEC>  SUCCESS 663884690.0
+2024-06-26 15:44:10,336	[INFO]	4       SUCCESS               663884690.000000 (101.71%) [2 edit(s)]  
+2024-06-26 15:44:10,336	[DEBUG]	patch(4)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 553))"
+2024-06-26 15:44:10,344	[INFO]	5       SUCCESS               652718939.000000 (100.00%) [0 edit(s)] [cached] 
+2024-06-26 15:44:10,344	[DEBUG]	patch(5)=""
+2024-06-26 15:44:28,275	[DEBUG]	EXEC>  SUCCESS 650973743.0
+2024-06-26 15:44:28,275	[INFO]	6       SUCCESS              *650973743.000000 (99.73%) [2 edit(s)]  
+2024-06-26 15:44:28,275	[DEBUG]	patch(6)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488))"
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -313,6 +313,7 @@
+     }
+ 
+     public void setTimeout(int t) {
++        this.stats.incConflicts();
+         this.timeout = t * 1000L;
+         this.timeBasedTimeout = true;
+         this.undertimeout = true;
+@@ -1294,7 +1295,7 @@
+                                         .solutionFound((this.fullmodel != null)
+                                                 ? this.fullmodel
+                                                 : this.model, this);
+-                                return Lbool.TRUE;
++                                this.trailLim.clear();
+                             } else {
+                                 confl = preventTheSameDecisionsToBeMade();
+                                 this.lastConflictMeansUnsat = false;
+
+2024-06-26 15:44:28,288	[INFO]	7       SUCCESS               651677580.000000 (99.84%) [1 edit(s)] [cached] 
+2024-06-26 15:44:28,288	[DEBUG]	patch(7)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801))"
+2024-06-26 15:44:31,645	[INFO]	8       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:44:31,645	[DEBUG]	patch(8)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488)) | SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 333), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 685))"
+2024-06-26 15:44:49,750	[DEBUG]	EXEC>  SUCCESS 655889299.0
+2024-06-26 15:44:49,750	[INFO]	9       SUCCESS               655889299.000000 (100.49%) [1 edit(s)]  
+2024-06-26 15:44:49,750	[DEBUG]	patch(9)="SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488))"
+2024-06-26 15:44:52,923	[INFO]	10      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-06-26 15:44:52,923	[DEBUG]	patch(10)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 106))"
+2024-06-26 15:45:11,301	[DEBUG]	EXEC>  SUCCESS 660653874.0
+2024-06-26 15:45:11,301	[INFO]	11      SUCCESS               660653874.000000 (101.22%) [3 edit(s)]  
+2024-06-26 15:45:11,301	[DEBUG]	patch(11)="SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488)) | SrcmlStmtDeletion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 617))"
+2024-06-26 15:45:11,319	[INFO]	~~~~ END ~~~~
+2024-06-26 15:45:11,319	[INFO]	
+2024-06-26 15:45:11,319	[INFO]	==== REPORT ====
+2024-06-26 15:45:11,319	[INFO]	Termination: time budget
+2024-06-26 15:45:11,319	[INFO]	Retries: 1
+2024-06-26 15:45:11,319	[INFO]	Log file: /home/dbouras/magpie/_magpie_logs/sat4j_1719412945.log
+2024-06-26 15:45:11,319	[INFO]	Patch file: _magpie_logs/sat4j_1719412945.patch
+2024-06-26 15:45:11,319	[INFO]	Diff file: _magpie_logs/sat4j_1719412945.diff
+2024-06-26 15:45:11,319	[INFO]	Reference fitness: 652718939.000000
+2024-06-26 15:45:11,320	[INFO]	Best fitness: 650973743.000000
+2024-06-26 15:45:11,320	[INFO]	
+2024-06-26 15:45:11,321	[INFO]	==== BEST PATCH ====
+SrcmlStmtReplacement(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 480), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 801)) | SrcmlStmtInsertion(('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', '_inter_block', 255), ('org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java.xml', 'stmt', 488))
+2024-06-26 15:45:11,321	[INFO]	
+2024-06-26 15:45:11,321	[INFO]	==== DIFF ====
+[1m--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java[0m
+[1m+++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java[0m
+[36m@@ -313,6 +313,7 @@[0m
+     }
+ 
+     public void setTimeout(int t) {
+[32m+        this.stats.incConflicts();[0m
+         this.timeout = t * 1000L;
+         this.timeBasedTimeout = true;
+         this.undertimeout = true;
+[36m@@ -1294,7 +1295,7 @@[0m
+                                         .solutionFound((this.fullmodel != null)
+                                                 ? this.fullmodel
+                                                 : this.model, this);
+[31m-                                return Lbool.TRUE;[0m
+[32m+                                this.trailLim.clear();[0m
+                             } else {
+                                 confl = preventTheSameDecisionsToBeMade();
+                                 this.lastConflictMeansUnsat = false;
+

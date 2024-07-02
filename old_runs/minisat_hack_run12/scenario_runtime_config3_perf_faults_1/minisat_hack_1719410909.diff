@@ -1,0 +1,47 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -903,6 +903,35 @@
+                     }/*auto*/
+ 
+                     if (!luby_restart){
++                        if (learnts.size() > (int32_t)opt_cp_increase && cp < conflicts){
++                            cp = conflicts + (int32_t)opt_cp_increase;
++                            // Reduce the set of learnt clauses:
++                            reduceDB();
++
++                            static int adjust = 0;
++                            if (core_added < (int32_t)opt_cp_increase * (double)opt_core_tolerance){
++                                if (LBD_cut < (int32_t)opt_lbd_cut_max)/*auto*/{
++                                    
++                                    LBD_cut = (int32_t)opt_lbd_cut + ++adjust;
++                                }/*auto*/
++
++                                if (!luby_restart){
++                                    core_added = 0;
++                                    K = 1;
++                                    lS = 0, LQ.clear();
++                                    cancelUntil(0);
++                                    return l_Undef; }
++                            }else{
++                                if (adjust > 0)/*auto*/{
++                                     adjust--;
++                                }/*auto*/
++                                if (adjust == 0)/*auto*/{
++                                     K = (double)opt_K;
++                                }/*auto*/
++                                LBD_cut = (int32_t)opt_lbd_cut + adjust;
++                            }
++                            core_added = 0;
++                        }
+                         core_added = 0;
+                         K = 1;
+                         lS = 0, LQ.clear();
+@@ -1006,7 +1035,7 @@
+     model.clear();
+     conflict.clear();
+     if (!ok)/*auto*/{
+-       return l_False;
++       
+     }/*auto*/
+ 
+     solves++;

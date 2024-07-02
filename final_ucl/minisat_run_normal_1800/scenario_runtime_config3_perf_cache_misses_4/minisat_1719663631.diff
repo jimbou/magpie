@@ -1,0 +1,44 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -159,6 +159,7 @@
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+         return ok = (propagate() == CRef_Undef);
++        printf("===============================================================================\n");
+     }else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+@@ -234,6 +235,7 @@
+ //
+ void Solver::cancelUntil(int level) {
+     if (decisionLevel() > level){
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         for (int c = trail.size()-1; c >= trail_lim[level]; c--){
+             Var      x  = var(trail[c]);
+             assigns [x] = l_Undef;
+@@ -437,7 +439,7 @@
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+-                    analyze_stack.push(p);
++                    
+                     analyze_toclear.push(p);
+                 }else{
+                     for (int j = top; j < analyze_toclear.size(); j++)
+@@ -546,6 +548,7 @@
+                 /*auto*/{
+                     c[0] = c[1], c[1] = false_lit;
+                 }/*auto*/
++            simpDB_props -= num_props;
+             assert(c[1] == false_lit);
+             i++;
+ 
+@@ -723,7 +726,7 @@
+         CRef confl = propagate();
+         if (confl != CRef_Undef){
+             // CONFLICT
+-            conflicts++; conflictC++;
++            conflicts++; 
+             if (decisionLevel() == 0) /*auto*/{
+                 return l_False;
+             }/*auto*/

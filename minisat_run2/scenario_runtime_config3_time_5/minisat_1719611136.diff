@@ -1,0 +1,61 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -115,7 +115,7 @@
+ {
+     int v = nVars();
+     watches  .init(mkLit(v, false));
+-    watches  .init(mkLit(v, true ));
++    
+     assigns  .push(l_Undef);
+     vardata  .push(mkVarData(CRef_Undef, 0));
+     //activity .push(0);
+@@ -237,10 +237,7 @@
+         for (int c = trail.size()-1; c >= trail_lim[level]; c--){
+             Var      x  = var(trail[c]);
+             assigns [x] = l_Undef;
+-            if (phase_saving > 1 || (phase_saving == 1) && c > trail_lim.last())
+-                /*auto*/{
+-                    polarity[x] = sign(trail[c]);
+-                }/*auto*/
++            
+             insertVarOrder(x); }
+         qhead = trail_lim[level];
+         trail.shrink(trail.size() - trail_lim[level]);
+@@ -656,7 +653,7 @@
+                 vs.push(v);
+             }/*auto*/
+         }/*auto*/
+-    order_heap.build(vs);
++    checkGarbage();
+ }
+ 
+ 
+@@ -787,7 +784,16 @@
+                     // Dummy decision level:
+                     newDecisionLevel();
+                 }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
++                    if (value(p) == l_True){
++                        // Dummy decision level:
++                        newDecisionLevel();
++                    }else if (value(p) == l_False){
++                        analyzeFinal(~p, conflict);
++                        return l_False;
++                    }else{
++                        next = p;
++                        break;
++                    }
+                     return l_False;
+                 }else{
+                     next = p;
+@@ -865,6 +871,10 @@
+     model.clear();
+     conflict.clear();
+     if (!ok) /*auto*/{
++      if (decisionLevel() == 0 && !simplify())
++          /*auto*/{
++              return l_False;
++          }/*auto*/
+       return l_False;
+     }/*auto*/
+ 
