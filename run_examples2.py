@@ -10,7 +10,8 @@ import magpie.settings
 #python3.11 run_examples.py triangle-c scenario scenario_params run_triangle "make run_triangle" triangle.c
 data = {
     "original": {
-        "median_execution_time": 0
+        "median_execution_time": 0,
+        "search_type": ""
     },
     "items": []
 }
@@ -52,14 +53,14 @@ def extract_data_from_log(file_path):
     # Regular expression to find the number of retries
     retries_pattern = re.compile(r"Retries:\s+(\d+)")
     # Regular expression to find all occurrences of "patch(xxx)="
-    patch_numbers_pattern = re.compile(r"patch\((\d+)\)=")
+    patch_numbers_pattern = re.compile(r"patch\((\d+)(?:-(\d+))?\)=")
     #fitness if float
     best_fitness_pattern = re.compile(r"Best fitness:\s+(\d+(?:\.\d+)?)")
 
 
     ref_fitness_pattern = re.compile(r"Reference fitness:\s+(\d+(?:\.\d+)?)")
 
-    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")   
+    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+(?:-\d+)?\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")  
 
 
 
@@ -88,7 +89,17 @@ def extract_data_from_log(file_path):
                 ref_fitness = float(ref_fitness_match.group(1))
 
             # Find all patch numbers and determine the maximum
-            patch_numbers = [int(num) for num in patch_numbers_pattern.findall(file_content)]
+            patch_numbers=[]
+            num_matches = patch_numbers_pattern.findall(file_content)
+            for match in num_matches:
+                if match[1]:  # If the second group is not empty, it's a range
+                    first = int(match[0])
+                    second = int(match[1])
+                    result = first * 10 + second
+                else:  # Otherwise, it's a single number
+                    result = int(match[0])
+                patch_numbers.append(result)
+    
             if patch_numbers:
                 max_patch_number = max(patch_numbers)
             
@@ -110,6 +121,7 @@ def run_command(command, directory =None):
     """ Helper function to run a shell command and return its output. """
     
     return subprocess.run(command, shell=True, text=True, capture_output=True, cwd=directory)
+# 
     
 def create_directory_with_suffix(base_path):
     """ Create a directory with an incrementing number suffix if it already exists. """
@@ -154,21 +166,75 @@ def build_command(params, cmd):
         'simp-gc-frac': '-simp-gc-frac',
         'sub-lim': '-sub-lim',
         'cl-lim': '-cl-lim',
-        'grow': '-grow'
+        'grow': '-grow',
+        'RESTARTS': 'RESTARTS',
+        'LUBYFACTOR': 'LUBYFACTOR',
+        'FIXEDPERIOD': 'FIXEDPERIOD',
+        'PHASE': 'PHASE',
+        'CLADECAY': 'CLADECAY',
+        'INITCONFLICTBOUND': 'INITCONFLICTBOUND',
+        'VARDECAY': 'VARDECAY',
+        'CONFLICTBOUNDINCFACTOR': 'CONFLICTBOUNDINCFACTOR',
+        'SIMP': 'SIMP',
+        'CLEANING': 'CLEANING',
+        'lbd-cut': '-lbd-cut',
+        'lbd-cut-max': '-lbd-cut-max',
+        'cp-increase ': '-cp-increase',
+        'P': '-P',
+        'I': '-I',
+        'K': '-K',
+        'M': '-M',
+        'V': '-V',
+        'N': '-N',
+        'U': '-U',
+        'B': '-B',
+        'num-decimal-places': '-num-decimal-places',
+        'level': 'level',
+        'wbits': 'wbits',
+        'memLevel': 'memLevel',
+        'strategy': 'strategy',
+        'search_steps':'-search_steps',
+        'restarts':'-restarts',
+        'repeats':'-repeats',
+        'noise':'-noise',
+        'static_noise':'-static_noise',
+        'lowmemory':'-lowmemory',
+        'method':'--method',
+        'jac':'--jac',
+        'tol':'--tol',
+        'disp':'--disp',
+        'maxiter':'--maxiter'
+
     }
 
     for key, value in params.items():
         if key in flag_mappings:
-            if value.lower() == 'true':
-                cmd.append(flag_mappings[key])
-            elif value.lower() == 'false':
-                if "no-" not in flag_mappings[key]:
-                    cmd.append('-no-' + flag_mappings[key][1:])
+            if key in [ 'P', 'I', 'K', 'M', 'V', 'N', 'U', 'B','num-decimal-places','static_noise','lowmemory', 'search_steps', 'restarts', 'repeats', 'noise']:
+
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    pass
+                elif value.lower() == 'none':
+                    pass
+                else:
+                    cmd.append(flag_mappings[key] + ' ' + value)
+            elif key in ['method', 'jac', 'tol', 'disp', 'maxiter']:
+                if value.lower() == 'none' or value.lower() == None or value.lower() == 'false':
+                    pass
+                else:
+                    cmd.append(flag_mappings[key] + '=' + value)
             else:
-                cmd.append(flag_mappings[key] + '=' + value)
+                if value.lower() == 'true':
+                    cmd.append(flag_mappings[key])
+                elif value.lower() == 'false':
+                    if "no-" not in flag_mappings[key]:
+                        cmd.append('-no-' + flag_mappings[key][1:])
+                else:
+                    cmd.append(flag_mappings[key] + '=' + value)
     return cmd
 
-def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
+def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file,search_type='local_search'):
     # perf_items = [
     #     'time', 'perf_time', 'perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
@@ -178,28 +244,34 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     #     "perf_dTLB_load_misses", "weights", "energy"
     # ]
     # "energy_ram", "energy_uncore"
-    perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
-        "perf_cache_references", "perf_cache_misses", "perf_branches",
-        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = ["time", "perf_time", "weights", "energy"]
+    perf_items = [ "weights", "energy", "perf_L1_dcache_loads"]
+    # perf_items = [ 'time','perf_time','perf_instructions', 'perf_cycles',
+    #     "perf_cache_references", "perf_cache_misses", "perf_branches",
+    #     "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
     erroneous=[]
     execution_times = []
     run_com =name3
     if params_file != "":
         params = load_parameters(f'examples/{name1}/necessary/{params_file}')
         run_com = build_command(params, name3)
+        run_com= " ".join(run_com)
         print(run_com)
 
     result = run_command(compile_command, f"examples/{name1}/necessary")
-    for _ in range(1):
-        start = time.time()
+    for _ in range(20):
+        start = time.perf_counter()
         result = run_command(run_com, f'examples/{name1}/necessary')
-        end = time.time()
+        end = time.perf_counter()
         duration = end - start  
         execution_times.append(float(duration))
+        #if the command returns error then add that to the erroneous list
+        
+
+
     
     median_time_orig = statistics.median(execution_times)
     data["original"]["median_execution_time"] = median_time_orig
+    data["original"]["search_type"]= search_type
     print(f'Median execution time: {median_time_orig}')
 
     # Main directory for this run
@@ -208,14 +280,14 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     for item in perf_items:
         #get time before execution
         try:
-            for retries_num  in range(1,3):
+            for retries_num  in range(1,6):
 
                 new_string = f"{scenario }_{item}.txt"
                 print(f"Running {new_string} for retry {retries_num}")
                 scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
                 scenario_path=update_retries(scenario_path_base,retries_num)
-                command = f"python3.11 magpie local_search --scenario {scenario_path}"
-                duration_magpie = 0
+                command = f"python3.11 magpie {search_type} --scenario {scenario_path}"
+                
                 if item != "weights":
                     start_mag_w = time.perf_counter()
                     result1 = run_command(command)
@@ -239,7 +311,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 log_path = None
                 patch_path = None
                 diff_path = None
-                # print(result.stderr)
                 for line in result1.splitlines():
                     if "Log file:" in line:
                         log_path = line.split()[-1]
@@ -253,7 +324,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     print (result1)
                     erroneous.append(item)
                     continue
-
                 # Subdirectory for the current item
                 item_directory = os.path.join(main_directory, scenario+"_"+item)
                 item_directory = item_directory +"_"+str(retries_num)
@@ -269,7 +339,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 with open(patch_path, 'r') as file:
                     patch_contents = file.read()
                 diff_name = os.path.basename(diff_path)
-
                 retries, max_patch, best_fitness, ref_fitness, fitness_values = extract_data_from_log(log_path)
                 if retries is not None and max_patch is not None:
                     print("Number of Retries:", retries)
@@ -281,24 +350,31 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
 
                 
                 patch_command= f"patch {improved_file} ../{diff_name}"
+                cp_command = f"cp {improved_file} ../"
                 result = run_command(patch_command, f"{item_directory}/necessary")
+                result = run_command(cp_command, f"{item_directory}/necessary")
                 #print(result.stderr)
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
+                run_com2 =name3
                 if params_file != "":
                     params = load_parameters(f'{item_directory}/necessary/{params_file}')
                     run_com2 = build_command(params, name3)
+                    run_com2= " ".join(run_com2)
                     print(run_com2)
                 execution_times = []
-                for _ in range(1):
-                    start = time.time()
+                for _ in range(20):
+                    start = time.perf_counter()
                     result = run_command(run_com2, f"{item_directory}/necessary")
-                    end = time.time()
+                    end = time.perf_counter()
                     print(result.stderr)
                     duration = end - start  
                     execution_times.append(float(duration))
+                    if result.returncode != 0:
+                        erroneous.append(f"{item}_{retries}_execution")
                 
-            
+                #remove the final_destination directory
+                shutil.rmtree(final_destination)
                 median_time = statistics.median(execution_times)
                 print(f'Median execution time: {median_time}')
 
@@ -321,6 +397,10 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 "new_highs": new_highs,
                 "new_highs_ratio": new_highs / len(fitness_values) if len(fitness_values) > 0 else "N/A"
                 })
+                with open(f'{main_directory}/performance_data_temp.json', 'w') as file:
+                    json.dump(data, file, indent=4)
+            #sleep for 60 seconds
+                time.sleep(60)
         except Exception as e:
             print(f"An error occurred: {e}")
             print(f"Erroneeous in {erroneous}")
@@ -330,32 +410,17 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
-    if len(sys.argv) != 8:
-        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file>")
+    if len(sys.argv) != 9:
+        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file> <search_type>")
     else:
-        
-      
-        name1 =sys.argv[1]
-        params_file = sys.argv[7]
-        name3= sys.argv[4]
-        
-        
+        main_directory = f"{sys.argv[1]}_run"
+        main_directory = create_directory_with_suffix(main_directory)
+        if sys.argv[2] != "":
+            print("Executing with normal scenario")
+            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7],sys.argv[8] )
+        if sys.argv[3] != "":
+            print("Executing with params scenario")
+            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7],sys.argv[8])
 
-        run_com = ['bash run_fixed.sh', '-no-luby', '-gc-frac=0.2', '-rinc=2.0', '-var-decay=0.95', '-cla-decay=0.999', '-rnd-freq=0.0', '-rnd-seed=91648253', '-phase-saving=2', '-ccmin-mode=2', '-rfirst=100', '-pre', '-verb=1', '-elim', '-simp-gc-frac=0.5', '-sub-lim=1000', '-cl-lim=20', '-grow=0']
-        print(run_com)
-        start = time.time()
-        result = run_command(run_com, f'examples/{name1}/necessary')
-        end = time.time()
-        duration = end - start  
-        print(f"Duration: {duration}")
-
-        run_com = ['bash run_fixed.sh', '-no-luby', '-no-rnd-init', '-gc-frac=0.2', '-rinc=2.0', '-var-decay=0.95', '-cla-decay=0.999', '-rnd-freq=0.0', '-rnd-seed=91648253', '-phase-saving=2', '-ccmin-mode=2', '-rfirst=100', '-pre', '-verb=1', '-no-rcheck', '-no-asymm', '-elim', '-simp-gc-frac=0.5', '-sub-lim=1000', '-cl-lim=20', '-grow=0']
-        #concat the items of the list with spaces between
-        run_com = ' '.join(run_com)
-
-        print(run_com)
-        start = time.time()
-        result = run_command(run_com, f'examples/{name1}/necessary')
-        end = time.time()
-        duration = end - start  
-        print(f"Duration: {duration}")
+        with open(f'{main_directory}/performance_data.json', 'w') as file:
+            json.dump(data, file, indent=4)
