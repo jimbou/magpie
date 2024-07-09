@@ -1,9 +1,10 @@
 import os
 import shutil
 import statistics
-import yaml
+
 import time
-mport json
+import json
+import subprocess
 
 def update_performance_data(results):
     # Read the existing JSON data
@@ -15,11 +16,11 @@ def update_performance_data(results):
         name1 = item.get('item_name')
         name2 = item.get('number_of_retries')
         # Check if this combination exists in the results
-        if (name1, name2) in results:
-            item['median_execution_time'] = results[(name1, name2)]
+        if f'{name1}_{name2}' in results:
+            item['median_execution_time'] = results[f'{name1}_{name2}']
         
         else:
-            print(f'The {name1}, {name2} does not exist')
+            print(f'The {name1}_{name2} does not exist')
 
     # Write the updated JSON data to a new file
     with open('performance_data_updated.json', 'w') as file:
@@ -31,15 +32,16 @@ def run_command(command, directory=None):
 
 def main():
     base_path = os.getcwd()
-    source_folder = "../../examples/minisat/necessary"
+    source_folder = "../examples/minisat/necessary"
 
     results = {}
 
     # Traverse subdirectories in the current directory
     for folder in os.listdir(base_path):
-        if os.path.isdir(folder) and folder.startswith("scenario_runtime_config1_"):
-            name = folder.replace("scenario_runtime_config1_", "")
+        if os.path.isdir(folder) and folder.startswith("scenario_runtime_config3_"):
+            name = folder.replace("scenario_runtime_config3_", "")
             name1, name2 = name.rsplit('_', 1)
+            print(name1, name2)
             subfolder_path = os.path.join(base_path, folder)
 
             # Copy the necessary folder into the current subfolder
@@ -60,11 +62,11 @@ def main():
                 start_time = time.perf_counter()
                 run_command("bash run_fixed.sh")
                 end_time = time.perf_counter()
-                duration = (end_time - start_time) * 1e9  # convert seconds to nanoseconds
+                duration = (end_time - start_time)  # convert seconds to nanoseconds
                 durations.append(duration)
 
             median_duration = statistics.median(durations)
-            results[(name1, name2)] = median_duration
+            results[f'{name1}_{name2}'] = median_duration
 
             # Remove the necessary folder
             os.chdir(subfolder_path)  # Move back to the subdirectory
@@ -74,12 +76,12 @@ def main():
             os.chdir(base_path)
 
     # Store results in a YAML file
-    with open('results.yml', 'w') as yaml_file:
-        yaml.dump(results, yaml_file, default_flow_style=False)
+    with open('results.json', 'w') as json_file:
+        json.dump(results, json_file, indent=4)
 
     # Print results
     for key, value in results.items():
-        print(f"{key}: Median Duration = {value} nanoseconds")
+        print(f"{key}: Median Duration = {value} seconds")
     
     update_performance_data(results)
 
