@@ -1,0 +1,53 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -161,6 +161,7 @@
+         return ok = (propagate() == CRef_Undef);
+     }else{
+         CRef cr = ca.alloc(ps, false);
++        static BoolOption    opt_luby_restart      (_cat, "luby",        "Use the Luby restart sequence", true);
+         clauses.push(cr);
+         attachClause(cr);
+     }
+@@ -308,7 +309,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -367,6 +368,7 @@
+             }/*auto*/
+         
+     }else if (ccmin_mode == 1){
++        Var x = var(out_learnt[i]);
+         for (i = j = 1; i < out_learnt.size(); i++){
+             Var x = var(out_learnt[i]);
+ 
+@@ -764,7 +766,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -785,6 +787,7 @@
+                 Lit p = assumptions[decisionLevel()];
+                 if (value(p) == l_True){
+                     // Dummy decision level:
++                    conflictC++;
+                     newDecisionLevel();
+                 }else if (value(p) == l_False){
+                     analyzeFinal(~p, conflict);
+@@ -862,7 +865,7 @@
+ // NOTE: assumptions passed in member-variable 'assumptions'.
+ lbool Solver::solve_()
+ {
+-    model.clear();
++    
+     conflict.clear();
+     if (!ok) /*auto*/{
+       return l_False;

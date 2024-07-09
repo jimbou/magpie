@@ -1,0 +1,71 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -187,7 +187,7 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -436,7 +436,7 @@
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+-                    seen[var(p)] = 1;
++                    
+                     analyze_stack.push(p);
+                     analyze_toclear.push(p);
+                 }else{
+@@ -466,7 +466,7 @@
+ |________________________________________________________________________________________________@*/
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+-    out_conflict.clear();
++    
+     out_conflict.push(p);
+ 
+     if (decisionLevel() == 0)
+@@ -536,7 +536,8 @@
+             // Try to avoid inspecting the clause:
+             Lit blocker = i->blocker;
+             if (value(blocker) == l_True){
+-                *j++ = *i++; continue; }
++                *j++ = *i++;
++                static IntOption     opt_phase_saving      (_cat, "phase-saving", "Controls the level of phase saving (0=none, 1=limited, 2=full)", 2, IntRange(0, 2)); continue; }
+ 
+             // Make sure the false literal is data[1]:
+             CRef     cr        = i->cref;
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -862,7 +863,7 @@
+ // NOTE: assumptions passed in member-variable 'assumptions'.
+ lbool Solver::solve_()
+ {
+-    model.clear();
++    
+     conflict.clear();
+     if (!ok) /*auto*/{
+       return l_False;
+@@ -875,12 +876,7 @@
+     learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
+     lbool   status            = l_Undef;
+ 
+-    if (verbosity >= 1){
+-        printf("============================[ Search Statistics ]==============================\n");
+-        printf("| Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
+-        printf("|           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+-        printf("===============================================================================\n");
+-    }
++    cancelUntil(0);
+ 
+     // Search:
+     int curr_restarts = 0;

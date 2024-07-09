@@ -1,0 +1,121 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -175,7 +175,7 @@
+     watches[~c[0]].push(Watcher(cr, c[1]));
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt()) /*auto*/{
+-      learnts_literals += c.size();
++      
+     }/*auto*/
+     else            /*auto*/{
+       clauses_literals += c.size();
+@@ -187,7 +187,8 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        Lit p     = lit_Undef;
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -479,19 +480,7 @@
+     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
+         Var x = var(trail[i]);
+         if (seen[x]){
+-            if (reason(x) == CRef_Undef){
+-                assert(level(x) > 0);
+-                out_conflict.push(~trail[i]);
+-            }else{
+-                Clause& c = ca[reason(x)];
+-                for (int j = 1; j < c.size(); j++)
+-                    /*auto*/{
+-                        if (level(var(c[j])) > 0)
+-                        /*auto*/{
+-                            seen[var(c[j])] = 1;
+-                        }/*auto*/
+-                    }/*auto*/
+-            }
++            
+             seen[x] = 0;
+         }
+     }
+@@ -631,17 +620,7 @@
+ void Solver::removeSatisfied(vec<CRef>& cs)
+ {
+     int i, j;
+-    for (i = j = 0; i < cs.size(); i++){
+-        Clause& c = ca[cs[i]];
+-        if (satisfied(c))
+-            /*auto*/{
+-                removeClause(cs[i]);
+-            }/*auto*/
+-        else
+-            /*auto*/{
+-                cs[j++] = cs[i];
+-            }/*auto*/
+-    }
++    
+     cs.shrink(i - j);
+ }
+ 
+@@ -750,13 +729,7 @@
+                 learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
+                 max_learnts             *= learntsize_inc;
+ 
+-                if (verbosity >= 1)
+-                    /*auto*/{
+-                        printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
+-                           (int)conflicts, 
+-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+-                           (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
+-                    }/*auto*/
++                
+             }
+ 
+         }else{
+@@ -764,7 +737,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,21 +756,12 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -905,10 +869,7 @@
+         for (int i = 0; i < nVars(); i++) /*auto*/{
+             model[i] = value(i);
+         }/*auto*/
+-    }else if (status == l_False && conflict.size() == 0)
+-        /*auto*/{
+-            ok = false;
+-        }/*auto*/
++    }else 
+ 
+     cancelUntil(0);
+     return status;
