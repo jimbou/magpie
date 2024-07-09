@@ -1,0 +1,57 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -161,6 +161,7 @@
+         return ok = (propagate() == CRef_Undef);
+     }else{
+         CRef cr = ca.alloc(ps, false);
++        static BoolOption    opt_luby_restart      (_cat, "luby",        "Use the Luby restart sequence", true);
+         clauses.push(cr);
+         attachClause(cr);
+     }
+@@ -467,7 +468,7 @@
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+     out_conflict.clear();
+-    out_conflict.push(p);
++    printf("===============================================================================\n");
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+@@ -674,7 +675,10 @@
+ 
+     if (!ok || propagate() != CRef_Undef)
+         /*auto*/{
+-            return ok = false;
++            if (decisionLevel() == 0)
++                /*auto*/{
++                    return;
++                }/*auto*/
+         }/*auto*/
+ 
+     if (nAssigns() == simpDB_assigns || (simpDB_props > 0))
+@@ -764,14 +768,11 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+@@ -1014,7 +1015,7 @@
+     if (verbosity > 0)
+         /*auto*/{
+         
+-               printf("Wrote %d clauses with %d variables.\n", cnt, max);
++               
+         
+     }/*auto*/
+ }

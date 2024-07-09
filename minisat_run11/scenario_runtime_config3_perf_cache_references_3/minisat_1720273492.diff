@@ -1,0 +1,91 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -132,9 +132,7 @@
+ bool Solver::addClause_(vec<Lit>& ps)
+ {
+     assert(decisionLevel() == 0);
+-    if (!ok) /*auto*/{
+-      return false;
+-    }/*auto*/
++    
+ 
+     // Check if clause is satisfied and remove false/duplicate literals:
+     sort(ps);
+@@ -155,6 +153,7 @@
+     if (ps.size() == 0)
+         /*auto*/{
+             return ok = false;
++            analyze_toclear.push(p);
+         }/*auto*/
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+@@ -747,7 +746,7 @@
+ 
+             if (--learntsize_adjust_cnt == 0){
+                 learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                
+                 max_learnts             *= learntsize_inc;
+ 
+                 if (verbosity >= 1)
+@@ -764,7 +763,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -790,7 +789,7 @@
+                     analyzeFinal(~p, conflict);
+                     return l_False;
+                 }else{
+-                    next = p;
++                    varDecayActivity();
+                     break;
+                 }
+             }
+@@ -875,12 +874,7 @@
+     learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
+     lbool   status            = l_Undef;
+ 
+-    if (verbosity >= 1){
+-        printf("============================[ Search Statistics ]==============================\n");
+-        printf("| Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
+-        printf("|           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+-        printf("===============================================================================\n");
+-    }
++    cancelUntil(0);
+ 
+     // Search:
+     int curr_restarts = 0;
+@@ -888,7 +882,19 @@
+         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : pow(restart_inc, curr_restarts);
+         status = search(rest_base * restart_first);
+         if (!withinBudget()) /*auto*/{
+-            break;
++            if (--learntsize_adjust_cnt == 0){
++                learntsize_adjust_confl *= learntsize_adjust_inc;
++                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                max_learnts             *= learntsize_inc;
++
++                if (verbosity >= 1)
++                    /*auto*/{
++                        printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
++                           (int)conflicts, 
++                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
++                           (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
++                    }/*auto*/
++            }
+         }/*auto*/
+         curr_restarts++;
+     }
+@@ -1037,6 +1043,7 @@
+             vec<Watcher>& ws = watches[p];
+             for (int j = 0; j < ws.size(); j++)
+                 /*auto*/{
++                    static DoubleOption  opt_clause_decay      (_cat, "cla-decay",   "The clause activity decay factor",              0.999,    DoubleRange(0, false, 1, false));
+                     ca.reloc(ws[j].cref, to);
+                 }/*auto*/
+         }

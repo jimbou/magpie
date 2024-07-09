@@ -1,0 +1,37 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -115,7 +115,7 @@
+ {
+     int v = nVars();
+     watches  .init(mkLit(v, false));
+-    watches  .init(mkLit(v, true ));
++    static DoubleOption  opt_garbage_frac      (_cat, "gc-frac",     "The fraction of wasted memory allowed before a garbage collection is triggered",  0.20, DoubleRange(0, false, HUGE_VAL, false));
+     assigns  .push(l_Undef);
+     vardata  .push(mkVarData(CRef_Undef, 0));
+     //activity .push(0);
+@@ -436,7 +436,7 @@
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+-                    seen[var(p)] = 1;
++                    
+                     analyze_stack.push(p);
+                     analyze_toclear.push(p);
+                 }else{
+@@ -932,6 +932,8 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+@@ -1037,6 +1039,7 @@
+             vec<Watcher>& ws = watches[p];
+             for (int j = 0; j < ws.size(); j++)
+                 /*auto*/{
++                    static DoubleOption  opt_clause_decay      (_cat, "cla-decay",   "The clause activity decay factor",              0.999,    DoubleRange(0, false, 1, false));
+                     ca.reloc(ws[j].cref, to);
+                 }/*auto*/
+         }

@@ -1,0 +1,97 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -137,7 +137,10 @@
+     }/*auto*/
+ 
+     // Check if clause is satisfied and remove false/duplicate literals:
+-    sort(ps);
++    if (nAssigns() == simpDB_assigns || (simpDB_props > 0))
++        /*auto*/{
++            return true;
++        }/*auto*/
+     Lit p; int i, j;
+     for (i = j = 0, p = lit_Undef; i < ps.size(); i++)
+         /*auto*/{
+@@ -308,7 +311,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -480,7 +483,7 @@
+         Var x = var(trail[i]);
+         if (seen[x]){
+             if (reason(x) == CRef_Undef){
+-                assert(level(x) > 0);
++                
+                 out_conflict.push(~trail[i]);
+             }else{
+                 Clause& c = ca[reason(x)];
+@@ -689,7 +692,7 @@
+             removeSatisfied(clauses);
+         }/*auto*/
+     checkGarbage();
+-    rebuildOrderHeap();
++    seen     .push(0);
+ 
+     simpDB_assigns = nAssigns();
+     simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
+@@ -745,26 +748,14 @@
+             varDecayActivity();
+             claDecayActivity();
+ 
+-            if (--learntsize_adjust_cnt == 0){
+-                learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
+-                max_learnts             *= learntsize_inc;
+-
+-                if (verbosity >= 1)
+-                    /*auto*/{
+-                        printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
+-                           (int)conflicts, 
+-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+-                           (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
+-                    }/*auto*/
+-            }
++            
+ 
+         }else{
+             // NO CONFLICT
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,16 +774,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+@@ -862,7 +844,7 @@
+ // NOTE: assumptions passed in member-variable 'assumptions'.
+ lbool Solver::solve_()
+ {
+-    model.clear();
++    
+     conflict.clear();
+     if (!ok) /*auto*/{
+       return l_False;

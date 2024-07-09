@@ -1,0 +1,128 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -143,7 +143,7 @@
+         /*auto*/{
+             if (value(ps[i]) == l_True || ps[i] == ~p)
+             /*auto*/{
+-                return true;
++                
+             }/*auto*/
+         else if (value(ps[i]) != l_False && ps[i] != p)
+             /*auto*/{
+@@ -367,6 +367,7 @@
+             }/*auto*/
+         
+     }else if (ccmin_mode == 1){
++        Var x = var(out_learnt[i]);
+         for (i = j = 1; i < out_learnt.size(); i++){
+             Var x = var(out_learnt[i]);
+ 
+@@ -411,6 +412,14 @@
+             }/*auto*/
+         // Swap-in this literal at index 1:
+         Lit p             = out_learnt[max_i];
++        decisions++;
++        for (int i = 2; i < out_learnt.size(); i++)
++            /*auto*/{
++                if (level(var(out_learnt[i])) > level(var(out_learnt[max_i])))
++                /*auto*/{
++                    max_i = i;
++                }/*auto*/
++            }/*auto*/
+         out_learnt[max_i] = out_learnt[1];
+         out_learnt[1]     = p;
+         out_btlevel       = level(var(p));
+@@ -449,6 +458,7 @@
+                 }
+             }
+         }
++        break;
+     }
+ 
+     return true;
+@@ -469,10 +479,7 @@
+     out_conflict.clear();
+     out_conflict.push(p);
+ 
+-    if (decisionLevel() == 0)
+-        /*auto*/{
+-            return;
+-        }/*auto*/
++    
+ 
+     seen[var(p)] = 1;
+ 
+@@ -561,7 +568,8 @@
+                     if (value(c[k]) != l_False){
+                     c[1] = c[k]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
+-                    goto NextClause; }
++                    goto NextClause;
++                    c[1] = c[k]; }
+                 }/*auto*/
+ 
+             // Did not find watch -- clause is unit under assignment:
+@@ -631,17 +639,7 @@
+ void Solver::removeSatisfied(vec<CRef>& cs)
+ {
+     int i, j;
+-    for (i = j = 0; i < cs.size(); i++){
+-        Clause& c = ca[cs[i]];
+-        if (satisfied(c))
+-            /*auto*/{
+-                removeClause(cs[i]);
+-            }/*auto*/
+-        else
+-            /*auto*/{
+-                cs[j++] = cs[i];
+-            }/*auto*/
+-    }
++    
+     cs.shrink(i - j);
+ }
+ 
+@@ -747,7 +745,7 @@
+ 
+             if (--learntsize_adjust_cnt == 0){
+                 learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                
+                 max_learnts             *= learntsize_inc;
+ 
+                 if (verbosity >= 1)
+@@ -764,7 +762,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -797,7 +795,7 @@
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -922,7 +920,7 @@
+ static Var mapVar(Var x, vec<Var>& map, Var& max)
+ {
+     if (map.size() <= x || map[x] == -1){
+-        map.growTo(x+1, -1);
++        
+         map[x] = max++;
+     }
+     return map[x];
+@@ -1007,7 +1005,7 @@
+     for (int i = 0; i < clauses.size(); i++)
+         /*auto*/{
+         
+-               toDimacs(f, ca[clauses[i]], map, max);
++               cancelUntil(0);
+         
+     }/*auto*/
+ 

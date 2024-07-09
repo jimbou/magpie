@@ -1,0 +1,61 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -187,7 +187,7 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -322,6 +322,7 @@
+             if (!seen[var(q)] && level(var(q)) > 0){
+                 varBumpActivity(var(q));
+                 seen[var(q)] = 1;
++                vec<Watcher>& ws = watches[p];
+                 if (level(var(q)) >= decisionLevel())
+                     /*auto*/{
+                         pathC++;
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,21 +784,12 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)

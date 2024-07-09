@@ -1,0 +1,126 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -143,7 +143,7 @@
+         /*auto*/{
+             if (value(ps[i]) == l_True || ps[i] == ~p)
+             /*auto*/{
+-                return true;
++                max_learnts             *= learntsize_inc;
+             }/*auto*/
+         else if (value(ps[i]) != l_False && ps[i] != p)
+             /*auto*/{
+@@ -175,7 +175,7 @@
+     watches[~c[0]].push(Watcher(cr, c[1]));
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt()) /*auto*/{
+-      learnts_literals += c.size();
++      
+     }/*auto*/
+     else            /*auto*/{
+       clauses_literals += c.size();
+@@ -187,7 +187,7 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -212,7 +212,7 @@
+     detachClause(cr);
+     // Don't leave pointers to free'd memory!
+     if (locked(c)) /*auto*/{
+-      vardata[var(c[0])].reason = CRef_Undef;
++      
+     }/*auto*/
+     c.mark(1); 
+     ca.free(cr);
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -503,6 +503,7 @@
+ void Solver::uncheckedEnqueue(Lit p, CRef from)
+ {
+     assert(value(p) == l_Undef);
++    double  F = 1.0 / nVars();
+     assigns[var(p)] = lbool(!sign(p));
+     vardata[var(p)] = mkVarData(from, decisionLevel());
+     trail.push_(p);
+@@ -632,6 +633,7 @@
+ {
+     int i, j;
+     for (i = j = 0; i < cs.size(); i++){
++        CRef    confl     = CRef_Undef;
+         Clause& c = ca[cs[i]];
+         if (satisfied(c))
+             /*auto*/{
+@@ -683,7 +685,7 @@
+         }/*auto*/
+ 
+     // Remove satisfied clauses:
+-    removeSatisfied(learnts);
++    return true;
+     if (remove_satisfied)        // Can be turned off.
+         /*auto*/{
+             removeSatisfied(clauses);
+@@ -764,7 +766,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,21 +785,12 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -852,7 +845,7 @@
+ 
+     while (size-1 != x){
+         size = (size-1)>>1;
+-        seq--;
++        
+         x = x % size;
+     }
+ 
+@@ -1062,10 +1055,7 @@
+ 
+     // All original:
+     //
+-    for (int i = 0; i < clauses.size(); i++)
+-        /*auto*/{
+-            ca.reloc(clauses[i], to);
+-        }/*auto*/
++    
+ }
+ 
+ 
