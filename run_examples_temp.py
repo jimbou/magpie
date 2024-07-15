@@ -248,6 +248,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
         "perf_cache_references", "perf_cache_misses", "perf_branches",
         "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy", "perf_L1_dcache_loads"]
     perf_items = [ 'perf_time',"weights","energy"]
+    perf_items = [ "energy"]
     erroneous=[]
     execution_times = []
     run_com =name3

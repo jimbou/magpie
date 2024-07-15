@@ -45,7 +45,7 @@ git pull || true
 git add . || true
 
 # Commit the changes
-git commit -m "test commit automation" || true
+git commit -m "test commit 2 automation" || true
 
 # Push the changes
 git push origin || true
