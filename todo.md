@@ -11,9 +11,11 @@
 Analysis part:
 1) Rank the metrics for each benchmark and find median rank for each metric (do it one for retries 1 to 5 and then 1 to 3)
 2) Rank the metrics for each retry per benhmark and find median rank for each retry across bencharks
-3) use plot_lines and get_median_for_plot_lines.py to get across benchmarks the total_decreases`, `average_decrease_percentage_per_step`, `std_deviation_of_decreases`, and `proportion_of_large_decreases`. once for retries and once for metrics
+3) use plot_lines and get_median_for_plot_lines.py to get across benchmarks the total_decreases`, `average_decrease_percentage_per_step`, `std_deviation_of_decreases`, and `proportion_of_large_decreases`. once for retries and once for metrics  (add 25th percentile and 75th percentile)
 4) calculate the overhead of each metric by ranking the median number of steps  rank for that metric across benchmarks
-so for every benchmark rank the benchmarks based on number of steps (get the median from the number of retries probably retries=3) and then get average rank for each benchmark
+so for every benchmark rank the metrics based on number of steps (get the median from the number of retries probably retries=3) and then get average rank for each benchmark
 5) find how much the number of retries decreases the number of steps as a percentage for each metric . Find the decrease from 1 to 2 then 1 to 3 then 1 to 4 then 1 to 5  for each metric at each benchmark and then get the median for each metric across benchmarks
 6) talk about energy specifically
 7) talk about in correlation with the initial calculations which the best metric to correlate with execution time are to be used as surrogates.
+8) best fit line -- mad thing
+9) find coverage of tests
