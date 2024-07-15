@@ -57,6 +57,21 @@ git commit -m "fixed minisat normal issue" || true
 # Push the changes
 git push origin || true
 
+
+python3.11 run_examples.py minisat_hack "" scenario_runtime_config3 "bash run_fixed.sh" "./build.sh" sources/core/Solver.cc "" local_search
+
+
+# Pull the latest changes
+git pull || true
+# Add changes to staging area
+git add . || true
+# Commit the changes
+git commit -m "minisat hack normal rerun" || true
+# Push the changes
+git push origin || true
+sleep 1800
+
+
 python3.11 run_examples.py sat4j "" scenario_runtime_config1 "bash run_fixed.sh" "" test.params test.params local_search
 sleep 1800
 python3.11 run_examples.py sat4j "" scenario_runtime_config3 "bash run_fixed.sh" "ant sat" org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java "" local_search
