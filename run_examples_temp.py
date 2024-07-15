@@ -119,7 +119,7 @@ def extract_data_from_log(file_path):
 
 def run_command(command, directory =None):
     """ Helper function to run a shell command and return its output. """
-    print(f"Running command: {command}")
+    
     return subprocess.run(command, shell=True, text=True, capture_output=True, cwd=directory)
 # 
     
@@ -246,8 +246,8 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     # "energy_ram", "energy_uncore"
     perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", "perf_branches",
-        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
-    perf_items = [ 'time','weights', 'energy']
+        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy", "perf_L1_dcache_loads"]
+    perf_items = [ "energy"]
     erroneous=[]
     execution_times = []
     run_com =name3
@@ -258,13 +258,17 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
         print(run_com)
 
     result = run_command(compile_command, f"examples/{name1}/necessary")
-    for _ in range(1):
+    for _ in range(20):
         start = time.perf_counter()
         result = run_command(run_com, f'examples/{name1}/necessary')
-        print(result.stderr)
         end = time.perf_counter()
         duration = end - start  
         execution_times.append(float(duration))
+        #if the command returns error then add that to the erroneous list
+        
+        
+
+
     
     median_time_orig = statistics.median(execution_times)
     data["original"]["median_execution_time"] = median_time_orig
@@ -277,7 +281,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     for item in perf_items:
         #get time before execution
         try:
-            for retries_num  in range(1,2):
+            for retries_num  in range(4,5):
 
                 new_string = f"{scenario }_{item}.txt"
                 print(f"Running {new_string} for retry {retries_num}")
@@ -351,7 +355,6 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 result = run_command(patch_command, f"{item_directory}/necessary")
                 result = run_command(cp_command, f"{item_directory}/necessary")
                 #print(result.stderr)
-                print(f"running {compile_command}")
                 result = run_command(compile_command, f"{item_directory}/necessary")
                 print(f"Files for {item} saved in {item_directory}")
                 run_com2 =name3
@@ -361,7 +364,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     run_com2= " ".join(run_com2)
                     print(run_com2)
                 execution_times = []
-                for _ in range(1):
+                for _ in range(20):
                     start = time.perf_counter()
                     result = run_command(run_com2, f"{item_directory}/necessary")
                     end = time.perf_counter()
@@ -369,7 +372,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     duration = end - start  
                     execution_times.append(float(duration))
                     if result.returncode != 0:
-                        erroneous.append(f"{item}_{retries}")
+                        erroneous.append(f"{item}_{retries}_execution")
                 
                 #remove the final_destination directory
                 shutil.rmtree(final_destination)
@@ -397,7 +400,8 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 })
                 with open(f'{main_directory}/performance_data_temp.json', 'w') as file:
                     json.dump(data, file, indent=4)
-            time.sleep(2)
+            #sleep for 60 seconds
+                time.sleep(60)
         except Exception as e:
             print(f"An error occurred: {e}")
             print(f"Erroneeous in {erroneous}")

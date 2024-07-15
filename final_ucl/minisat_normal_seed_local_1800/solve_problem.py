@@ -32,7 +32,7 @@ def run_command(command, directory=None):
 
 def main():
     base_path = os.getcwd()
-    source_folder = "../examples/minisat/necessary"
+    source_folder = "../../examples/minisat/necessary"
 
     results = {}
 
@@ -58,7 +58,7 @@ def main():
 
             # Run 'bash run_fixed.sh' 21 times and record the execution times
             durations = []
-            for _ in range(21):
+            for _ in range(3):
                 start_time = time.perf_counter()
                 run_command("bash run_fixed.sh")
                 end_time = time.perf_counter()
@@ -67,6 +67,7 @@ def main():
 
             median_duration = statistics.median(durations)
             results[f'{name1}_{name2}'] = median_duration
+            print(f'{name1}_{name2} : {median_duration}')
 
             # Remove the necessary folder
             os.chdir(subfolder_path)  # Move back to the subdirectory

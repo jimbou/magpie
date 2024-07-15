@@ -5,7 +5,7 @@ ARGV=$@
 my_test() {
     FILENAME=$1
     EXPECTED=$2
-    ./minisat_HACK_999ED_CSSC_static $FILENAME $ARGV > /dev/null
+    ./sources/simp/minisat_HACK_999ED_CSSC_static $FILENAME $ARGV > /dev/null
     RETURN=$?
     # echo $RETURN
     if [ $RETURN -ne $((EXPECTED)) ]; then
@@ -22,6 +22,7 @@ my_test data/uf100-01.cnf 10
 my_test data/uf100-02.cnf 10
 my_test data/uf150-01.cnf 10
 my_test data/uf150-02.cnf 10
+my_test data/uf200-01.cnf 10
 
 my_test data/uuf50-01.cnf 20
 my_test data/uuf50-02.cnf 20
@@ -29,4 +30,5 @@ my_test data/uuf100-01.cnf 20
 my_test data/uuf100-02.cnf 20
 my_test data/uuf150-01.cnf 20
 my_test data/uuf150-02.cnf 20
+my_test data/uuf200-01.cnf 20
 
