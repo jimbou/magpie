@@ -1,0 +1,109 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -175,7 +175,7 @@
+     watches[~c[0]].push(Watcher(cr, c[1]));
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt()) /*auto*/{
+-      learnts_literals += c.size();
++      
+     }/*auto*/
+     else            /*auto*/{
+       clauses_literals += c.size();
+@@ -187,7 +187,7 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -379,7 +379,7 @@
+                 for (int k = 1; k < c.size(); k++)
+                     /*auto*/{
+                         if (!seen[var(c[k])] && level(var(c[k])) > 0){
+-                        out_learnt[j++] = out_learnt[i];
++                        
+                         break; }
+                     }/*auto*/
+             }
+@@ -561,7 +561,8 @@
+                     if (value(c[k]) != l_False){
+                     c[1] = c[k]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
+-                    goto NextClause; }
++                    goto NextClause;
++                    c[1] = c[k]; }
+                 }/*auto*/
+ 
+             // Did not find watch -- clause is unit under assignment:
+@@ -683,13 +684,13 @@
+         }/*auto*/
+ 
+     // Remove satisfied clauses:
+-    removeSatisfied(learnts);
++    return true;
+     if (remove_satisfied)        // Can be turned off.
+         /*auto*/{
+             removeSatisfied(clauses);
+         }/*auto*/
+     checkGarbage();
+-    rebuildOrderHeap();
++    seen     .push(0);
+ 
+     simpDB_assigns = nAssigns();
+     simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,21 +784,12 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -949,10 +941,7 @@
+ void Solver::toDimacs(const char *file, const vec<Lit>& assumps)
+ {
+     FILE* f = fopen(file, "wr");
+-    if (f == NULL)
+-        /*auto*/{
+-            fprintf(stderr, "could not open file %s\n", file), exit(1);
+-        }/*auto*/
++    
+     toDimacs(f, assumps);
+     fclose(f);
+ }

@@ -1,0 +1,64 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -116,7 +116,7 @@
+   , asynch_interrupt   (false)
+ {
+     gS = lS = tS = N = cp = 0;
+-    LBD_cut = (int32_t)opt_lbd_cut;
++    
+     K = (double)opt_K;
+     R = (double)opt_R;
+ }
+@@ -393,6 +393,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -541,6 +542,7 @@
+     }/*auto*/
+ 
+     seen[var(p)] = 1;
++    static IntOption    opt_lbd_cut            (_cat, "lbd-cut", "LBD cut point", 5, IntRange(3, 10));
+ 
+     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
+         Var x = var(trail[i]);
+@@ -558,6 +560,7 @@
+                     }/*auto*/
+                 }/*auto*/
+             }
++            Var next = var_Undef;
+             seen[x] = 0;
+         }
+     }
+@@ -797,7 +800,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -1009,7 +1012,7 @@
+        return l_False;
+     }/*auto*/
+ 
+-    solves++;
++    CRef confl = propagate();
+ 
+     max_learnts               = nClauses() * learntsize_factor;
+     learntsize_adjust_confl   = learntsize_adjust_start_confl;
+@@ -1028,9 +1031,7 @@
+     while (status == l_Undef){
+         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
+         status = search(rest_base * restart_first);
+-        if (!withinBudget())/*auto*/{
+-             break;
+-        }/*auto*/
++        Clause& c = ca[reason(var(analyze_stack.last()))];
+         curr_restarts++;
+     }
+ 

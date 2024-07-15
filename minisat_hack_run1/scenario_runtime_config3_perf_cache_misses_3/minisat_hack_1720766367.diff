@@ -1,0 +1,68 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -204,6 +204,7 @@
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+         return ok = (propagate() == CRef_Undef);
++        newDecisionLevel();
+     }else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+@@ -420,6 +421,10 @@
+         for (i = 1; i < out_learnt.size(); i++)/*auto*/{
+             
+             abstract_level |= abstractLevel(var(out_learnt[i]));
++        }/*auto*/
++        for (i = 1; i < out_learnt.size(); i++)/*auto*/{
++            
++            abstract_level |= abstractLevel(var(out_learnt[i]));
+         }/*auto*/ // (maintain an abstraction of levels involved in conflict)
+ 
+         for (i = j = 1; i < out_learnt.size(); i++)/*auto*/{
+@@ -554,7 +559,7 @@
+                     
+                     if (level(var(c[j])) > 0)/*auto*/{
+                         
+-                        seen[var(c[j])] = 1;
++                        core_added = 0;
+                     }/*auto*/
+                 }/*auto*/
+             }
+@@ -675,7 +680,9 @@
+     int     i, j;
+     //double  extra_lim = cla_inc / learnts.size();    // Remove any clause below this activity
+ 
+-    sort(learnts, reduceDB_lt(ca));
++    for (int j = 0; j < analyze_toclear.size(); j++)/*auto*/{
++       seen[var(analyze_toclear[j])] = 0;
++    }/*auto*/
+     // Don't delete binary or locked clauses. From the rest, delete clauses from the first half
+     // and clauses with activity smaller than 'extra_lim':
+     for (i = j = 0; i < learnts.size(); i++){
+@@ -692,7 +699,7 @@
+         }/*auto*/
+     }
+     learnts.shrink(i - j);
+-    checkGarbage();
++    
+ }
+ 
+ 
+@@ -797,7 +804,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -1009,7 +1016,7 @@
+        return l_False;
+     }/*auto*/
+ 
+-    solves++;
++    CRef confl = propagate();
+ 
+     max_learnts               = nClauses() * learntsize_factor;
+     learntsize_adjust_confl   = learntsize_adjust_start_confl;

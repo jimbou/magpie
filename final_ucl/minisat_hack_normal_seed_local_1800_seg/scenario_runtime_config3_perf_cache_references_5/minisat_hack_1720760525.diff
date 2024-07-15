@@ -1,0 +1,66 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -116,7 +116,7 @@
+   , asynch_interrupt   (false)
+ {
+     gS = lS = tS = N = cp = 0;
+-    LBD_cut = (int32_t)opt_lbd_cut;
++    
+     K = (double)opt_K;
+     R = (double)opt_R;
+ }
+@@ -157,6 +157,7 @@
+ {
+     assert(decisionLevel() == 0);
+     if (!ok)/*auto*/{
++       assert(confl != CRef_Undef);
+        return false;
+     }/*auto*/
+ 
+@@ -393,6 +394,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -414,6 +416,7 @@
+     // Simplify conflict clause:
+     //
+     int i, j;
++    static DoubleOption opt_R                  (_cat, "R-val", "R", 1.4, DoubleRange(1.0, true, 2.5, true));
+     out_learnt.copyTo(analyze_toclear);
+     if (ccmin_mode == 2){
+         uint32_t abstract_level = 0;
+@@ -797,7 +800,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -827,6 +830,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1222,6 +1232,7 @@
+     ClauseAllocator to(ca.size() - ca.wasted()); 
+ 
+     relocAll(to);
++    checkGarbage();
+     if (verbosity >= 2)/*auto*/{
+       
+         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 

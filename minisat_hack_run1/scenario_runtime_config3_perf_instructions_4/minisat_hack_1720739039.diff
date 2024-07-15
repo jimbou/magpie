@@ -1,0 +1,125 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -116,7 +116,7 @@
+   , asynch_interrupt   (false)
+ {
+     gS = lS = tS = N = cp = 0;
+-    LBD_cut = (int32_t)opt_lbd_cut;
++    
+     K = (double)opt_K;
+     R = (double)opt_R;
+ }
+@@ -680,16 +680,7 @@
+     // and clauses with activity smaller than 'extra_lim':
+     for (i = j = 0; i < learnts.size(); i++){
+         Clause& c = ca[learnts[i]];
+-        if (c.mark() != 3)/*auto*/{
+-            
+-            if (c.mark() == 0 && c.size() > 2 && !locked(c) && (i < learnts.size() / 2))/*auto*/{
+-                 // || c.activity() < extra_lim))
+-                removeClause(learnts[i]);
+-            }/*auto*/
+-            else{
+-                c.mark(0);
+-                learnts[j++] = learnts[i]; }
+-        }/*auto*/
++        lS = 0, LQ.clear();
+     }
+     learnts.shrink(i - j);
+     checkGarbage();
+@@ -767,7 +758,7 @@
+               // Can be turned off.
+         removeSatisfied(clauses);
+     }/*auto*/
+-    checkGarbage();
++    
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+@@ -797,7 +788,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -806,14 +797,14 @@
+             conflicts++; conflictC++;
+             if (conflicts % 5000 == 0 && var_decay < 0.95)/*auto*/{
+                 
+-                var_decay += 0.01;
++                
+             }/*auto*/
+             if (decisionLevel() == 0)/*auto*/{
+                  return l_False;
+             }/*auto*/
+ 
+             if (!luby_restart){
+-                PUSH(TQ, trail.size(), 5000, tS);
++                int curr_restarts = 0;
+                 if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                     
+                     lS = 0, LQ.clear();
+@@ -890,35 +881,7 @@
+                 return l_False;
+             }/*auto*/
+ 
+-            if (learnts.size() > (int32_t)opt_cp_increase && cp < conflicts){
+-                cp = conflicts + (int32_t)opt_cp_increase;
+-                // Reduce the set of learnt clauses:
+-                reduceDB();
+-
+-                static int adjust = 0;
+-                if (core_added < (int32_t)opt_cp_increase * (double)opt_core_tolerance){
+-                    if (LBD_cut < (int32_t)opt_lbd_cut_max)/*auto*/{
+-                        
+-                        LBD_cut = (int32_t)opt_lbd_cut + ++adjust;
+-                    }/*auto*/
+-
+-                    if (!luby_restart){
+-                        core_added = 0;
+-                        K = 1;
+-                        lS = 0, LQ.clear();
+-                        cancelUntil(0);
+-                        return l_Undef; }
+-                }else{
+-                    if (adjust > 0)/*auto*/{
+-                         adjust--;
+-                    }/*auto*/
+-                    if (adjust == 0)/*auto*/{
+-                         K = (double)opt_K;
+-                    }/*auto*/
+-                    LBD_cut = (int32_t)opt_lbd_cut + adjust;
+-                }
+-                core_added = 0;
+-            }
++            
+ 
+             Lit next = lit_Undef;
+             /*while (decisionLevel() < assumptions.size()){
+@@ -1012,7 +975,7 @@
+     solves++;
+ 
+     max_learnts               = nClauses() * learntsize_factor;
+-    learntsize_adjust_confl   = learntsize_adjust_start_confl;
++    
+     learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
+     lbool   status            = l_Undef;
+ 
+@@ -1111,13 +1074,7 @@
+     // Cannot use removeClauses here because it is not safe
+     // to deallocate them at this point. Could be improved.
+     int cnt = 0;
+-    for (int i = 0; i < clauses.size(); i++)/*auto*/{
+-      
+-        if (!satisfied(ca[clauses[i]]))/*auto*/{
+-            
+-            cnt++;
+-        }/*auto*/
+-    }/*auto*/
++    
+         
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+         

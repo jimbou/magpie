@@ -1,0 +1,1090 @@
+2024-07-06 22:24:30,547	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 45
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = True
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 100
+default_lengthout = 1e6
+diff_method = unified
+trust_local_filesystem = True
+run_timeout = 100
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/minisat
+target_files = 
+	core/Solver.cc.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = bash init.sh
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = bash compile.sh
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = bash compile.sh
+compile_timeout = 
+compile_lengthout = 
+test_cmd = bash test.sh
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat -e branches bash run_fixed.sh
+run_timeout = 
+run_lengthout = 
+retries = 5
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_branches
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = FirstImprovement
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 10000
+max_time = 1800
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-07-06 22:24:30,547	[DEBUG]	
+2024-07-06 22:24:30,547	[INFO]	==== SEARCH: FirstImprovement ====
+2024-07-06 22:24:30,547	[INFO]	~~~~ WARMUP ~~~~
+2024-07-06 22:25:45,956	[DEBUG]	EXEC>  SUCCESS 8635500713.8
+2024-07-06 22:25:45,956	[INFO]	WARM    SUCCESS               8635500713.799999 (--) [0 edit(s)]  
+2024-07-06 22:26:56,785	[DEBUG]	EXEC>  SUCCESS 8636179151.6
+2024-07-06 22:26:56,785	[INFO]	WARM    SUCCESS               8636179151.600000 (--) [0 edit(s)]  
+2024-07-06 22:28:07,128	[DEBUG]	EXEC>  SUCCESS 8636061535.0
+2024-07-06 22:28:07,128	[INFO]	WARM    SUCCESS               8636061535.000000 (--) [0 edit(s)]  
+2024-07-06 22:28:07,128	[INFO]	REF     SUCCESS               8636061535.000000 (--) [0 edit(s)]  
+2024-07-06 22:28:07,128	[INFO]	
+2024-07-06 22:28:07,128	[INFO]	~~~~ START ~~~~
+2024-07-06 22:28:09,074	[INFO]	1       TEST_CODE_ERROR       None (--) [1 edit(s)]  
+2024-07-06 22:28:09,074	[DEBUG]	patch(1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 263), ('core/Solver.cc.xml', 'stmt', 155))"
+2024-07-06 22:29:19,157	[DEBUG]	EXEC>  SUCCESS 8635315578.0
+2024-07-06 22:29:19,157	[INFO]	2       SUCCESS              *8635315578.000000 (99.99%) [1 edit(s)]  
+2024-07-06 22:29:19,157	[DEBUG]	patch(2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -932,6 +932,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-07-06 22:29:19,161	[INFO]	3       SUCCESS               8636061535.000000 (100.00%) [0 edit(s)] [cached] 
+2024-07-06 22:29:19,161	[DEBUG]	patch(3)=""
+2024-07-06 22:30:29,262	[DEBUG]	EXEC>  SUCCESS 8635152294.0
+2024-07-06 22:30:29,262	[INFO]	4       SUCCESS              *8635152294.000000 (99.99%) [2 edit(s)]  
+2024-07-06 22:30:29,262	[DEBUG]	patch(4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -797,7 +797,7 @@
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -932,6 +932,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-07-06 22:30:29,268	[INFO]	5       SUCCESS               8635315578.000000 (99.99%) [1 edit(s)] [cached] 
+2024-07-06 22:30:29,268	[DEBUG]	patch(5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-07-06 22:30:31,124	[INFO]	6       TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:30:31,124	[DEBUG]	patch(6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 108))"
+2024-07-06 22:30:31,563	[INFO]	7       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:30:31,563	[DEBUG]	patch(7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 38))"
+2024-07-06 22:30:32,017	[INFO]	8       COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:30:32,017	[DEBUG]	patch(8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 88), ('core/Solver.cc.xml', 'stmt', 128))"
+2024-07-06 22:31:43,056	[DEBUG]	EXEC>  SUCCESS 8635505407.2
+2024-07-06 22:31:43,057	[INFO]	9       SUCCESS               8635505407.200001 (99.99%) [1 edit(s)]  
+2024-07-06 22:31:43,057	[DEBUG]	patch(9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+2024-07-06 22:33:25,035	[INFO]	10      TEST_TIMEOUT          None (--) [3 edit(s)]  
+2024-07-06 22:33:25,035	[DEBUG]	patch(10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 303))"
+2024-07-06 22:33:25,472	[INFO]	11      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:33:25,472	[DEBUG]	patch(11)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 359), ('core/Solver.cc.xml', 'stmt', 320))"
+2024-07-06 22:33:25,903	[INFO]	12      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:33:25,904	[DEBUG]	patch(12)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 150), ('core/Solver.cc.xml', 'stmt', 212))"
+2024-07-06 22:33:27,723	[INFO]	13      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:33:27,723	[DEBUG]	patch(13)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 31))"
+2024-07-06 22:33:27,730	[INFO]	14      SUCCESS              +8635152294.000000 (99.99%) [3 edit(s)] [cached] 
+2024-07-06 22:33:27,730	[DEBUG]	patch(14)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+2024-07-06 22:34:37,891	[DEBUG]	EXEC>  SUCCESS 8656877232.0
+2024-07-06 22:34:37,891	[INFO]	15      SUCCESS               8656877232.000000 (100.24%) [4 edit(s)]  
+2024-07-06 22:34:37,891	[DEBUG]	patch(15)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-07-06 22:34:37,896	[INFO]	16      SUCCESS               8635505407.200001 (99.99%) [2 edit(s)] [cached] 
+2024-07-06 22:34:37,896	[DEBUG]	patch(16)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+2024-07-06 22:34:37,902	[INFO]	17      SUCCESS              +8635152294.000000 (99.99%) [2 edit(s)] [cached] 
+2024-07-06 22:34:37,902	[DEBUG]	patch(17)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+2024-07-06 22:34:37,906	[INFO]	18      SUCCESS               8635505407.200001 (99.99%) [1 edit(s)] [cached] 
+2024-07-06 22:34:37,906	[DEBUG]	patch(18)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319))"
+2024-07-06 22:34:37,928	[INFO]	19      SUCCESS               8635315578.000000 (99.99%) [1 edit(s)] [cached] 
+2024-07-06 22:34:37,928	[DEBUG]	patch(19)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-07-06 22:34:38,371	[INFO]	20      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:34:38,371	[DEBUG]	patch(20)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 337), ('core/Solver.cc.xml', 'stmt', 124))"
+2024-07-06 22:34:38,810	[INFO]	21      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:34:38,810	[DEBUG]	patch(21)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 252))"
+2024-07-06 22:34:39,251	[INFO]	22      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:34:39,251	[DEBUG]	patch(22)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 179), ('core/Solver.cc.xml', 'stmt', 401))"
+2024-07-06 22:34:41,118	[INFO]	23      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:34:41,118	[DEBUG]	patch(23)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 42))"
+2024-07-06 22:34:42,914	[INFO]	24      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:34:42,915	[DEBUG]	patch(24)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 199))"
+2024-07-06 22:35:53,492	[DEBUG]	EXEC>  SUCCESS 8637652632.0
+2024-07-06 22:35:53,492	[INFO]	25      SUCCESS               8637652632.000000 (100.02%) [3 edit(s)]  
+2024-07-06 22:35:53,492	[DEBUG]	patch(25)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 386), ('core/Solver.cc.xml', 'stmt', 363))"
+2024-07-06 22:36:10,192	[DEBUG]	EXEC>  SUCCESS 1892565126.4
+2024-07-06 22:36:10,192	[INFO]	26      SUCCESS              *1892565126.400000 (21.91%) [3 edit(s)]  
+2024-07-06 22:36:10,192	[DEBUG]	patch(26)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 319)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -797,7 +797,7 @@
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+-                decisions++;
++                
+                 next = pickBranchLit();
+ 
+                 if (next == lit_Undef)
+@@ -932,6 +932,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-07-06 22:36:27,021	[DEBUG]	EXEC>  SUCCESS 1892491112.0
+2024-07-06 22:36:27,022	[INFO]	27      SUCCESS              *1892491112.000000 (21.91%) [2 edit(s)]  
+2024-07-06 22:36:27,022	[DEBUG]	patch(27)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -932,6 +932,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-07-06 22:36:43,719	[DEBUG]	EXEC>  SUCCESS 1892504141.0
+2024-07-06 22:36:43,719	[INFO]	28      SUCCESS               1892504141.000000 (21.91%) [3 edit(s)]  
+2024-07-06 22:36:43,719	[DEBUG]	patch(28)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-07-06 22:36:43,725	[INFO]	29      SUCCESS               8635315578.000000 (99.99%) [1 edit(s)] [cached] 
+2024-07-06 22:36:43,725	[DEBUG]	patch(29)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-07-06 22:36:44,166	[INFO]	30      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:36:44,166	[DEBUG]	patch(30)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 119))"
+2024-07-06 22:36:44,603	[INFO]	31      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:36:44,603	[DEBUG]	patch(31)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 25), ('core/Solver.cc.xml', 'stmt', 318))"
+2024-07-06 22:36:46,473	[INFO]	32      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:36:46,473	[DEBUG]	patch(32)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 416))"
+2024-07-06 22:37:04,014	[DEBUG]	EXEC>  SUCCESS 1974033707.6
+2024-07-06 22:37:04,014	[INFO]	33      SUCCESS               1974033707.600000 (22.86%) [3 edit(s)]  
+2024-07-06 22:37:04,014	[DEBUG]	patch(33)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 303))"
+2024-07-06 22:37:04,452	[INFO]	34      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:37:04,452	[DEBUG]	patch(34)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 394), ('core/Solver.cc.xml', 'stmt', 426))"
+2024-07-06 22:37:21,207	[DEBUG]	EXEC>  SUCCESS 1892503306.6
+2024-07-06 22:37:21,207	[INFO]	35      SUCCESS               1892503306.600000 (21.91%) [1 edit(s)]  
+2024-07-06 22:37:21,207	[DEBUG]	patch(35)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119))"
+2024-07-06 22:37:38,025	[DEBUG]	EXEC>  SUCCESS 1892512127.6
+2024-07-06 22:37:38,025	[INFO]	36      SUCCESS               1892512127.600000 (21.91%) [3 edit(s)]  
+2024-07-06 22:37:38,025	[DEBUG]	patch(36)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 302))"
+2024-07-06 22:37:54,739	[DEBUG]	EXEC>  SUCCESS 1891501497.6
+2024-07-06 22:37:54,739	[INFO]	37      SUCCESS              *1891501497.600000 (21.90%) [3 edit(s)]  
+2024-07-06 22:37:54,739	[DEBUG]	patch(37)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,16 +783,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+@@ -932,6 +923,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-07-06 22:37:56,612	[INFO]	38      TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-07-06 22:37:56,612	[DEBUG]	patch(38)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 42), ('core/Solver.cc.xml', 'stmt', 67))"
+2024-07-06 22:38:14,154	[DEBUG]	EXEC>  SUCCESS 2015484813.2
+2024-07-06 22:38:14,154	[INFO]	39      SUCCESS               2015484813.200000 (23.34%) [4 edit(s)]  
+2024-07-06 22:38:14,154	[DEBUG]	patch(39)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 409), ('core/Solver.cc.xml', 'stmt', 195))"
+2024-07-06 22:38:30,952	[DEBUG]	EXEC>  SUCCESS 1891488770.0
+2024-07-06 22:38:30,952	[INFO]	40      SUCCESS              *1891488770.000000 (21.90%) [2 edit(s)]  
+2024-07-06 22:38:30,952	[DEBUG]	patch(40)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,16 +783,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+
+2024-07-06 22:39:42,032	[DEBUG]	EXEC>  SUCCESS 8630716575.4
+2024-07-06 22:39:42,032	[INFO]	41      SUCCESS               8630716575.400000 (99.94%) [1 edit(s)]  
+2024-07-06 22:39:42,032	[DEBUG]	patch(41)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311))"
+2024-07-06 22:39:42,471	[INFO]	42      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:39:42,471	[DEBUG]	patch(42)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 169), ('core/Solver.cc.xml', 'stmt', 321))"
+2024-07-06 22:39:42,927	[INFO]	43      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:39:42,927	[DEBUG]	patch(43)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 12), ('core/Solver.cc.xml', 'stmt', 184))"
+2024-07-06 22:39:42,942	[INFO]	44      SUCCESS               1892503306.600000 (21.91%) [1 edit(s)] [cached] 
+2024-07-06 22:39:42,942	[DEBUG]	patch(44)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119))"
+2024-07-06 22:39:59,722	[DEBUG]	EXEC>  SUCCESS 1891515737.2
+2024-07-06 22:39:59,723	[INFO]	45      SUCCESS               1891515737.200000 (21.90%) [3 edit(s)]  
+2024-07-06 22:39:59,723	[DEBUG]	patch(45)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 55), ('core/Solver.cc.xml', 'stmt', 295))"
+2024-07-06 22:40:00,151	[INFO]	46      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:00,151	[DEBUG]	patch(46)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 532), ('core/Solver.cc.xml', 'stmt', 72))"
+2024-07-06 22:40:01,977	[INFO]	47      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:40:01,977	[DEBUG]	patch(47)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 97))"
+2024-07-06 22:40:02,417	[INFO]	48      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:02,417	[DEBUG]	patch(48)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 52), ('core/Solver.cc.xml', 'stmt', 303))"
+2024-07-06 22:40:19,050	[DEBUG]	EXEC>  SUCCESS 1892252394.4
+2024-07-06 22:40:19,050	[INFO]	49      SUCCESS               1892252394.400000 (21.91%) [3 edit(s)]  
+2024-07-06 22:40:19,050	[DEBUG]	patch(49)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 268))"
+2024-07-06 22:40:19,495	[INFO]	50      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:19,495	[DEBUG]	patch(50)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 44), ('core/Solver.cc.xml', 'stmt', 369))"
+2024-07-06 22:40:21,404	[INFO]	51      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:40:21,404	[DEBUG]	patch(51)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 21))"
+2024-07-06 22:40:38,234	[DEBUG]	EXEC>  SUCCESS 1891499745.2
+2024-07-06 22:40:38,234	[INFO]	52      SUCCESS               1891499745.200000 (21.90%) [3 edit(s)]  
+2024-07-06 22:40:38,234	[DEBUG]	patch(52)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 172))"
+2024-07-06 22:40:38,681	[INFO]	53      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:38,681	[DEBUG]	patch(53)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 178), ('core/Solver.cc.xml', 'stmt', 399))"
+2024-07-06 22:40:39,117	[INFO]	54      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:39,117	[DEBUG]	patch(54)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 523), ('core/Solver.cc.xml', 'stmt', 73))"
+2024-07-06 22:40:39,555	[INFO]	55      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:39,555	[DEBUG]	patch(55)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 9), ('core/Solver.cc.xml', 'stmt', 42))"
+2024-07-06 22:40:39,993	[INFO]	56      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:39,993	[DEBUG]	patch(56)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 389), ('core/Solver.cc.xml', 'stmt', 305))"
+2024-07-06 22:40:40,431	[INFO]	57      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:40,431	[DEBUG]	patch(57)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 403), ('core/Solver.cc.xml', 'stmt', 179))"
+2024-07-06 22:40:40,872	[INFO]	58      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:40,873	[DEBUG]	patch(58)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 404), ('core/Solver.cc.xml', 'stmt', 144))"
+2024-07-06 22:40:41,313	[INFO]	59      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:41,313	[DEBUG]	patch(59)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 71), ('core/Solver.cc.xml', 'stmt', 396))"
+2024-07-06 22:40:43,192	[INFO]	60      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:40:43,192	[DEBUG]	patch(60)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 280), ('core/Solver.cc.xml', 'stmt', 43))"
+2024-07-06 22:40:43,640	[INFO]	61      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:43,640	[DEBUG]	patch(61)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 263), ('core/Solver.cc.xml', 'stmt', 95))"
+2024-07-06 22:40:45,501	[INFO]	62      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:40:45,502	[DEBUG]	patch(62)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 66))"
+2024-07-06 22:40:45,948	[INFO]	63      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:45,948	[DEBUG]	patch(63)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 376), ('core/Solver.cc.xml', 'stmt', 254))"
+2024-07-06 22:40:46,381	[INFO]	64      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:46,381	[DEBUG]	patch(64)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 257), ('core/Solver.cc.xml', 'stmt', 174))"
+2024-07-06 22:40:46,819	[INFO]	65      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:46,819	[DEBUG]	patch(65)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 498), ('core/Solver.cc.xml', 'stmt', 366))"
+2024-07-06 22:40:47,260	[INFO]	66      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:40:47,260	[DEBUG]	patch(66)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 552), ('core/Solver.cc.xml', 'stmt', 114))"
+2024-07-06 22:42:29,178	[INFO]	67      TEST_TIMEOUT          None (--) [3 edit(s)]  
+2024-07-06 22:42:29,178	[DEBUG]	patch(67)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 291))"
+2024-07-06 22:42:31,084	[INFO]	68      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:42:31,084	[DEBUG]	patch(68)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 386), ('core/Solver.cc.xml', 'stmt', 257))"
+2024-07-06 22:42:32,947	[INFO]	69      TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-07-06 22:42:32,947	[DEBUG]	patch(69)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 268), ('core/Solver.cc.xml', 'stmt', 227))"
+2024-07-06 22:42:33,395	[INFO]	70      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:33,395	[DEBUG]	patch(70)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 325))"
+2024-07-06 22:42:33,832	[INFO]	71      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:33,832	[DEBUG]	patch(71)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 31), ('core/Solver.cc.xml', 'stmt', 112))"
+2024-07-06 22:42:50,531	[DEBUG]	EXEC>  SUCCESS 1891765794.6
+2024-07-06 22:42:50,531	[INFO]	72      SUCCESS               1891765794.600000 (21.91%) [3 edit(s)]  
+2024-07-06 22:42:50,531	[DEBUG]	patch(72)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 128))"
+2024-07-06 22:42:50,972	[INFO]	73      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:50,972	[DEBUG]	patch(73)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 237), ('core/Solver.cc.xml', 'stmt', 284))"
+2024-07-06 22:42:51,410	[INFO]	74      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:51,411	[DEBUG]	patch(74)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 144), ('core/Solver.cc.xml', 'stmt', 393))"
+2024-07-06 22:42:51,855	[INFO]	75      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:51,855	[DEBUG]	patch(75)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 166), ('core/Solver.cc.xml', 'stmt', 327))"
+2024-07-06 22:42:52,294	[INFO]	76      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:52,294	[DEBUG]	patch(76)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 118), ('core/Solver.cc.xml', 'stmt', 250))"
+2024-07-06 22:42:52,737	[INFO]	77      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:52,737	[DEBUG]	patch(77)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 344), ('core/Solver.cc.xml', 'stmt', 34))"
+2024-07-06 22:42:53,176	[INFO]	78      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:42:53,176	[DEBUG]	patch(78)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 89), ('core/Solver.cc.xml', 'stmt', 167))"
+2024-07-06 22:43:55,592	[DEBUG]	EXEC>  SUCCESS 7439822128.2
+2024-07-06 22:43:55,592	[INFO]	79      SUCCESS               7439822128.200000 (86.15%) [3 edit(s)]  
+2024-07-06 22:43:55,592	[DEBUG]	patch(79)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 240))"
+2024-07-06 22:43:55,600	[INFO]	80      SUCCESS               1891499745.200000 (21.90%) [3 edit(s)] [cached] 
+2024-07-06 22:43:55,600	[DEBUG]	patch(80)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 172))"
+2024-07-06 22:43:56,038	[INFO]	81      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:43:56,038	[DEBUG]	patch(81)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 276), ('core/Solver.cc.xml', 'stmt', 266))"
+2024-07-06 22:44:15,580	[DEBUG]	EXEC>  SUCCESS 2253480372.8
+2024-07-06 22:44:15,580	[INFO]	82      SUCCESS               2253480372.800000 (26.09%) [3 edit(s)]  
+2024-07-06 22:44:15,580	[DEBUG]	patch(82)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 118))"
+2024-07-06 22:44:35,519	[DEBUG]	EXEC>  SUCCESS 2321871134.8
+2024-07-06 22:44:35,519	[INFO]	83      SUCCESS               2321871134.800000 (26.89%) [3 edit(s)]  
+2024-07-06 22:44:35,519	[DEBUG]	patch(83)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 100))"
+2024-07-06 22:44:35,960	[INFO]	84      COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-07-06 22:44:35,960	[DEBUG]	patch(84)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 231), ('core/Solver.cc.xml', 'stmt', 381))"
+2024-07-06 22:44:52,629	[DEBUG]	EXEC>  SUCCESS 1891553074.2
+2024-07-06 22:44:52,629	[INFO]	85      SUCCESS               1891553074.200000 (21.90%) [3 edit(s)]  
+2024-07-06 22:44:52,629	[DEBUG]	patch(85)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 37), ('core/Solver.cc.xml', 'stmt', 8))"
+2024-07-06 22:45:09,326	[DEBUG]	EXEC>  SUCCESS 1891468412.8
+2024-07-06 22:45:09,326	[INFO]	86      SUCCESS              *1891468412.800000 (21.90%) [3 edit(s)]  
+2024-07-06 22:45:09,326	[DEBUG]	patch(86)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +780,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+
+2024-07-06 22:45:09,334	[INFO]	87      SUCCESS              +1891468412.800000 (21.90%) [4 edit(s)] [cached] 
+2024-07-06 22:45:09,334	[DEBUG]	patch(87)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312))"
+2024-07-06 22:45:09,775	[INFO]	88      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:45:09,775	[DEBUG]	patch(88)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 327), ('core/Solver.cc.xml', 'stmt', 210))"
+2024-07-06 22:45:10,214	[INFO]	89      COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:45:10,214	[DEBUG]	patch(89)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 345), ('core/Solver.cc.xml', 'stmt', 165))"
+2024-07-06 22:45:26,960	[DEBUG]	EXEC>  SUCCESS 1891513483.8
+2024-07-06 22:45:26,960	[INFO]	90      SUCCESS               1891513483.800000 (21.90%) [5 edit(s)]  
+2024-07-06 22:45:26,960	[DEBUG]	patch(90)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 382), ('core/Solver.cc.xml', 'stmt', 237))"
+2024-07-06 22:45:43,722	[DEBUG]	EXEC>  SUCCESS 1882611666.2
+2024-07-06 22:45:43,723	[INFO]	91      SUCCESS              *1882611666.200000 (21.80%) [5 edit(s)]  
+2024-07-06 22:45:43,723	[DEBUG]	patch(91)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +780,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+
+2024-07-06 22:45:44,169	[INFO]	92      COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:45:44,169	[DEBUG]	patch(92)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 249), ('core/Solver.cc.xml', 'stmt', 140))"
+2024-07-06 22:46:01,080	[DEBUG]	EXEC>  SUCCESS 1882565633.4
+2024-07-06 22:46:01,080	[INFO]	93      SUCCESS              *1882565633.400000 (21.80%) [6 edit(s)]  
+2024-07-06 22:46:01,080	[DEBUG]	patch(93)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 312)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +780,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+@@ -1014,7 +1001,7 @@
+     if (verbosity > 0)
+         /*auto*/{
+         
+-               printf("Wrote %d clauses with %d variables.\n", cnt, max);
++               
+         
+     }/*auto*/
+ }
+
+2024-07-06 22:46:01,089	[INFO]	94      SUCCESS              +1882565633.400000 (21.80%) [5 edit(s)] [cached] 
+2024-07-06 22:46:01,089	[DEBUG]	patch(94)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+2024-07-06 22:46:17,935	[DEBUG]	EXEC>  SUCCESS 1882592041.4
+2024-07-06 22:46:17,935	[INFO]	95      SUCCESS               1882592041.400000 (21.80%) [6 edit(s)]  
+2024-07-06 22:46:17,935	[DEBUG]	patch(95)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 339))"
+2024-07-06 22:46:18,368	[INFO]	96      COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:46:18,368	[DEBUG]	patch(96)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 131), ('core/Solver.cc.xml', 'stmt', 52))"
+2024-07-06 22:46:20,263	[INFO]	97      TEST_CODE_ERROR       None (--) [6 edit(s)]  
+2024-07-06 22:46:20,263	[DEBUG]	patch(97)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 207), ('core/Solver.cc.xml', 'stmt', 363))"
+2024-07-06 22:46:20,953	[INFO]	98      COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:46:20,953	[DEBUG]	patch(98)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 11), ('core/Solver.cc.xml', 'stmt', 423))"
+2024-07-06 22:46:20,962	[INFO]	99      SUCCESS               1882611666.200000 (21.80%) [4 edit(s)] [cached] 
+2024-07-06 22:46:20,962	[DEBUG]	patch(99)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98))"
+2024-07-06 22:46:21,414	[INFO]	100     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:46:21,414	[DEBUG]	patch(100)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 116))"
+2024-07-06 22:46:38,241	[DEBUG]	EXEC>  SUCCESS 1882678061.4
+2024-07-06 22:46:38,241	[INFO]	101     SUCCESS               1882678061.400000 (21.80%) [4 edit(s)]  
+2024-07-06 22:46:38,242	[DEBUG]	patch(101)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 311)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+2024-07-06 22:46:38,250	[INFO]	102     SUCCESS              +1882565633.400000 (21.80%) [4 edit(s)] [cached] 
+2024-07-06 22:46:38,250	[DEBUG]	patch(102)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+2024-07-06 22:46:54,843	[DEBUG]	EXEC>  SUCCESS 1893678246.4
+2024-07-06 22:46:54,843	[INFO]	103     SUCCESS               1893678246.400000 (21.93%) [5 edit(s)]  
+2024-07-06 22:46:54,843	[DEBUG]	patch(103)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 205), ('core/Solver.cc.xml', 'stmt', 193))"
+2024-07-06 22:47:11,696	[DEBUG]	EXEC>  SUCCESS 1883613040.2
+2024-07-06 22:47:11,696	[INFO]	104     SUCCESS               1883613040.200000 (21.81%) [3 edit(s)]  
+2024-07-06 22:47:11,696	[DEBUG]	patch(104)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+2024-07-06 22:47:11,705	[INFO]	105     SUCCESS               1882611666.200000 (21.80%) [3 edit(s)] [cached] 
+2024-07-06 22:47:11,705	[DEBUG]	patch(105)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98))"
+2024-07-06 22:47:12,150	[INFO]	106     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:47:12,150	[DEBUG]	patch(106)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 130))"
+2024-07-06 22:47:12,594	[INFO]	107     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:47:12,594	[DEBUG]	patch(107)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 215), ('core/Solver.cc.xml', 'stmt', 133))"
+2024-07-06 22:47:29,140	[DEBUG]	EXEC>  SUCCESS 1882564027.2
+2024-07-06 22:47:29,141	[INFO]	108     SUCCESS              *1882564027.200000 (21.80%) [5 edit(s)]  
+2024-07-06 22:47:29,141	[DEBUG]	patch(108)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -467,7 +467,7 @@
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+     out_conflict.clear();
+-    out_conflict.push(p);
++    printf("===============================================================================\n");
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +780,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+@@ -1014,7 +1001,7 @@
+     if (verbosity > 0)
+         /*auto*/{
+         
+-               printf("Wrote %d clauses with %d variables.\n", cnt, max);
++               
+         
+     }/*auto*/
+ }
+
+2024-07-06 22:47:45,734	[DEBUG]	EXEC>  SUCCESS 1891418602.6
+2024-07-06 22:47:45,734	[INFO]	109     SUCCESS               1891418602.600000 (21.90%) [4 edit(s)]  
+2024-07-06 22:47:45,734	[DEBUG]	patch(109)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:48:02,517	[DEBUG]	EXEC>  SUCCESS 1883213696.0
+2024-07-06 22:48:02,518	[INFO]	110     SUCCESS               1883213696.000000 (21.81%) [6 edit(s)]  
+2024-07-06 22:48:02,518	[DEBUG]	patch(110)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 84))"
+2024-07-06 22:49:12,770	[DEBUG]	EXEC>  SUCCESS 8592380353.2
+2024-07-06 22:49:12,770	[INFO]	111     SUCCESS               8592380353.200001 (99.49%) [4 edit(s)]  
+2024-07-06 22:49:12,770	[DEBUG]	patch(111)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:49:12,778	[INFO]	112     SUCCESS               1882565633.400000 (21.80%) [4 edit(s)] [cached] 
+2024-07-06 22:49:12,778	[DEBUG]	patch(112)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408))"
+2024-07-06 22:49:13,219	[INFO]	113     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:49:13,219	[DEBUG]	patch(113)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 33), ('core/Solver.cc.xml', 'stmt', 316))"
+2024-07-06 22:49:47,152	[DEBUG]	EXEC>  SUCCESS 4313356339.8
+2024-07-06 22:49:47,152	[INFO]	114     SUCCESS               4313356339.800000 (49.95%) [6 edit(s)]  
+2024-07-06 22:49:47,152	[DEBUG]	patch(114)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 292))"
+2024-07-06 22:50:03,755	[DEBUG]	EXEC>  SUCCESS 1883607899.0
+2024-07-06 22:50:03,755	[INFO]	115     SUCCESS               1883607899.000000 (21.81%) [4 edit(s)]  
+2024-07-06 22:50:03,755	[DEBUG]	patch(115)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:50:04,198	[INFO]	116     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:50:04,198	[DEBUG]	patch(116)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 409), ('core/Solver.cc.xml', 'stmt', 78))"
+2024-07-06 22:50:04,650	[INFO]	117     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:50:04,650	[DEBUG]	patch(117)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 112), ('core/Solver.cc.xml', 'stmt', 123))"
+2024-07-06 22:50:21,182	[DEBUG]	EXEC>  SUCCESS 1882952627.6
+2024-07-06 22:50:21,182	[INFO]	118     SUCCESS               1882952627.600000 (21.80%) [6 edit(s)]  
+2024-07-06 22:50:21,182	[DEBUG]	patch(118)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-07-06 22:50:37,973	[DEBUG]	EXEC>  SUCCESS 1882570470.0
+2024-07-06 22:50:37,973	[INFO]	119     SUCCESS               1882570470.000000 (21.80%) [6 edit(s)]  
+2024-07-06 22:50:37,973	[DEBUG]	patch(119)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 408)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266))"
+2024-07-06 22:50:54,732	[DEBUG]	EXEC>  SUCCESS 1882534150.2
+2024-07-06 22:50:54,732	[INFO]	120     SUCCESS              *1882534150.200000 (21.80%) [4 edit(s)]  
+2024-07-06 22:50:54,732	[DEBUG]	patch(120)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -467,7 +467,7 @@
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+     out_conflict.clear();
+-    out_conflict.push(p);
++    printf("===============================================================================\n");
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +780,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+
+2024-07-06 22:52:05,216	[DEBUG]	EXEC>  SUCCESS 8592796861.0
+2024-07-06 22:52:05,216	[INFO]	121     SUCCESS               8592796861.000000 (99.50%) [3 edit(s)]  
+2024-07-06 22:52:05,216	[DEBUG]	patch(121)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:52:07,070	[INFO]	122     TEST_CODE_ERROR       None (--) [5 edit(s)]  
+2024-07-06 22:52:07,070	[DEBUG]	patch(122)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 190))"
+2024-07-06 22:52:23,790	[DEBUG]	EXEC>  SUCCESS 1891034502.0
+2024-07-06 22:52:23,790	[INFO]	123     SUCCESS               1891034502.000000 (21.90%) [5 edit(s)]  
+2024-07-06 22:52:23,790	[DEBUG]	patch(123)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 131), ('core/Solver.cc.xml', 'stmt', 8))"
+2024-07-06 22:52:40,666	[DEBUG]	EXEC>  SUCCESS 1891512484.2
+2024-07-06 22:52:40,666	[INFO]	124     SUCCESS               1891512484.200000 (21.90%) [3 edit(s)]  
+2024-07-06 22:52:40,666	[DEBUG]	patch(124)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:52:57,471	[DEBUG]	EXEC>  SUCCESS 1882570510.6
+2024-07-06 22:52:57,472	[INFO]	125     SUCCESS               1882570510.600000 (21.80%) [5 edit(s)]  
+2024-07-06 22:52:57,472	[DEBUG]	patch(125)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 143), ('core/Solver.cc.xml', 'stmt', 413))"
+2024-07-06 22:52:57,911	[INFO]	126     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:52:57,911	[DEBUG]	patch(126)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 107), ('core/Solver.cc.xml', 'stmt', 239))"
+2024-07-06 22:52:57,919	[INFO]	127     SUCCESS               1882611666.200000 (21.80%) [3 edit(s)] [cached] 
+2024-07-06 22:52:57,919	[DEBUG]	patch(127)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98))"
+2024-07-06 22:53:14,709	[DEBUG]	EXEC>  SUCCESS 1883577026.0
+2024-07-06 22:53:14,709	[INFO]	128     SUCCESS               1883577026.000000 (21.81%) [3 edit(s)]  
+2024-07-06 22:53:14,709	[DEBUG]	patch(128)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:54:56,628	[INFO]	129     TEST_TIMEOUT          None (--) [5 edit(s)]  
+2024-07-06 22:54:56,628	[DEBUG]	patch(129)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 228), ('core/Solver.cc.xml', 'stmt', 60))"
+2024-07-06 22:54:57,089	[INFO]	130     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:54:57,089	[DEBUG]	patch(130)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 273))"
+2024-07-06 22:54:57,527	[INFO]	131     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:54:57,527	[DEBUG]	patch(131)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 448), ('core/Solver.cc.xml', 'stmt', 72))"
+2024-07-06 22:54:59,421	[INFO]	132     TEST_CODE_ERROR       None (--) [5 edit(s)]  
+2024-07-06 22:54:59,421	[DEBUG]	patch(132)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 110))"
+2024-07-06 22:55:16,227	[DEBUG]	EXEC>  SUCCESS 1882594601.4
+2024-07-06 22:55:16,227	[INFO]	133     SUCCESS               1882594601.400000 (21.80%) [5 edit(s)]  
+2024-07-06 22:55:16,227	[DEBUG]	patch(133)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 55), ('core/Solver.cc.xml', 'stmt', 94))"
+2024-07-06 22:55:16,676	[INFO]	134     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:16,676	[DEBUG]	patch(134)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 455), ('core/Solver.cc.xml', 'stmt', 161))"
+2024-07-06 22:55:17,117	[INFO]	135     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:17,117	[DEBUG]	patch(135)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 509), ('core/Solver.cc.xml', 'stmt', 136))"
+2024-07-06 22:55:18,985	[INFO]	136     TEST_CODE_ERROR       None (--) [5 edit(s)]  
+2024-07-06 22:55:18,985	[DEBUG]	patch(136)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 423), ('core/Solver.cc.xml', 'stmt', 339))"
+2024-07-06 22:55:19,427	[INFO]	137     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:19,427	[DEBUG]	patch(137)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 99), ('core/Solver.cc.xml', 'stmt', 24))"
+2024-07-06 22:55:19,865	[INFO]	138     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:19,865	[DEBUG]	patch(138)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 215), ('core/Solver.cc.xml', 'stmt', 251))"
+2024-07-06 22:55:20,307	[INFO]	139     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:20,307	[DEBUG]	patch(139)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 132), ('core/Solver.cc.xml', 'stmt', 145))"
+2024-07-06 22:55:20,764	[INFO]	140     COMPILE_CODE_ERROR    None (--) [5 edit(s)]  
+2024-07-06 22:55:20,764	[DEBUG]	patch(140)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 478), ('core/Solver.cc.xml', 'stmt', 275))"
+2024-07-06 22:55:37,473	[DEBUG]	EXEC>  SUCCESS 1882620544.6
+2024-07-06 22:55:37,473	[INFO]	141     SUCCESS               1882620544.600000 (21.80%) [5 edit(s)]  
+2024-07-06 22:55:37,473	[DEBUG]	patch(141)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 308))"
+2024-07-06 22:55:37,483	[INFO]	142     SUCCESS              +1882534150.200000 (21.80%) [5 edit(s)] [cached] 
+2024-07-06 22:55:37,483	[DEBUG]	patch(142)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344))"
+2024-07-06 22:55:37,924	[INFO]	143     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:55:37,924	[DEBUG]	patch(143)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 393), ('core/Solver.cc.xml', 'stmt', 50))"
+2024-07-06 22:55:54,676	[DEBUG]	EXEC>  SUCCESS 1882544550.6
+2024-07-06 22:55:54,676	[INFO]	144     SUCCESS               1882544550.600000 (21.80%) [6 edit(s)]  
+2024-07-06 22:55:54,676	[DEBUG]	patch(144)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 238), ('core/Solver.cc.xml', 'stmt', 360))"
+2024-07-06 22:55:54,685	[INFO]	145     SUCCESS               8592796861.000000 (99.50%) [4 edit(s)] [cached] 
+2024-07-06 22:55:54,685	[DEBUG]	patch(145)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344))"
+2024-07-06 22:55:55,128	[INFO]	146     COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-07-06 22:55:55,128	[DEBUG]	patch(146)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 509), ('core/Solver.cc.xml', 'stmt', 374))"
+2024-07-06 22:55:55,136	[INFO]	147     SUCCESS               1882611666.200000 (21.80%) [4 edit(s)] [cached] 
+2024-07-06 22:55:55,136	[DEBUG]	patch(147)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 317), ('core/Solver.cc.xml', 'stmt', 344))"
+2024-07-06 22:55:55,146	[INFO]	148     SUCCESS              +1882534150.200000 (21.80%) [4 edit(s)] [cached] 
+2024-07-06 22:55:55,146	[DEBUG]	patch(148)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361))"
+2024-07-06 22:55:55,153	[INFO]	149     SUCCESS               1882611666.200000 (21.80%) [3 edit(s)] [cached] 
+2024-07-06 22:55:55,153	[DEBUG]	patch(149)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98))"
+2024-07-06 22:56:11,546	[DEBUG]	EXEC>  SUCCESS 1838083799.4
+2024-07-06 22:56:11,546	[INFO]	150     SUCCESS              *1838083799.400000 (21.28%) [5 edit(s)]  
+2024-07-06 22:56:11,546	[DEBUG]	patch(150)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -467,7 +467,7 @@
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+     out_conflict.clear();
+-    out_conflict.push(p);
++    printf("===============================================================================\n");
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+@@ -764,14 +764,11 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+@@ -780,20 +777,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+
+2024-07-06 22:57:17,393	[DEBUG]	EXEC>  SUCCESS 7978527463.2
+2024-07-06 22:57:17,394	[INFO]	151     SUCCESS               7978527463.200000 (92.39%) [4 edit(s)]  
+2024-07-06 22:57:17,394	[DEBUG]	patch(151)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304))"
+2024-07-06 22:57:34,019	[DEBUG]	EXEC>  SUCCESS 1838038816.0
+2024-07-06 22:57:34,019	[INFO]	152     SUCCESS              *1838038816.000000 (21.28%) [6 edit(s)]  
+2024-07-06 22:57:34,020	[DEBUG]	patch(152)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -308,7 +308,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -466,8 +466,8 @@
+ |________________________________________________________________________________________________@*/
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+-    out_conflict.clear();
+-    out_conflict.push(p);
++    
++    printf("===============================================================================\n");
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+@@ -764,14 +764,11 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+@@ -780,20 +777,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+
+2024-07-06 22:57:34,466	[INFO]	153     COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-07-06 22:57:34,466	[DEBUG]	patch(153)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 86), ('core/Solver.cc.xml', 'stmt', 147))"
+2024-07-06 22:57:34,907	[INFO]	154     COMPILE_CODE_ERROR    None (--) [7 edit(s)]  
+2024-07-06 22:57:34,907	[DEBUG]	patch(154)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 373), ('core/Solver.cc.xml', 'stmt', 91))"
+2024-07-06 22:57:51,351	[DEBUG]	EXEC>  SUCCESS 1838070877.6
+2024-07-06 22:57:51,351	[INFO]	155     SUCCESS               1838070877.600000 (21.28%) [7 edit(s)]  
+2024-07-06 22:57:51,351	[DEBUG]	patch(155)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 259), ('core/Solver.cc.xml', 'stmt', 172))"
+2024-07-06 22:58:07,823	[DEBUG]	EXEC>  SUCCESS 1839086232.0
+2024-07-06 22:58:07,823	[INFO]	156     SUCCESS               1839086232.000000 (21.30%) [5 edit(s)]  
+2024-07-06 22:58:07,823	[DEBUG]	patch(156)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170))"
+2024-07-06 22:58:07,833	[INFO]	~~~~ END ~~~~
+2024-07-06 22:58:07,834	[INFO]	
+2024-07-06 22:58:07,834	[INFO]	==== REPORT ====
+2024-07-06 22:58:07,834	[INFO]	Termination: time budget
+2024-07-06 22:58:07,834	[INFO]	Retries: 5
+2024-07-06 22:58:07,834	[INFO]	Log file: /home/dbouras/magpie/_magpie_logs/minisat_1720301070.log
+2024-07-06 22:58:07,834	[INFO]	Patch file: _magpie_logs/minisat_1720301070.patch
+2024-07-06 22:58:07,834	[INFO]	Diff file: _magpie_logs/minisat_1720301070.diff
+2024-07-06 22:58:07,834	[INFO]	Reference fitness: 8636061535.000000
+2024-07-06 22:58:07,834	[INFO]	Best fitness: 1838038816.000000
+2024-07-06 22:58:07,834	[INFO]	
+2024-07-06 22:58:07,835	[INFO]	==== BEST PATCH ====
+SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 302), ('core/Solver.cc.xml', 'stmt', 119)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 309), ('core/Solver.cc.xml', 'stmt', 388)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 98)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 171), ('core/Solver.cc.xml', 'stmt', 361)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 304)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170))
+2024-07-06 22:58:07,835	[INFO]	
+2024-07-06 22:58:07,835	[INFO]	==== DIFF ====
+[1m--- before: core/Solver.cc[0m
+[1m+++ after: core/Solver.cc[0m
+[36m@@ -308,7 +308,7 @@[0m
+     int index   = trail.size() - 1;
+ 
+     do{
+[31m-        assert(confl != CRef_Undef); // (otherwise should be UIP)[0m
+[32m+         // (otherwise should be UIP)[0m
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+[36m@@ -466,8 +466,8 @@[0m
+ |________________________________________________________________________________________________@*/
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+[31m-    out_conflict.clear();[0m
+[31m-    out_conflict.push(p);[0m
+[32m+    [0m
+[32m+    printf("===============================================================================\n");[0m
+ 
+     if (decisionLevel() == 0)
+         /*auto*/{
+[36m@@ -764,14 +764,11 @@[0m
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+[31m-                cancelUntil(0);[0m
+[32m+                uint32_t abstract_level = 0;[0m
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+[31m-            if (decisionLevel() == 0 && !simplify())[0m
+[31m-                /*auto*/{[0m
+[31m-                    return l_False;[0m
+[31m-                }/*auto*/[0m
+[32m+            [0m
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+[36m@@ -780,20 +777,7 @@[0m
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+[31m-            while (decisionLevel() < assumptions.size()){[0m
+[31m-                // Perform user provided assumption:[0m
+[31m-                Lit p = assumptions[decisionLevel()];[0m
+[31m-                if (value(p) == l_True){[0m
+[31m-                    // Dummy decision level:[0m
+[31m-                    newDecisionLevel();[0m
+[31m-                }else if (value(p) == l_False){[0m
+[31m-                    analyzeFinal(~p, conflict);[0m
+[31m-                    return l_False;[0m
+[31m-                }else{[0m
+[31m-                    next = p;[0m
+[31m-                    break;[0m
+[31m-                }[0m
+[31m-            }[0m
+[32m+            vec<Var> map;[0m
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+

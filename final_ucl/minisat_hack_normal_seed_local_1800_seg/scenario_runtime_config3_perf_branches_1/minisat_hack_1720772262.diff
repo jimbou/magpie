@@ -1,0 +1,84 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -116,7 +116,7 @@
+   , asynch_interrupt   (false)
+ {
+     gS = lS = tS = N = cp = 0;
+-    LBD_cut = (int32_t)opt_lbd_cut;
++    
+     K = (double)opt_K;
+     R = (double)opt_R;
+ }
+@@ -137,6 +137,7 @@
+ Var Solver::newVar(bool sign, bool dvar)
+ {
+     int v = nVars();
++    checkGarbage();
+     watches  .init(mkLit(v, false));
+     watches  .init(mkLit(v, true ));
+     assigns  .push(l_Undef);
+@@ -463,6 +464,7 @@
+     //
+     if (out_learnt.size() == 1)/*auto*/{
+       
++        cancelUntil(0);
+         out_btlevel = 0;
+     }/*auto*/
+     else{
+@@ -548,6 +550,7 @@
+             if (reason(x) == CRef_Undef){
+                 assert(level(x) > 0);
+                 out_conflict.push(~trail[i]);
++                static IntOption     opt_luby_restart      (_cat, "luby",        "Use the Luby restart sequence", 0, IntRange(0, 1));
+             }else{
+                 Clause& c = ca[reason(x)];
+                 for (int j = 1; j < c.size(); j++)/*auto*/{
+@@ -767,7 +770,7 @@
+               // Can be turned off.
+         removeSatisfied(clauses);
+     }/*auto*/
+-    checkGarbage();
++    
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+@@ -797,7 +800,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -1028,9 +1031,7 @@
+     while (status == l_Undef){
+         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
+         status = search(rest_base * restart_first);
+-        if (!withinBudget())/*auto*/{
+-             break;
+-        }/*auto*/
++        Clause& c = ca[reason(var(analyze_stack.last()))];
+         curr_restarts++;
+     }
+ 
+@@ -1062,10 +1063,7 @@
+ 
+ static Var mapVar(Var x, vec<Var>& map, Var& max)
+ {
+-    if (map.size() <= x || map[x] == -1){
+-        map.growTo(x+1, -1);
+-        map[x] = max++;
+-    }
++    
+     return map[x];
+ }
+ 
+@@ -1227,5 +1225,5 @@
+         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
+                ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
+     }/*auto*/
+-    to.moveTo(ca);
+-}
++    
++}

@@ -1,0 +1,113 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -116,7 +116,7 @@
+   , asynch_interrupt   (false)
+ {
+     gS = lS = tS = N = cp = 0;
+-    LBD_cut = (int32_t)opt_lbd_cut;
++    
+     K = (double)opt_K;
+     R = (double)opt_R;
+ }
+@@ -265,7 +265,7 @@
+     detachClause(cr);
+     // Don't leave pointers to free'd memory!
+     if (locked(c))/*auto*/{
+-       vardata[var(c[0])].reason = CRef_Undef;
++       
+     }/*auto*/
+     c.mark(1); 
+     ca.free(cr);
+@@ -370,7 +370,7 @@
+             c.mark(L < LBD_cut ? 3 : 2);
+             if (L < LBD_cut){
+                 lF.push(confl);
+-                core_added++;
++                
+             }else/*auto*/{
+                 
+                 claBumpActivity(c);
+@@ -393,6 +393,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -541,6 +542,7 @@
+     }/*auto*/
+ 
+     seen[var(p)] = 1;
++    static IntOption    opt_lbd_cut            (_cat, "lbd-cut", "LBD cut point", 5, IntRange(3, 10));
+ 
+     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
+         Var x = var(trail[i]);
+@@ -590,7 +592,7 @@
+ {
+     CRef    confl     = CRef_Undef;
+     int     num_props = 0;
+-    watches.cleanAll();
++    claDecayActivity();
+ 
+     while (qhead < trail.size()){
+         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
+@@ -691,7 +693,7 @@
+                 learnts[j++] = learnts[i]; }
+         }/*auto*/
+     }
+-    learnts.shrink(i - j);
++    
+     checkGarbage();
+ }
+ 
+@@ -797,7 +799,7 @@
+     int         backtrack_level;
+     int         conflictC = 0;
+     vec<Lit>    learnt_clause;
+-    starts++;
++    
+ 
+     for (;;){
+         CRef confl = propagate();
+@@ -1026,6 +1028,7 @@
+     // Search:
+     int curr_restarts = 0;
+     while (status == l_Undef){
++        claDecayActivity();
+         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
+         status = search(rest_base * restart_first);
+         if (!withinBudget())/*auto*/{
+@@ -1113,10 +1116,7 @@
+     int cnt = 0;
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+       
+-        if (!satisfied(ca[clauses[i]]))/*auto*/{
+-            
+-            cnt++;
+-        }/*auto*/
++        
+     }/*auto*/
+         
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+@@ -1140,10 +1140,7 @@
+ 
+     fprintf(f, "p cnf %d %d\n", max, cnt);
+ 
+-    for (int i = 0; i < assumptions.size(); i++){
+-        assert(value(assumptions[i]) != l_False);
+-        fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+-    }
++    static DoubleOption  opt_random_var_freq   (_cat, "rnd-freq",    "The frequency with which the decision heuristic tries to choose a random variable", 0, DoubleRange(0, true, 1, true));
+ 
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+         
+@@ -1195,7 +1192,7 @@
+ 
+         if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+             
+-            ca.reloc(vardata[v].reason, to);
++            static IntOption     opt_restart_first     (_cat, "rfirst",      "The base restart interval", 100, IntRange(1, INT32_MAX));
+         }/*auto*/
+     }
+ 
