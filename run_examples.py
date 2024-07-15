@@ -268,6 +268,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
         execution_times.append(float(duration))
         #if the command returns error then add that to the erroneous list
         
+        
 
 
     
@@ -409,6 +410,8 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
             with open(f'{main_directory}/performance_data.json', 'w') as file:
                 json.dump(data, file, indent=4)  
             return -1
+    with open(f'erroneous.txt', 'w') as file:
+        file.write(f"{name1} {scenario} {name3} Erroneeous = {erroneous}")
     print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
