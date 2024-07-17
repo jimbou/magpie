@@ -1,0 +1,59 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -137,7 +137,7 @@
+ Var Solver::newVar(bool sign, bool dvar)
+ {
+     int v = nVars();
+-    watches  .init(mkLit(v, false));
++    
+     watches  .init(mkLit(v, true ));
+     assigns  .push(l_Undef);
+     vardata  .push(mkVarData(CRef_Undef, 0));
+@@ -393,6 +393,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -692,7 +693,7 @@
+         }/*auto*/
+     }
+     learnts.shrink(i - j);
+-    checkGarbage();
++    
+ }
+ 
+ 
+@@ -767,7 +768,7 @@
+               // Can be turned off.
+         removeSatisfied(clauses);
+     }/*auto*/
+-    checkGarbage();
++    
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -994,6 +1002,7 @@
+     while (size-1 != x){
+         size = (size-1)>>1;
+         seq--;
++        double  progress = 0;
+         x = x % size;
+     }
+ 

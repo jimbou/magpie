@@ -1,0 +1,43 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -362,7 +362,8 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++        assert(confl != CRef_Undef);
++        lbool   status            = l_Undef; // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt() && c.mark() != 3){
+@@ -393,6 +394,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -692,7 +694,7 @@
+         }/*auto*/
+     }
+     learnts.shrink(i - j);
+-    checkGarbage();
++    
+ }
+ 
+ 
+@@ -827,6 +829,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){

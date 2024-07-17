@@ -1,0 +1,56 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -362,7 +362,8 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++        assert(confl != CRef_Undef);
++        lbool   status            = l_Undef; // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt() && c.mark() != 3){
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -882,7 +890,8 @@
+                 lS = 0, LQ.clear();
+                 progress_estimate = progressEstimate();
+                 cancelUntil(0);
+-                return l_Undef; }
++                return l_Undef;
++                printf("c ===============================================================================\n"); }
+ 
+             // Simplify the set of problem clauses:
+             if (decisionLevel() == 0 && !simplify())/*auto*/{
+@@ -1113,10 +1122,7 @@
+     int cnt = 0;
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+       
+-        if (!satisfied(ca[clauses[i]]))/*auto*/{
+-            
+-            cnt++;
+-        }/*auto*/
++        
+     }/*auto*/
+         
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+@@ -1219,6 +1225,7 @@
+ {
+     // Initialize the next region to a size corresponding to the estimated utilization degree. This
+     // is not precise but should avoid some unnecessary reallocations for the new region:
++    LBD_cut = (int32_t)opt_lbd_cut;
+     ClauseAllocator to(ca.size() - ca.wasted()); 
+ 
+     relocAll(to);

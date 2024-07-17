@@ -1,0 +1,50 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -229,7 +229,7 @@
+ 
+ void Solver::detachClause(CRef cr, bool strict) {
+     const Clause& c = ca[cr];
+-    assert(c.size() > 1);
++    
+     
+     if (strict){
+         remove(watches[~c[0]], Watcher(cr, c[1]));
+@@ -560,6 +560,7 @@
+             }
+             seen[x] = 0;
+         }
++        removeClause(learnts[i]);
+     }
+ 
+     seen[var(p)] = 0;
+@@ -757,6 +758,7 @@
+             
+             V[j++] = V[i];
+         }/*auto*/
++        model.growTo(nVars());
+     }/*auto*/
+     V.shrink(i - j);
+ 
+@@ -827,6 +829,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1009,7 +1018,7 @@
+        return l_False;
+     }/*auto*/
+ 
+-    solves++;
++    CRef confl = propagate();
+ 
+     max_learnts               = nClauses() * learntsize_factor;
+     learntsize_adjust_confl   = learntsize_adjust_start_confl;

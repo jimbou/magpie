@@ -1,0 +1,72 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -393,6 +393,7 @@
+                 }else/*auto*/{
+                     
+                     out_learnt.push(q);
++                    int curr_restarts = 0;
+                 }/*auto*/
+             }
+         }
+@@ -692,7 +693,7 @@
+         }/*auto*/
+     }
+     learnts.shrink(i - j);
+-    checkGarbage();
++    
+ }
+ 
+ 
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1062,10 +1070,7 @@
+ 
+ static Var mapVar(Var x, vec<Var>& map, Var& max)
+ {
+-    if (map.size() <= x || map[x] == -1){
+-        map.growTo(x+1, -1);
+-        map[x] = max++;
+-    }
++    
+     return map[x];
+ }
+ 
+@@ -1090,10 +1095,7 @@
+ void Solver::toDimacs(const char *file, const vec<Lit>& assumps)
+ {
+     FILE* f = fopen(file, "wr");
+-    if (f == NULL)/*auto*/{
+-      
+-        fprintf(stderr, "could not open file %s\n", file), exit(1);
+-    }/*auto*/
++    
+     toDimacs(f, assumps);
+     fclose(f);
+ }
+@@ -1124,13 +1126,7 @@
+                
+         if (!satisfied(ca[clauses[i]])){
+             Clause& c = ca[clauses[i]];
+-            for (int j = 0; j < c.size(); j++)/*auto*/{
+-            
+-                if (value(c[j]) != l_False)/*auto*/{
+-                    
+-                    mapVar(var(c[j]), map, max);
+-                }/*auto*/
+-            }/*auto*/
++            
+         }
+         
+     }/*auto*/

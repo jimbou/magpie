@@ -1,0 +1,58 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -204,6 +204,7 @@
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+         return ok = (propagate() == CRef_Undef);
++        newDecisionLevel();
+     }else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+@@ -265,7 +266,7 @@
+     detachClause(cr);
+     // Don't leave pointers to free'd memory!
+     if (locked(c))/*auto*/{
+-       vardata[var(c[0])].reason = CRef_Undef;
++       
+     }/*auto*/
+     c.mark(1); 
+     ca.free(cr);
+@@ -692,7 +693,7 @@
+         }/*auto*/
+     }
+     learnts.shrink(i - j);
+-    checkGarbage();
++    
+ }
+ 
+ 
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1144,6 +1152,7 @@
+         assert(value(assumptions[i]) != l_False);
+         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+     }
++    removeSatisfied(lF);
+ 
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+         
+@@ -1219,6 +1228,7 @@
+ {
+     // Initialize the next region to a size corresponding to the estimated utilization degree. This
+     // is not precise but should avoid some unnecessary reallocations for the new region:
++    LBD_cut = (int32_t)opt_lbd_cut;
+     ClauseAllocator to(ca.size() - ca.wasted()); 
+ 
+     relocAll(to);

@@ -1,0 +1,62 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -204,6 +204,7 @@
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+         return ok = (propagate() == CRef_Undef);
++        newDecisionLevel();
+     }else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -964,7 +972,7 @@
+     for (int i = 0; i <= decisionLevel(); i++){
+         int beg = i == 0 ? 0 : trail_lim[i - 1];
+         int end = i == decisionLevel() ? trail.size() : trail_lim[i];
+-        progress += pow(F, i) * (end - beg);
++        
+     }
+ 
+     return progress / nVars();
+@@ -1116,6 +1124,16 @@
+         if (!satisfied(ca[clauses[i]]))/*auto*/{
+             
+             cnt++;
++            if (verbosity >= 1)/*auto*/{
++                
++                printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
++                       (int)conflicts, 
++                       (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
++                       (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
++                       starts, conflicts / starts,
++                       luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
++                       (int32_t)opt_cp_increase, (double)opt_core_tolerance);
++            }/*auto*/
+         }/*auto*/
+     }/*auto*/
+         
+@@ -1193,10 +1211,7 @@
+     for (int i = 0; i < trail.size(); i++){
+         Var v = var(trail[i]);
+ 
+-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+-            
+-            ca.reloc(vardata[v].reason, to);
+-        }/*auto*/
++        
+     }
+ 
+     // All learnt:

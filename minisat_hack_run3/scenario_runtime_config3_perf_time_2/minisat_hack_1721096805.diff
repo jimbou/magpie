@@ -1,0 +1,66 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -204,6 +204,7 @@
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+         return ok = (propagate() == CRef_Undef);
++        newDecisionLevel();
+     }else{
+         CRef cr = ca.alloc(ps, false);
+         clauses.push(cr);
+@@ -223,7 +224,7 @@
+        learnts_literals += c.size();
+     }/*auto*/
+     else/*auto*/{
+-                  clauses_literals += c.size();
++                  
+     }/*auto*/ }
+ 
+ 
+@@ -590,7 +591,7 @@
+ {
+     CRef    confl     = CRef_Undef;
+     int     num_props = 0;
+-    watches.cleanAll();
++    claDecayActivity();
+ 
+     while (qhead < trail.size()){
+         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1113,10 +1121,7 @@
+     int cnt = 0;
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+       
+-        if (!satisfied(ca[clauses[i]]))/*auto*/{
+-            
+-            cnt++;
+-        }/*auto*/
++        
+     }/*auto*/
+         
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+@@ -1193,10 +1198,7 @@
+     for (int i = 0; i < trail.size(); i++){
+         Var v = var(trail[i]);
+ 
+-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+-            
+-            ca.reloc(vardata[v].reason, to);
+-        }/*auto*/
++        
+     }
+ 
+     // All learnt:

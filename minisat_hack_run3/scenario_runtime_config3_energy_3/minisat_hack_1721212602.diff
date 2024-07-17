@@ -1,0 +1,45 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -229,7 +229,7 @@
+ 
+ void Solver::detachClause(CRef cr, bool strict) {
+     const Clause& c = ca[cr];
+-    assert(c.size() > 1);
++    
+     
+     if (strict){
+         remove(watches[~c[0]], Watcher(cr, c[1]));
+@@ -827,6 +827,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
+@@ -1113,10 +1120,7 @@
+     int cnt = 0;
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+       
+-        if (!satisfied(ca[clauses[i]]))/*auto*/{
+-            
+-            cnt++;
+-        }/*auto*/
++        
+     }/*auto*/
+         
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+@@ -1144,6 +1148,7 @@
+         assert(value(assumptions[i]) != l_False);
+         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+     }
++    removeSatisfied(lF);
+ 
+     for (int i = 0; i < clauses.size(); i++)/*auto*/{
+         

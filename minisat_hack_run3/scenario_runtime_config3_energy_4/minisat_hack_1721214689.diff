@@ -1,0 +1,33 @@
+--- before: sources/core/Solver.cc
++++ after: sources/core/Solver.cc
+@@ -414,6 +414,7 @@
+     // Simplify conflict clause:
+     //
+     int i, j;
++    static DoubleOption opt_R                  (_cat, "R-val", "R", 1.4, DoubleRange(1.0, true, 2.5, true));
+     out_learnt.copyTo(analyze_toclear);
+     if (ccmin_mode == 2){
+         uint32_t abstract_level = 0;
+@@ -554,7 +555,7 @@
+                     
+                     if (level(var(c[j])) > 0)/*auto*/{
+                         
+-                        seen[var(c[j])] = 1;
++                        core_added = 0;
+                     }/*auto*/
+                 }/*auto*/
+             }
+@@ -827,6 +828,13 @@
+             if (!luby_restart){
+                 gS += L;
+                 PUSH(LQ, L, 50, lS);
++                if (!luby_restart){
++                    PUSH(TQ, trail.size(), 5000, tS);
++                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
++                        
++                        lS = 0, LQ.clear();
++                    }/*auto*/
++                }
+             }
+ 
+             if (learnt_clause.size() == 1){
