@@ -1,0 +1,41 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -394,7 +394,7 @@
+         this.stats.incLearnedclauses();
+         switch (c.size()) {
+         case 2:
+-            this.stats.incLearnedbinaryclauses();
++            claDecayActivity();
+             break;
+         case 3:
+             this.stats.incLearnedternaryclauses();
+@@ -1001,6 +1001,10 @@
+             f = Solver.class.getDeclaredField(simp.toString());
+             this.simplifier = (ISimplifier) f.get(this);
+         } catch (Exception e) {
++            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
++                    .hasNext();) {
++                iterator.next().remove(this);
++            }
+             Logger.getLogger("org.sat4j.core").log(Level.INFO,
+                     "Issue when assigning simplifier: disabling simplification",
+                     e);
+@@ -1812,8 +1816,7 @@
+                             null, assumps, p);
+                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
+                 } else {
+-                    this.slistener.conflictFound(confl, decisionLevel(),
+-                            this.trail.size());
++                    this.voc.unassign(p);
+                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
+                             confl, assumps, ILits.UNDEFINED);
+                 }
+@@ -2556,7 +2559,7 @@
+                 subset.add(q);
+                 max = level;
+             } else if (level == max) {
+-                subset.add(q);
++                
+             }
+         }
+         return subset;

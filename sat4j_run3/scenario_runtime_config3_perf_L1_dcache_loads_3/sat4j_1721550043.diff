@@ -1,0 +1,49 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -1812,8 +1812,7 @@
+                             null, assumps, p);
+                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
+                 } else {
+-                    this.slistener.conflictFound(confl, decisionLevel(),
+-                            this.trail.size());
++                    this.voc.unassign(p);
+                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
+                             confl, assumps, ILits.UNDEFINED);
+                 }
+@@ -2093,7 +2092,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2135,7 +2136,7 @@
+         }
+         stb.append("Listener: ");
+         stb.append(slistener);
+-        stb.append("\n");
++        
+         stb.append(prefix);
+         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
+         return stb.toString();
+@@ -2436,7 +2437,7 @@
+         case LBD:
+             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
+                     timer);
+-            break;
++            
+         case LBD2:
+             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
+                     timer);
+@@ -2479,6 +2480,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {

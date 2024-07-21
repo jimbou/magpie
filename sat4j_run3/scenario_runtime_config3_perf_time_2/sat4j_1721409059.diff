@@ -1,0 +1,49 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -565,9 +565,7 @@
+         this.voc.setTrailPosition(p, this.trail.size());
+         this.voc.setReason(p, from);
+         this.trail.push(p);
+-        if (from != null && from.learnt()) {
+-            this.learnedConstraintsDeletionStrategy.onPropagation(from, p);
+-        }
++        
+         return true;
+     }
+ 
+@@ -1450,6 +1448,7 @@
+                     tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
+                     this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+                     reason = this.voc.getReason(p);
++                    Constr confl = reduceClausesContainingTheNegationOf(p);
+                     if (reason == null && this.voc.getLevel(p) > 0
+                             // we consider literals propagated by learned
+                             // clauses
+@@ -2093,7 +2092,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2135,7 +2136,7 @@
+         }
+         stb.append("Listener: ");
+         stb.append(slistener);
+-        stb.append("\n");
++        
+         stb.append(prefix);
+         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
+         return stb.toString();
+@@ -2479,6 +2480,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {

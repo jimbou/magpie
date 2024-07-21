@@ -1,0 +1,48 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -1204,7 +1204,7 @@
+         while (!trail.isEmpty() && trail.size() > level) {
+             undoOne();
+             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+-                trailLim.pop();
++                
+                 decisions.pop();
+             }
+         }
+@@ -1477,6 +1477,7 @@
+                     int p = this.voc.getFromPool(i);
+                     if (!this.voc.isUnassigned(p)) {
+                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
++                        Solver.this.undertimeout = false;
+                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+                         if (this.voc.getReason(p) == null) {
+                             this.decisions.push(tempmodel.last());
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -2093,7 +2094,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2253,7 +2256,7 @@
+         }
+         int current = this.trail.last();
+         while (current != p) {
+-            undoOne();
++            
+             if (this.trail.isEmpty()) {
+                 return;
+             }

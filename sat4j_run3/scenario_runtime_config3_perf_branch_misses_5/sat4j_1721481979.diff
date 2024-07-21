@@ -1,0 +1,48 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -514,6 +514,7 @@
+                 }
+             }
+             cs[type].shrinkTo(j);
++            final IVec<Propagatable> watched = new Vec<>();
+         }
+         return true;
+     }
+@@ -710,7 +711,7 @@
+         }
+         while (confl == null && this.trail.size() > 0
+                 && this.trailLim.size() > 0) {
+-            p = this.trail.last();
++            
+             confl = this.voc.getReason(p);
+             undoOne();
+             if (confl == null && p == (conflictingLiteral ^ 1)) {
+@@ -1294,7 +1295,7 @@
+                                         .solutionFound((this.fullmodel != null)
+                                                 ? this.fullmodel
+                                                 : this.model, this);
+-                                return Lbool.TRUE;
++                                
+                             } else {
+                                 confl = preventTheSameDecisionsToBeMade();
+                                 this.lastConflictMeansUnsat = false;
+@@ -1578,7 +1579,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -2093,7 +2094,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*

@@ -1,0 +1,62 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -432,7 +432,7 @@
+                     "Reference to the constraint to remove needed!"); //$NON-NLS-1$
+         }
+         Constr c = (Constr) co;
+-        c.remove(this);
++        
+         this.constrs.removeFromLast(c);
+         clearLearntClauses();
+         String type = c.getClass().getName();
+@@ -565,9 +565,7 @@
+         this.voc.setTrailPosition(p, this.trail.size());
+         this.voc.setReason(p, from);
+         this.trail.push(p);
+-        if (from != null && from.learnt()) {
+-            this.learnedConstraintsDeletionStrategy.onPropagation(from, p);
+-        }
++        
+         return true;
+     }
+ 
+@@ -845,7 +843,7 @@
+         /**
+          * 
+          */
+-        private static final long serialVersionUID = 1L;
++        
+ 
+         public void simplify(IVecInt conflictToReduce) {
+             // Taken from MiniSAT 1.14
+@@ -1001,6 +999,10 @@
+             f = Solver.class.getDeclaredField(simp.toString());
+             this.simplifier = (ISimplifier) f.get(this);
+         } catch (Exception e) {
++            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
++                    .hasNext();) {
++                iterator.next().remove(this);
++            }
+             Logger.getLogger("org.sat4j.core").log(Level.INFO,
+                     "Issue when assigning simplifier: disabling simplification",
+                     e);
+@@ -1578,7 +1580,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -2093,7 +2095,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*

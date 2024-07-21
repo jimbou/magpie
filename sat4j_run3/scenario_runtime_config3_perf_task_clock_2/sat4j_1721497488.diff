@@ -1,0 +1,67 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -710,7 +710,7 @@
+         }
+         while (confl == null && this.trail.size() > 0
+                 && this.trailLim.size() > 0) {
+-            p = this.trail.last();
++            
+             confl = this.voc.getReason(p);
+             undoOne();
+             if (confl == null && p == (conflictingLiteral ^ 1)) {
+@@ -723,34 +723,10 @@
+         if (confl == null) {
+             return outLearnt;
+         }
+-        do {
+-            preason.clear();
+-            confl.calcReason(p, preason);
+-            // Trace reason for p
+-            for (var j = 0; j < preason.size(); j++) {
+-                int q = preason.get(j);
+-                if (!seen[q >> 1]) {
+-                    seen[q >> 1] = true;
+-                    if (this.voc.getReason(q) == null
+-                            && this.voc.getLevel(q) > 0) {
+-                        assert assumps.contains(toDimacs(q));
+-                        outLearnt.push(toDimacs(q));
+-                    }
+-                }
+-            }
+-
+-            // select next reason to look at
+-            do {
+-                p = this.trail.last();
+-                confl = this.voc.getReason(p);
+-                undoOne();
+-                if (decisionLevel() > 0
+-                        && this.trail.size() <= this.trailLim.last()) {
+-                    this.trailLim.pop();
+-                }
+-            } while (this.trail.size() > 0 && decisionLevel() > 0
+-                    && (!seen[p >> 1] || confl == null));
+-        } while (decisionLevel() > 0);
++        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
++                .hasNext();) {
++            iterator.next().remove(this);
++        }
+         return outLearnt;
+     }
+ 
+@@ -2135,7 +2111,7 @@
+         }
+         stb.append("Listener: ");
+         stb.append(slistener);
+-        stb.append("\n");
++        
+         stb.append(prefix);
+         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
+         return stb.toString();
+@@ -2479,6 +2455,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {

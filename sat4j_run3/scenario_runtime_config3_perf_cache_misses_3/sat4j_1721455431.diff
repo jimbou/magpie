@@ -1,0 +1,86 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -508,7 +508,7 @@
+             for (var i = 0; i < cs[type].size(); i++) {
+                 if (cs[type].get(i).simplify()) {
+                     // enleve les contraintes satisfaites de la base
+-                    cs[type].get(i).remove(this);
++                    
+                 } else {
+                     cs[type].moveTo(j++, i);
+                 }
+@@ -1204,7 +1204,7 @@
+         while (!trail.isEmpty() && trail.size() > level) {
+             undoOne();
+             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+-                trailLim.pop();
++                
+                 decisions.pop();
+             }
+         }
+@@ -1283,10 +1283,7 @@
+                             // satisfied
+                             var allsat = true;
+                             for (var i = 0; i < this.constrs.size(); i++) {
+-                                if (!this.constrs.get(i).isSatisfied()) {
+-                                    allsat = false;
+-                                    break;
+-                                }
++                                
+                             }
+                             if (allsat) {
+                                 modelFound();
+@@ -1404,7 +1401,7 @@
+             String str;
+             for (var i = 0; i < trailLim.size(); i++) {
+                 q = trail.get(trailLim.get(i));
+-                stb.append(LiteralsUtils.toDimacs(q));
++                
+                 this.voc.unassign(q);
+                 this.voc.satisfies(q ^ 1);
+                 // can change invariants in constraints data
+@@ -1477,6 +1474,7 @@
+                     int p = this.voc.getFromPool(i);
+                     if (!this.voc.isUnassigned(p)) {
+                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
++                        Solver.this.undertimeout = false;
+                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+                         if (this.voc.getReason(p) == null) {
+                             this.decisions.push(tempmodel.last());
+@@ -1578,7 +1576,7 @@
+     protected final void reduceDB() {
+         this.stats.incReduceddb();
+         this.slistener.cleaning();
+-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
++        
+     }
+ 
+     protected ActivityComparator getActivityComparator() {
+@@ -1823,6 +1821,7 @@
+                 cancelLearntLiterals(learnedLiteralsLimit);
+                 return false;
+             }
++            return true;
+         }
+         this.rootLevel = decisionLevel();
+         // moved initialization here if new literals are added in the
+@@ -2093,7 +2092,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2436,7 +2437,7 @@
+         case LBD:
+             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
+                     timer);
+-            break;
++            
+         case LBD2:
+             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
+                     timer);

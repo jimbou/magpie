@@ -1,0 +1,49 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -285,7 +285,7 @@
+     public <S extends ISolverService> void setSearchListener(
+             SearchListener<S> sl) {
+         this.slistener = sl;
+-        this.slistener.init(this);
++        
+     }
+ 
+     /*
+@@ -305,9 +305,7 @@
+      * LearningStrategy)
+      */
+     public void setLearningStrategy(LearningStrategy<D> strategy) {
+-        if (this.learner != null) {
+-            this.learner.setSolver(null);
+-        }
++        
+         this.learner = strategy;
+         strategy.setSolver(this);
+     }
+@@ -747,6 +745,7 @@
+                 if (decisionLevel() > 0
+                         && this.trail.size() <= this.trailLim.last()) {
+                     this.trailLim.pop();
++                    this.learnedConstraintsDeletionStrategy.init();
+                 }
+             } while (this.trail.size() > 0 && decisionLevel() > 0
+                     && (!seen[p >> 1] || confl == null));
+@@ -2093,7 +2092,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2479,6 +2480,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {
