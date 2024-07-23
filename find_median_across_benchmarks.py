@@ -21,23 +21,35 @@ def read_and_combine_csv(files):
     combined_df = pd.concat(data_frames)
     return combined_df
 
-def calculate_medians(combined_df):
-    """Calculate medians across rows grouped by the index (first column in original CSV)."""
+def calculate_statistics(combined_df):
+    """Calculate medians and IQRs across rows grouped by the index (first column in original CSV)."""
+    # Calculating the median for each group
     median_df = combined_df.groupby(combined_df.index).median()
-    return median_df
+    median_df.rename(columns=lambda x: x + '_median', inplace=True)
+    
+    # Calculating the IQR for each group
+    Q1 = combined_df.groupby(combined_df.index).quantile(0.25)
+    Q3 = combined_df.groupby(combined_df.index).quantile(0.75)
+    IQR_df = Q3 - Q1
+    IQR_df.rename(columns=lambda x: x + '_IQR', inplace=True)
+    
+    # Combine the median and IQR DataFrames
+    stats_df = pd.concat([median_df, IQR_df], axis=1)
+    return stats_df
 
-def save_median_csv(median_df, output_file):
-    """Save the median DataFrame to a CSV file."""
-    median_df.to_csv(output_file)
+def save_stats_csv(stats_df, output_file):
+    """Save the statistics DataFrame (medians and IQRs) to a CSV file."""
+    stats_df.to_csv(output_file)
 
 def process_csvs(root_dir, csv_name):
-    """Main function to process CSVs."""
+    """Main function to process CSVs, calculating medians and IQRs."""
     csv_files = find_csv_files(root_dir, csv_name)
     combined_df = read_and_combine_csv(csv_files)
-    median_df = calculate_medians(combined_df)
-    output_file = os.path.join(root_dir, csv_name.replace('.csv', '_median.csv'))
-    save_median_csv(median_df, output_file)
-    print(f"Median CSV has been saved to {output_file}")
+    stats_df = calculate_statistics(combined_df)
+    output_file = os.path.join(root_dir, csv_name.replace('.csv', '_stats.csv'))
+    save_stats_csv(stats_df, output_file)
+    print(f"Statistics CSV (medians and IQRs) has been saved to {output_file}")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

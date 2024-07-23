@@ -35,7 +35,10 @@ def process_json(json_file_path):
     with open(json_file_path, 'r') as file:
         data = json.load(file)
 
-    categories = {'item_name': {}, 'retries': {}}
+    category_dicts = {
+        'item_name': {}, 'retries': {}, 'item_name_num': {}, 'retries_num': {},
+        'item_name_perc': {}, 'retries_perc': {}, 'item_name_perc_num': {}, 'retries_perc_num': {}
+    }
 
     for element in data['items']:
         item_name = element['item_name']
@@ -44,7 +47,7 @@ def process_json(json_file_path):
         
         improvement_ratio, improvement_num, improvement_perc_ratio, improvement_perc_num = find_largest_improvement_ratio(fitness_values)
         
-        categories_to_process = [
+        categories = [
             ('item_name', item_name, improvement_ratio),
             ('retries', retries, improvement_ratio),
             ('item_name_num', item_name, improvement_num),
@@ -55,27 +58,32 @@ def process_json(json_file_path):
             ('retries_perc_num', retries, improvement_perc_num)
         ]
 
-        for category_name, key, value in categories_to_process:
-            if key not in categories[category_name]:
-                categories[category_name][key] = []
-            categories[category_name][key].append(value)
+        for category_name, key, value in categories:
+            if key not in category_dicts[category_name]:
+                category_dicts[category_name][key] = []
+            category_dicts[category_name][key].append(value)
 
     result = {}
-    for name, cat_dict in categories.items():
+    for name, cat_dict in category_dicts.items():
         result[name] = {key: (median(values), np.percentile(values, 75) - np.percentile(values, 25)) for key, values in cat_dict.items()}
     
     return result
 
-def save_dict_to_csv(data_dict, csv_file_path):
+def save_dict_to_csv(data_dict, csv_file_path, header):
     sorted_data = sorted(data_dict.items(), key=lambda x: x[1][0])  # Sort by median
     
     with open(csv_file_path, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
-        writer.writerow(['Category', 'Median', 'IQR'])
+        writer.writerow(header)
         for key, value in sorted_data:
             writer.writerow([key, value[0], value[1]])
 
-def main(json_file_path):
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <json_file_path>")
+        sys.exit(1)
+    
+    json_file_path = sys.argv[1]
     results = process_json(json_file_path)
     
     json_dir = os.path.dirname(json_file_path)
@@ -95,12 +103,7 @@ def main(json_file_path):
 
     for key, data in results.items():
         csv_path = os.path.join(json_dir, file_paths[key])
-        save_dict_to_csv(data, csv_path)
+        header = ['Key', 'Median', 'IQR']
+        save_dict_to_csv(data, csv_path, header)
+        
         print(f"CSV file for {key} has been saved to {csv_path}")
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <json_file_path>")
-        sys.exit(1)
-
-    main(sys.argv[1])

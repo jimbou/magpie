@@ -41,6 +41,13 @@ def process_list(values, item_name, retries, output_dir):
         decreases = np.abs(decreases)
         std_deviation_of_decreases = np.std(decreases)
         median_decrease = np.median(decreases) if len(decreases) > 0 else 0
+
+        if len(decreases) > 0:
+            Q1 = np.percentile(decreases, 25)  # 25th percentile
+            Q3 = np.percentile(decreases, 75)  # 75th percentile
+            IQR_decrease = Q3 - Q1
+        else:
+            IQR_decrease = 0
         
         threshold = average_decrease_per_step * 1.5  # Example threshold
         #print(average_decrease_per_step, threshold,decreases)
@@ -53,6 +60,7 @@ def process_list(values, item_name, retries, output_dir):
             "average_decrease_percentage_per_step": average_decrease_percentage_per_step,
             "std_deviation_of_decreases": std_deviation_of_decreases,
             "median_decrease": median_decrease,
+            "iqr_decrease": IQR_decrease,
             "number_of_large_decreases": number_of_large_decreases,
             "proportion_of_large_decreases": proportion_of_large_decreases
         }

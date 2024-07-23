@@ -1,6 +1,6 @@
 #!/bin/bash
 COMMAND="$*"
-echo  $COMMAND
+
 # Check for input command
 if [ $# -eq 0 ]; then
     echo "No command provided."
