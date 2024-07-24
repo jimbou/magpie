@@ -1,0 +1,83 @@
+--- before: src/main/java/weka/classifiers/trees/RandomForest.java
++++ after: src/main/java/weka/classifiers/trees/RandomForest.java
+@@ -461,7 +461,7 @@
+   public void setNumDecimalPlaces(int num) {
+ 
+     super.setNumDecimalPlaces(num);
+-    ((RandomTree) getClassifier()).setNumDecimalPlaces(num);
++    
+   }
+ 
+   /**
+@@ -496,7 +496,7 @@
+   public String toString() {
+ 
+     if (m_Classifiers == null) {
+-      return "RandomForest: No model built yet.";
++      
+     }
+     StringBuilder buffer = new StringBuilder("RandomForest\n\n");
+     buffer.append(super.toString());
+@@ -551,14 +551,12 @@
+     }
+ 
+     double[] impurityDecreases = new double[m_data.numAttributes()];
+-    if (nodeCounts == null) {
+-      nodeCounts = new double[m_data.numAttributes()];
+-    }
++    
+     for (Classifier c : m_Classifiers) {
+       double[][] forClassifier = ((RandomTree) c).getImpurityDecreases();
+       for (int i = 0; i < m_data.numAttributes(); i++) {
+         impurityDecreases[i] += forClassifier[i][0];
+-        nodeCounts[i] += forClassifier[i][1];
++        RandomTree rTree = new RandomTree();
+       }
+     }
+     for (int i = 0; i < m_data.numAttributes(); i++) {
+@@ -607,8 +605,7 @@
+       "\tCompute and output attribute importance (mean impurity decrease "
+         + "method)", "attribute-importance", 0, "-attribute-importance"));
+ 
+-    newVector.addElement(new Option("\tNumber of iterations (i.e., the number of trees in the random forest).\n"
+-      + "\t(current value " + getNumIterations() + ")", "I", 1, "-I <num>"));
++    
+ 
+     newVector.addElement(new Option("\tNumber of execution slots.\n"
+       + "\t(default 1 - i.e. no parallelism)\n"
+@@ -640,6 +637,7 @@
+     }
+ 
+     if (getStoreOutOfBagPredictions()) {
++      String[] args = { "-do-not-check-capabilities" };
+       result.add("-store-out-of-bag-predictions");
+     }
+ 
+@@ -663,6 +661,9 @@
+ 
+     if (getDoNotCheckCapabilities()) {
+       result.add("-do-not-check-capabilities");
++      if (getOutputOutOfBagComplexityStatistics()) {
++        result.add("-output-out-of-bag-complexity-statistics");
++      }
+     }
+ 
+     // Add base classifier options
+@@ -839,7 +840,8 @@
+       ((RandomTree) AbstractClassifier.forName(defaultClassifierString(),
+         options));
+     classifier.setComputeImpurityDecreases(m_computeAttributeImportance);
+-    setDoNotCheckCapabilities(classifier.getDoNotCheckCapabilities());
++    List<Option> list =
++      Collections.list(((OptionHandler) getClassifier()).listOptions());
+     setSeed(classifier.getSeed());
+     setDebug(classifier.getDebug());
+     setNumDecimalPlaces(classifier.getNumDecimalPlaces());
+@@ -868,6 +870,6 @@
+    * @param argv the options
+    */
+   public static void main(String[] argv) {
+-    runClassifier(new RandomForest(), argv);
++    
+   }
+ }

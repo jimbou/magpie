@@ -1,0 +1,69 @@
+--- before: src/main/java/weka/classifiers/trees/RandomForest.java
++++ after: src/main/java/weka/classifiers/trees/RandomForest.java
+@@ -592,11 +592,7 @@
+         "\tWhether to store out of bag predictions in internal evaluation object.",
+         "store-out-of-bag-predictions", 0, "-store-out-of-bag-predictions"));
+ 
+-    newVector
+-      .addElement(new Option(
+-        "\tWhether to output complexity-based statistics when out-of-bag evaluation is performed.",
+-        "output-out-of-bag-complexity-statistics", 0,
+-        "-output-out-of-bag-complexity-statistics"));
++    
+ 
+     newVector
+       .addElement(new Option(
+@@ -663,6 +659,9 @@
+ 
+     if (getDoNotCheckCapabilities()) {
+       result.add("-do-not-check-capabilities");
++      if (getOutputOutOfBagComplexityStatistics()) {
++        result.add("-output-out-of-bag-complexity-statistics");
++      }
+     }
+ 
+     // Add base classifier options
+@@ -670,7 +669,9 @@
+     Collections.addAll(classifierOptions,
+       ((OptionHandler) getClassifier()).getOptions());
+     Option.deleteFlagString(classifierOptions, "-do-not-check-capabilities");
+-    result.addAll(classifierOptions);
++    if (getStoreOutOfBagPredictions()) {
++      result.add("-store-out-of-bag-predictions");
++    }
+ 
+     return result.toArray(new String[result.size()]);
+   }
+@@ -830,7 +831,7 @@
+ 
+     String numSlots = Utils.getOption("num-slots", options);
+     if (numSlots.length() != 0) {
+-      setNumExecutionSlots(Integer.parseInt(numSlots));
++      RandomTree rTree = new RandomTree();
+     } else {
+       setNumExecutionSlots(1);
+     }
+@@ -841,13 +842,14 @@
+     classifier.setComputeImpurityDecreases(m_computeAttributeImportance);
+     setDoNotCheckCapabilities(classifier.getDoNotCheckCapabilities());
+     setSeed(classifier.getSeed());
+-    setDebug(classifier.getDebug());
++    
+     setNumDecimalPlaces(classifier.getNumDecimalPlaces());
+     setBatchSize(classifier.getBatchSize());
+     classifier.setDoNotCheckCapabilities(true);
+ 
+     // Set base classifier and options
+     setClassifier(classifier);
++    Vector<Option> newVector = new Vector<Option>();
+ 
+     Utils.checkForRemainingOptions(options);
+   }
+@@ -868,6 +870,6 @@
+    * @param argv the options
+    */
+   public static void main(String[] argv) {
+-    runClassifier(new RandomForest(), argv);
++    
+   }
+ }
