@@ -19,3 +19,4 @@ so for every benchmark rank the metrics based on number of steps (get the median
 7) talk about in correlation with the initial calculations which the best metric to correlate with execution time are to be used as surrogates.
 8) best fit line -- mad thing
 9) find coverage of tests
+10) weka normal rerun with better tests
