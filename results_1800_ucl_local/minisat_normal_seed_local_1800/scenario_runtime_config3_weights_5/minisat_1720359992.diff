@@ -1,0 +1,44 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -435,6 +435,7 @@
+         for (int i = 1; i < c.size(); i++){
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
++                watches.cleanAll();
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+                     analyze_stack.push(p);
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -776,6 +777,7 @@
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+                 /*auto*/{
++                    Lit            p   = trail[qhead++];
+                     reduceDB();
+                 }/*auto*/
+ 
+@@ -791,7 +793,7 @@
+                     return l_False;
+                 }else{
+                     next = p;
+-                    break;
++                    max_learnts               = nClauses() * learntsize_factor;
+                 }
+             }
+ 
+@@ -932,6 +934,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 

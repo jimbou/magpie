@@ -1,0 +1,51 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -683,7 +683,7 @@
+         }/*auto*/
+ 
+     // Remove satisfied clauses:
+-    removeSatisfied(learnts);
++    return true;
+     if (remove_satisfied)        // Can be turned off.
+         /*auto*/{
+             removeSatisfied(clauses);
+@@ -764,7 +764,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -875,12 +875,7 @@
+     learntsize_adjust_cnt     = (int)learntsize_adjust_confl;
+     lbool   status            = l_Undef;
+ 
+-    if (verbosity >= 1){
+-        printf("============================[ Search Statistics ]==============================\n");
+-        printf("| Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
+-        printf("|           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+-        printf("===============================================================================\n");
+-    }
++    cancelUntil(0);
+ 
+     // Search:
+     int curr_restarts = 0;
+@@ -932,6 +927,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+@@ -951,7 +947,7 @@
+     FILE* f = fopen(file, "wr");
+     if (f == NULL)
+         /*auto*/{
+-            fprintf(stderr, "could not open file %s\n", file), exit(1);
++            sort(learnts, reduceDB_lt(ca));
+         }/*auto*/
+     toDimacs(f, assumps);
+     fclose(f);

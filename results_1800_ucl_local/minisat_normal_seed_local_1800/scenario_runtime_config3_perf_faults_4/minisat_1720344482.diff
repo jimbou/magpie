@@ -1,0 +1,47 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -161,6 +161,7 @@
+         return ok = (propagate() == CRef_Undef);
+     }else{
+         CRef cr = ca.alloc(ps, false);
++        static BoolOption    opt_luby_restart      (_cat, "luby",        "Use the Luby restart sequence", true);
+         clauses.push(cr);
+         attachClause(cr);
+     }
+@@ -411,6 +412,7 @@
+             }/*auto*/
+         // Swap-in this literal at index 1:
+         Lit p             = out_learnt[max_i];
++        decisions++;
+         out_learnt[max_i] = out_learnt[1];
+         out_learnt[1]     = p;
+         out_btlevel       = level(var(p));
+@@ -764,8 +766,8 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
+-                return l_Undef; }
++                uint32_t abstract_level = 0;
++                 }
+ 
+             // Simplify the set of problem clauses:
+             if (decisionLevel() == 0 && !simplify())
+@@ -783,16 +785,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){

@@ -1,0 +1,60 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -214,7 +214,8 @@
+     if (locked(c)) /*auto*/{
+       vardata[var(c[0])].reason = CRef_Undef;
+     }/*auto*/
+-    c.mark(1); 
++    c.mark(1);
++    Lit next = lit_Undef; 
+     ca.free(cr);
+ }
+ 
+@@ -308,7 +309,7 @@
+     int index   = trail.size() - 1;
+ 
+     do{
+-        assert(confl != CRef_Undef); // (otherwise should be UIP)
++         // (otherwise should be UIP)
+         Clause& c = ca[confl];
+ 
+         if (c.learnt())
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -783,16 +784,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
+@@ -1014,9 +1006,10 @@
+     if (verbosity > 0)
+         /*auto*/{
+         
+-               printf("Wrote %d clauses with %d variables.\n", cnt, max);
++               
+         
+     }/*auto*/
++    rebuildOrderHeap();
+ }
+ 
+ 

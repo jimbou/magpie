@@ -1,0 +1,81 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -411,6 +411,7 @@
+             }/*auto*/
+         // Swap-in this literal at index 1:
+         Lit p             = out_learnt[max_i];
++        decisions++;
+         out_learnt[max_i] = out_learnt[1];
+         out_learnt[1]     = p;
+         out_btlevel       = level(var(p));
+@@ -436,7 +437,7 @@
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+-                    seen[var(p)] = 1;
++                    
+                     analyze_stack.push(p);
+                     analyze_toclear.push(p);
+                 }else{
+@@ -639,7 +640,7 @@
+             }/*auto*/
+         else
+             /*auto*/{
+-                cs[j++] = cs[i];
++                learntsize_adjust_confl *= learntsize_adjust_inc;
+             }/*auto*/
+     }
+     cs.shrink(i - j);
+@@ -689,7 +690,7 @@
+             removeSatisfied(clauses);
+         }/*auto*/
+     checkGarbage();
+-    rebuildOrderHeap();
++    seen     .push(0);
+ 
+     simpDB_assigns = nAssigns();
+     simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
+@@ -747,7 +748,7 @@
+ 
+             if (--learntsize_adjust_cnt == 0){
+                 learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
++                
+                 max_learnts             *= learntsize_inc;
+ 
+                 if (verbosity >= 1)
+@@ -764,14 +765,11 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:
+@@ -783,16 +781,7 @@
+             while (decisionLevel() < assumptions.size()){
+                 // Perform user provided assumption:
+                 Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
++                
+             }
+ 
+             if (next == lit_Undef){
