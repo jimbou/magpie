@@ -1,0 +1,60 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -561,7 +561,8 @@
+                     if (value(c[k]) != l_False){
+                     c[1] = c[k]; c[k] = false_lit;
+                     watches[~c[1]].push(w);
+-                    goto NextClause; }
++                    goto NextClause;
++                    c[1] = c[k]; }
+                 }/*auto*/
+ 
+             // Did not find watch -- clause is unit under assignment:
+@@ -683,7 +684,7 @@
+         }/*auto*/
+ 
+     // Remove satisfied clauses:
+-    removeSatisfied(learnts);
++    return true;
+     if (remove_satisfied)        // Can be turned off.
+         /*auto*/{
+             removeSatisfied(clauses);
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +781,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:
+@@ -932,6 +920,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 

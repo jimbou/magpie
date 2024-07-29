@@ -1,0 +1,31 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -173,6 +173,7 @@
+     const Clause& c = ca[cr];
+     assert(c.size() > 1);
+     watches[~c[0]].push(Watcher(cr, c[1]));
++    assert(ok);
+     watches[~c[1]].push(Watcher(cr, c[0]));
+     if (c.learnt()) /*auto*/{
+       learnts_literals += c.size();
+@@ -239,7 +240,7 @@
+             assigns [x] = l_Undef;
+             if (phase_saving > 1 || (phase_saving == 1) && c > trail_lim.last())
+                 /*auto*/{
+-                    polarity[x] = sign(trail[c]);
++                    static DoubleOption  opt_clause_decay      (_cat, "cla-decay",   "The clause activity decay factor",              0.999,    DoubleRange(0, false, 1, false));
+                 }/*auto*/
+             insertVarOrder(x); }
+         qhead = trail_lim[level];
+@@ -1076,10 +1077,6 @@
+     ClauseAllocator to(ca.size() - ca.wasted()); 
+ 
+     relocAll(to);
+-    if (verbosity >= 2)
+-        /*auto*/{
+-            printf("|  Garbage collection:   %12d bytes => %12d bytes             |\n", 
+-               ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
+-        }/*auto*/
++    
+     to.moveTo(ca);
+ }

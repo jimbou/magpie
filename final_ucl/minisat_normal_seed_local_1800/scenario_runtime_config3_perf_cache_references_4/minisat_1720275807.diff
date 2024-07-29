@@ -1,0 +1,70 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -379,7 +379,7 @@
+                 for (int k = 1; k < c.size(); k++)
+                     /*auto*/{
+                         if (!seen[var(c[k])] && level(var(c[k])) > 0){
+-                        out_learnt[j++] = out_learnt[i];
++                        
+                         break; }
+                     }/*auto*/
+             }
+@@ -435,6 +435,7 @@
+         for (int i = 1; i < c.size(); i++){
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
++                watches.cleanAll();
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+                     analyze_stack.push(p);
+@@ -745,26 +746,14 @@
+             varDecayActivity();
+             claDecayActivity();
+ 
+-            if (--learntsize_adjust_cnt == 0){
+-                learntsize_adjust_confl *= learntsize_adjust_inc;
+-                learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
+-                max_learnts             *= learntsize_inc;
+-
+-                if (verbosity >= 1)
+-                    /*auto*/{
+-                        printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
+-                           (int)conflicts, 
+-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+-                           (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
+-                    }/*auto*/
+-            }
++            
+ 
+         }else{
+             // NO CONFLICT
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -780,20 +769,7 @@
+                 }/*auto*/
+ 
+             Lit next = lit_Undef;
+-            while (decisionLevel() < assumptions.size()){
+-                // Perform user provided assumption:
+-                Lit p = assumptions[decisionLevel()];
+-                if (value(p) == l_True){
+-                    // Dummy decision level:
+-                    newDecisionLevel();
+-                }else if (value(p) == l_False){
+-                    analyzeFinal(~p, conflict);
+-                    return l_False;
+-                }else{
+-                    next = p;
+-                    break;
+-                }
+-            }
++            vec<Var> map;
+ 
+             if (next == lit_Undef){
+                 // New variable decision:

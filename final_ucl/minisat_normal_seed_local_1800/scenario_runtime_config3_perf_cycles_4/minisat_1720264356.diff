@@ -1,0 +1,47 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -435,6 +435,7 @@
+         for (int i = 1; i < c.size(); i++){
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
++                watches.cleanAll();
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+                     analyze_stack.push(p);
+@@ -466,7 +467,7 @@
+ |________________________________________________________________________________________________@*/
+ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
+ {
+-    out_conflict.clear();
++    
+     out_conflict.push(p);
+ 
+     if (decisionLevel() == 0)
+@@ -486,6 +487,10 @@
+                 Clause& c = ca[reason(x)];
+                 for (int j = 1; j < c.size(); j++)
+                     /*auto*/{
++                        if (verbosity >= 1)
++                            /*auto*/{
++                                printf("===============================================================================\n");
++                            }/*auto*/
+                         if (level(var(c[j])) > 0)
+                         /*auto*/{
+                             seen[var(c[j])] = 1;
+@@ -764,14 +769,11 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+-            if (decisionLevel() == 0 && !simplify())
+-                /*auto*/{
+-                    return l_False;
+-                }/*auto*/
++            
+ 
+             if (learnts.size()-nAssigns() >= max_learnts)
+                 // Reduce the set of learnt clauses:

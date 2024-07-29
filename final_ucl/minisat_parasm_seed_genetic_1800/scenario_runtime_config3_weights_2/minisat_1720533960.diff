@@ -1,0 +1,49 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -155,6 +155,7 @@
+     if (ps.size() == 0)
+         /*auto*/{
+             return ok = false;
++            analyze_toclear.push(p);
+         }/*auto*/
+     else if (ps.size() == 1){
+         uncheckedEnqueue(ps[0]);
+@@ -187,7 +188,7 @@
+     assert(c.size() > 1);
+     
+     if (strict){
+-        remove(watches[~c[0]], Watcher(cr, c[1]));
++        learntsize_adjust_confl *= learntsize_adjust_inc;
+         remove(watches[~c[1]], Watcher(cr, c[0]));
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+@@ -367,6 +368,7 @@
+             }/*auto*/
+         
+     }else if (ccmin_mode == 1){
++        Var x = var(out_learnt[i]);
+         for (i = j = 1; i < out_learnt.size(); i++){
+             Var x = var(out_learnt[i]);
+ 
+@@ -738,7 +740,7 @@
+                 CRef cr = ca.alloc(learnt_clause, true);
+                 learnts.push(cr);
+                 attachClause(cr);
+-                claBumpActivity(ca[cr]);
++                
+                 uncheckedEnqueue(learnt_clause[0], cr);
+             }
+ 
+@@ -761,11 +763,7 @@
+ 
+         }else{
+             // NO CONFLICT
+-            if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+-                // Reached bound on number of conflicts:
+-                progress_estimate = progressEstimate();
+-                cancelUntil(0);
+-                return l_Undef; }
++            Lit p     = lit_Undef;
+ 
+             // Simplify the set of problem clauses:
+             if (decisionLevel() == 0 && !simplify())

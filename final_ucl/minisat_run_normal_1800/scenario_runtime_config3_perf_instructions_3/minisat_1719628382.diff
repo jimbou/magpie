@@ -1,0 +1,86 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -192,7 +192,7 @@
+     }else{
+         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
+         watches.smudge(~c[0]);
+-        watches.smudge(~c[1]);
++        
+     }
+ 
+     if (c.learnt()) /*auto*/{
+@@ -435,10 +435,12 @@
+         for (int i = 1; i < c.size(); i++){
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
++                learnts_literals -= c.size();
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+                     seen[var(p)] = 1;
+-                    analyze_stack.push(p);
++                    
+                     analyze_toclear.push(p);
++                    learnts_literals += c.size();
+                 }else{
+                     for (int j = top; j < analyze_toclear.size(); j++)
+                         /*auto*/{
+@@ -688,7 +690,7 @@
+         /*auto*/{
+             removeSatisfied(clauses);
+         }/*auto*/
+-    checkGarbage();
++    static DoubleOption  opt_restart_inc       (_cat, "rinc",        "Restart interval increase factor", 2, DoubleRange(1, false, HUGE_VAL, false));
+     rebuildOrderHeap();
+ 
+     simpDB_assigns = nAssigns();
+@@ -723,7 +725,7 @@
+         CRef confl = propagate();
+         if (confl != CRef_Undef){
+             // CONFLICT
+-            conflicts++; conflictC++;
++            conflicts++; 
+             if (decisionLevel() == 0) /*auto*/{
+                 return l_False;
+             }/*auto*/
+@@ -752,10 +754,7 @@
+ 
+                 if (verbosity >= 1)
+                     /*auto*/{
+-                        printf("| %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% |\n", 
+-                           (int)conflicts, 
+-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+-                           (int)max_learnts, nLearnts(), (double)learnts_literals/nLearnts(), progressEstimate()*100);
++                        
+                     }/*auto*/
+             }
+ 
+@@ -823,7 +822,7 @@
+     for (int i = 0; i <= decisionLevel(); i++){
+         int beg = i == 0 ? 0 : trail_lim[i - 1];
+         int end = i == decisionLevel() ? trail.size() : trail_lim[i];
+-        progress += pow(F, i) * (end - beg);
++        
+     }
+ 
+     return progress / nVars();
+@@ -850,11 +849,7 @@
+       ;
+     }/*auto*/
+ 
+-    while (size-1 != x){
+-        size = (size-1)>>1;
+-        seq--;
+-        x = x % size;
+-    }
++    
+ 
+     return pow(y, seq);
+ }
+@@ -877,7 +872,7 @@
+ 
+     if (verbosity >= 1){
+         printf("============================[ Search Statistics ]==============================\n");
+-        printf("| Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
++        cancelUntil(0);
+         printf("|           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+         printf("===============================================================================\n");
+     }
