@@ -20,3 +20,11 @@ so for every benchmark rank the metrics based on number of steps (get the median
 8) best fit line -- mad thing
 9) find coverage of tests
 10) weka normal rerun with better tests
+
+
+
+scipy energy 5
+lpg perf_cpu_clock 2
+lpg energy 1 3 5 
+minisat hack normal energy 1
+minisat params energy 1
