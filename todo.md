@@ -28,3 +28,7 @@ lpg perf_cpu_clock 2
 lpg energy 1 3 5 
 minisat hack normal energy 1
 minisat params energy 1
+
+
+11) find retries per metric
+group mad per item name
