@@ -24,7 +24,8 @@ def process_csv(file_path):
     grouped_by_retry.columns = ['_'.join(col).strip() if col[1] else col[0] for col in grouped_by_retry.columns.values]
 
     # Save the grouped data to CSV files
-    grouped_by_retry.to_csv('mean_median_mad_per_retry.csv', index=False)
+    grouped_by_retry.to_csv('mean_median_mad_per_retries.csv', index=False)
+    print(f'saved to mean_median_mad_per_retries.csv')
 
 if __name__ == "__main__":
     file_path = sys.argv[1]  # File path provided as the first command-line argument

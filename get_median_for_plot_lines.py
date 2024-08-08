@@ -31,7 +31,7 @@ def process_files(root_dir):
     grouped_by_retries = combined_data.groupby('number_of_retries').median()
     grouped_by_retries[['average_decrease_percentage_per_step', 'std_deviation_of_decreases', 'proportion_of_large_decreases']].to_csv(f'{root_dir}/fitness_analysis_grouped_by_retries.csv')
 
-    print(f"Files have been processed and saved.{root_dir}/fitness_analysis_grouped_by_retries.csv")
+    print(f"Files have been processed and saved.{root_dir}fitness_analysis_grouped_by_retries.csv")
 
 # Get the directory input from user
 #if the user has not given one argument
