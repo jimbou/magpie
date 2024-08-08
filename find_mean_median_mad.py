@@ -17,7 +17,7 @@ def process_csv(file_path):
     grouped_by_item.columns = ['_'.join(col).strip() if col[1] else col[0] for col in grouped_by_item.columns.values]
 
     # Save the grouped data to CSV files
-    grouped_by_item.to_csv('mean_median_mad_per_item.csv', index=False)
+    # grouped_by_item.to_csv('mean_median_mad_per_item.csv', index=False)
 
     # Group by Retry_Number, then calculate mean and median
     grouped_by_retry = df.groupby('Retry_Number').agg(['mean', 'median']).reset_index()
