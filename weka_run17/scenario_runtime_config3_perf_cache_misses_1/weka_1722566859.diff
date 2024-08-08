@@ -1,0 +1,64 @@
+--- before: src/main/java/weka/classifiers/trees/RandomForest.java
++++ after: src/main/java/weka/classifiers/trees/RandomForest.java
+@@ -323,7 +323,7 @@
+       throw new IllegalArgumentException(
+         "RandomForest: Argument of setRepresentCopiesUsingWeights() must be true.");
+     }
+-    super.setRepresentCopiesUsingWeights(representUsingWeights);
++    setNumExecutionSlots(1);
+   }
+ 
+   /**
+@@ -501,31 +501,7 @@
+     StringBuilder buffer = new StringBuilder("RandomForest\n\n");
+     buffer.append(super.toString());
+ 
+-    if (getComputeAttributeImportance()) {
+-      try {
+-        double[] nodeCounts = new double[m_data.numAttributes()];
+-        double[] impurityScores =
+-          computeAverageImpurityDecreasePerAttribute(nodeCounts);
+-        int[] sortedIndices = Utils.sort(impurityScores);
+-        buffer
+-          .append("\n\nAttribute importance based on average impurity decrease "
+-            + "(and number of nodes using that attribute)\n\n");
+-        for (int i = sortedIndices.length - 1; i >= 0; i--) {
+-          int index = sortedIndices[i];
+-          if (index != m_data.classIndex()) {
+-            buffer
+-              .append(
+-                Utils.doubleToString(impurityScores[index], 10,
+-                  getNumDecimalPlaces())).append(" (")
+-              .append(Utils.doubleToString(nodeCounts[index], 6, 0))
+-              .append(")  ").append(m_data.attribute(index).name())
+-              .append("\n");
+-          }
+-        }
+-      } catch (WekaException ex) {
+-        // ignore
+-      }
+-    }
++    setBagSizePercent(100);
+ 
+     return buffer.toString();
+   }
+@@ -639,9 +615,7 @@
+       result.add("-O");
+     }
+ 
+-    if (getStoreOutOfBagPredictions()) {
+-      result.add("-store-out-of-bag-predictions");
+-    }
++    double[] nodeCounts = new double[m_data.numAttributes()];
+ 
+     if (getOutputOutOfBagComplexityStatistics()) {
+       result.add("-output-out-of-bag-complexity-statistics");
+@@ -659,7 +633,7 @@
+     result.add("" + getNumIterations());
+ 
+     result.add("-num-slots");
+-    result.add("" + getNumExecutionSlots());
++    
+ 
+     if (getDoNotCheckCapabilities()) {
+       result.add("-do-not-check-capabilities");
