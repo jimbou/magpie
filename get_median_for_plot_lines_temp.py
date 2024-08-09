@@ -25,11 +25,11 @@ def process_files(root_dir):
 
     # Group by item_name and calculate medians
     grouped_by_item = combined_data.groupby('item_name').median()
-    grouped_by_item[['total_decreases','average_decrease_percentage_per_step', 'proportion_of_decreases','std_deviation_of_decreases', 'proportion_of_large_decreases']].to_csv(f'{root_dir}/fitness_analysis_grouped_by_item.csv')
+    grouped_by_item[['total_decreases','average_decrease_percentage_per_step', 'proportion_of_decreases']].to_csv(f'{root_dir}/fitness_analysis_grouped_by_item.csv')
 
     # Group by number_of_retries and calculate medians
     grouped_by_retries = combined_data.groupby('number_of_retries').median()
-    grouped_by_retries[['total_decreases','average_decrease_percentage_per_step', 'proportion_of_decreases','std_deviation_of_decreases', 'proportion_of_large_decreases']].to_csv(f'{root_dir}/fitness_analysis_grouped_by_retries.csv')
+    grouped_by_retries[['total_decreases','average_decrease_percentage_per_step', 'proportion_of_decreases']].to_csv(f'{root_dir}/fitness_analysis_grouped_by_retries.csv')
 
     print(f"Files have been processed and saved.{root_dir}fitness_analysis_grouped_by_retries.csv")
 

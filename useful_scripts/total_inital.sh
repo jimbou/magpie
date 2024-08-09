@@ -10,6 +10,6 @@ fi
 # Gather the full command as a single string
 
 
-./run.sh $COMMAND
+./run_initial.sh $COMMAND
 python3 create_factors.py medians.json
 python3 create_variance.py medians_all.json

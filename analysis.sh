@@ -13,17 +13,17 @@
 # python3 plotter.py results_1800_ucl_local/weka_normal/performance_data.json
 
 #plot_lines
-# python3 plot_lines.py results_1800_ucl_local/minisat_normal performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/minisat_params performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/minisat_hack_normal performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/minisat_hack_params performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/lpg performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/scipy performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/zlib performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/sat4j_normal performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/sat4j_params performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/weka_params performance_data.json
-# python3 plot_lines.py results_1800_ucl_local/weka_normal performance_data.json
+python3 plot_lines.py results_1800_ucl_local/minisat_normal performance_data.json
+python3 plot_lines.py results_1800_ucl_local/minisat_params performance_data.json
+python3 plot_lines.py results_1800_ucl_local/minisat_hack_normal performance_data.json
+python3 plot_lines.py results_1800_ucl_local/minisat_hack_params performance_data.json
+python3 plot_lines.py results_1800_ucl_local/lpg performance_data.json
+python3 plot_lines.py results_1800_ucl_local/scipy performance_data.json
+python3 plot_lines.py results_1800_ucl_local/zlib performance_data.json
+python3 plot_lines.py results_1800_ucl_local/sat4j_normal performance_data.json
+python3 plot_lines.py results_1800_ucl_local/sat4j_params performance_data.json
+python3 plot_lines.py results_1800_ucl_local/weka_params performance_data.json
+python3 plot_lines.py results_1800_ucl_local/weka_normal performance_data.json
 
 
 
@@ -59,7 +59,9 @@
 # python3 find_median_across_benchmarks.py results_1800_ucl_local/ average_rank_per_retry.csv
 # python3 find_median_across_benchmarks.py results_1800_ucl_local/ median_execution_time_data.csv
 # python3 find_median_across_benchmarks.py results_1800_ucl_local/ mean_median_execution_times.csv
+# python3 find_median_across_benchmarks.py results_1800_ucl_local/ best_fit_mad.csv
 
 
-python3 find_mean_median_mad.py  results_1800_ucl_local/best_fit_mad_stats.csv
+# python3 find_mean_median_mad.py  results_1800_ucl_local/best_fit_mad_stats.csv #ouputs to the main dir
 # python3 find_mean_median_mad_item.py results_1800_ucl_local/best_fit_mad_stats.csv
+# python3 find_best_retry_per_item.py results_1800_ucl_local/

@@ -28,6 +28,11 @@ lpg perf_cpu_clock 2
 lpg energy 1 3 5 
 minisat hack normal energy 1
 minisat params energy 1
+ 
+ enrgy  1 weka params
+ energy 1, weights 4, perf_L1_dcache_loads 3, time 4, perf_cache_misses 4, perf_branches 5, weka normal
+sat4j params energy 1, weights 2 4,
+minisat params energy
 
 
 11) find retries per metric
