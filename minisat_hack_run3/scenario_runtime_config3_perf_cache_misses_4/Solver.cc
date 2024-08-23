@@ -312,7 +312,10 @@ Lit Solver::pickBranchLit()
     // Random decision:
     if (drand(random_seed) < random_var_freq && !order_heap.empty()){
         next = order_heap[irand(random_seed,order_heap.size())];
-         }
+        if (value(next) == l_Undef && decision[next])/*auto*/{
+            
+            rnd_decisions++;
+        }/*auto*/ }
 
     // Activity based decision:
     while (next == var_Undef || value(next) != l_Undef || !decision[next])/*auto*/{
@@ -555,7 +558,6 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
                     }/*auto*/
                 }/*auto*/
             }
-            Var next = var_Undef;
             seen[x] = 0;
         }
     }
@@ -761,10 +763,7 @@ bool Solver::simplify()
     // Remove satisfied clauses:
     removeSatisfied(learnts);
     removeSatisfied(lF);
-    if (remove_satisfied)/*auto*/{
-              // Can be turned off.
-        removeSatisfied(clauses);
-    }/*auto*/
+    
     checkGarbage();
     rebuildOrderHeap();
 

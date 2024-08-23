@@ -311,7 +311,7 @@ Lit Solver::pickBranchLit()
 
     // Random decision:
     if (drand(random_seed) < random_var_freq && !order_heap.empty()){
-        next = order_heap[irand(random_seed,order_heap.size())];
+        
         if (value(next) == l_Undef && decision[next])/*auto*/{
             
             rnd_decisions++;
@@ -414,7 +414,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     // Simplify conflict clause:
     //
     int i, j;
-    static DoubleOption opt_R                  (_cat, "R-val", "R", 1.4, DoubleRange(1.0, true, 2.5, true));
     out_learnt.copyTo(analyze_toclear);
     if (ccmin_mode == 2){
         uint32_t abstract_level = 0;
@@ -451,6 +450,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         }
     }else/*auto*/{
       
+        int i, j;
         i = j = out_learnt.size();
     }/*auto*/
 
@@ -555,7 +555,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
                     
                     if (level(var(c[j])) > 0)/*auto*/{
                         
-                        core_added = 0;
+                        seen[var(c[j])] = 1;
                     }/*auto*/
                 }/*auto*/
             }
@@ -828,6 +828,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1111,7 +1118,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 {
     // Handle case when solver is in contradictory state:
     if (!ok){
-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+        
         return; }
 
     vec<Var> map; Var max = 0;

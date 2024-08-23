@@ -432,7 +432,7 @@ public class Solver<D extends DataStructureFactory>
                     "Reference to the constraint to remove needed!"); //$NON-NLS-1$
         }
         Constr c = (Constr) co;
-        
+        c.remove(this);
         this.constrs.removeFromLast(c);
         clearLearntClauses();
         String type = c.getClass().getName();
@@ -565,7 +565,9 @@ public class Solver<D extends DataStructureFactory>
         this.voc.setTrailPosition(p, this.trail.size());
         this.voc.setReason(p, from);
         this.trail.push(p);
-        
+        if (from != null && from.learnt()) {
+            this.learnedConstraintsDeletionStrategy.onPropagation(from, p);
+        }
         return true;
     }
 
@@ -704,6 +706,7 @@ public class Solver<D extends DataStructureFactory>
                   // level 0, so is not part of the explanation
                 return outLearnt;
             }
+            this.out = out;
             p = conflictingLiteral ^ 1;
         }
         while (confl == null && this.trail.size() > 0
@@ -718,9 +721,7 @@ public class Solver<D extends DataStructureFactory>
                 this.trailLim.pop();
             }
         }
-        if (confl == null) {
-            return outLearnt;
-        }
+        
         do {
             preason.clear();
             confl.calcReason(p, preason);
@@ -843,7 +844,7 @@ public class Solver<D extends DataStructureFactory>
         /**
          * 
          */
-        
+        private static final long serialVersionUID = 1L;
 
         public void simplify(IVecInt conflictToReduce) {
             // Taken from MiniSAT 1.14
@@ -999,10 +1000,6 @@ public class Solver<D extends DataStructureFactory>
             f = Solver.class.getDeclaredField(simp.toString());
             this.simplifier = (ISimplifier) f.get(this);
         } catch (Exception e) {
-            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
-                    .hasNext();) {
-                iterator.next().remove(this);
-            }
             Logger.getLogger("org.sat4j.core").log(Level.INFO,
                     "Issue when assigning simplifier: disabling simplification",
                     e);
@@ -1481,7 +1478,7 @@ public class Solver<D extends DataStructureFactory>
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
-                            this.decisions.push(tempmodel.last());
+                            IVecInt clause = new VecInt(nVars());
                         } else {
                             this.implied.push(tempmodel.last());
                             if (this.voc.getReason(p).learnt()) {
@@ -1494,7 +1491,7 @@ public class Solver<D extends DataStructureFactory>
                         }
                     }
                 } else {
-                    this.assignmentOrigins[i - 1] = AssignmentOrigin.UNASSIGNED;
+                    
                 }
             }
             this.fullmodel = new int[tempmodel.size()];
@@ -2095,9 +2092,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

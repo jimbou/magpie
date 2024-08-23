@@ -158,7 +158,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     assert(decisionLevel() == 0);
     if (!ok)/*auto*/{
        return false;
-       int max_i = 1;
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
@@ -371,7 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -505,6 +504,7 @@ bool Solver::litRedundant(Lit p, uint32_t abstract_levels)
                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
                     seen[var(p)] = 1;
                     analyze_stack.push(p);
+                    checkGarbage();
                     analyze_toclear.push(p);
                 }else{
                     for (int j = top; j < analyze_toclear.size(); j++)/*auto*/{
@@ -535,11 +535,10 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
 {
     out_conflict.clear();
     out_conflict.push(p);
+    m        .push(0);
+    m        .push(0);
 
-    if (decisionLevel() == 0)/*auto*/{
-      
-        return;
-    }/*auto*/
+    
 
     seen[var(p)] = 1;
 
@@ -828,6 +827,20 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1063,7 +1076,10 @@ lbool Solver::solve_()
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
-    
+    if (map.size() <= x || map[x] == -1){
+        map.growTo(x+1, -1);
+        map[x] = max++;
+    }
     return map[x];
 }
 

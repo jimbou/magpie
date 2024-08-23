@@ -116,7 +116,7 @@ Solver::Solver() :
   , asynch_interrupt   (false)
 {
     gS = lS = tS = N = cp = 0;
-    
+    LBD_cut = (int32_t)opt_lbd_cut;
     K = (double)opt_K;
     R = (double)opt_R;
 }
@@ -161,7 +161,7 @@ bool Solver::addClause_(vec<Lit>& ps)
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
-    
+    sort(ps);
 
     /*vec<Lit>    oc;
     oc.clear();*/
@@ -703,7 +703,7 @@ void Solver::removeSatisfied(vec<CRef>& cs)
         Clause& c = ca[cs[i]];
         if (satisfied(c))/*auto*/{
             
-            return;
+            removeClause(cs[i]);
         }/*auto*/
         else/*auto*/{
             
@@ -827,6 +827,55 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1111,7 +1160,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     // Handle case when solver is in contradictory state:
     if (!ok){
         fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
-        return; }
+         }
 
     vec<Var> map; Var max = 0;
 

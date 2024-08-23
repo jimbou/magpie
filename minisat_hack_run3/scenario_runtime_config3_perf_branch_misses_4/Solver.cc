@@ -229,7 +229,7 @@ void Solver::attachClause(CRef cr) {
 
 void Solver::detachClause(CRef cr, bool strict) {
     const Clause& c = ca[cr];
-    
+    assert(c.size() > 1);
     
     if (strict){
         remove(watches[~c[0]], Watcher(cr, c[1]));
@@ -237,7 +237,7 @@ void Solver::detachClause(CRef cr, bool strict) {
     }else{
         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
         watches.smudge(~c[0]);
-        watches.smudge(~c[1]);
+        
     }
 
     if (c.learnt())/*auto*/{
@@ -269,6 +269,7 @@ void Solver::removeClause(CRef cr) {
     }/*auto*/
     c.mark(1); 
     ca.free(cr);
+    assert(reason(var(analyze_stack.last())) != CRef_Undef);
 }
 
 
@@ -370,7 +371,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -691,8 +692,8 @@ void Solver::reduceDB()
                 learnts[j++] = learnts[i]; }
         }/*auto*/
     }
-    learnts.shrink(i - j);
     
+    checkGarbage();
 }
 
 
@@ -827,13 +828,6 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
-                if (!luby_restart){
-                    PUSH(TQ, trail.size(), 5000, tS);
-                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
-                        
-                        lS = 0, LQ.clear();
-                    }/*auto*/
-                }
             }
 
             if (learnt_clause.size() == 1){
@@ -860,7 +854,7 @@ lbool Solver::search(int nof_conflicts)
               fprintf(output, "0\n");
             }*/
 
-            varDecayActivity();
+            
             claDecayActivity();
 
             //if (--learntsize_adjust_cnt == 0){
@@ -1033,7 +1027,6 @@ lbool Solver::solve_()
     // Search:
     int curr_restarts = 0;
     while (status == l_Undef){
-        claDecayActivity();
         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
         status = search(rest_base * restart_first);
         if (!withinBudget())/*auto*/{
@@ -1111,7 +1104,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 {
     // Handle case when solver is in contradictory state:
     if (!ok){
-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+        
         return; }
 
     vec<Var> map; Var max = 0;
@@ -1121,7 +1114,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
@@ -1129,7 +1125,13 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
                
         if (!satisfied(ca[clauses[i]])){
             Clause& c = ca[clauses[i]];
+            for (int j = 0; j < c.size(); j++)/*auto*/{
             
+                if (value(c[j]) != l_False)/*auto*/{
+                    
+                    mapVar(var(c[j]), map, max);
+                }/*auto*/
+            }/*auto*/
         }
         
     }/*auto*/
@@ -1192,10 +1194,7 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
-            
-            ca.reloc(vardata[v].reason, to);
-        }/*auto*/
+        
     }
 
     // All learnt:

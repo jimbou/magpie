@@ -508,7 +508,7 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    cs[type].get(i).remove(this);
+                    
                 } else {
                     cs[type].moveTo(j++, i);
                 }
@@ -1292,7 +1292,7 @@ public class Solver<D extends DataStructureFactory>
                                         .solutionFound((this.fullmodel != null)
                                                 ? this.fullmodel
                                                 : this.model, this);
-                                
+                                return Lbool.TRUE;
                             } else {
                                 confl = preventTheSameDecisionsToBeMade();
                                 this.lastConflictMeansUnsat = false;
@@ -1576,7 +1576,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1944,15 +1944,7 @@ public class Solver<D extends DataStructureFactory>
             return;
         }
         Map<String, Counter> learntTypes = new HashMap<>();
-        for (Iterator<Constr> it = this.learnts.iterator(); it.hasNext();) {
-            String type = it.next().getClass().getName();
-            Counter count = learntTypes.get(type);
-            if (count == null) {
-                learntTypes.put(type, new Counter());
-            } else {
-                count.inc();
-            }
-        }
+        
         for (Map.Entry<String, Counter> entry : learntTypes.entrySet()) {
             out.println(prefix + "learnt constraints type " + entry.getKey()
                     + "\t: " + entry.getValue());
@@ -2091,9 +2083,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

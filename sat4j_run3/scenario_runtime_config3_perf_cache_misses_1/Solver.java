@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -432,7 +423,7 @@ public class Solver<D extends DataStructureFactory>
                     "Reference to the constraint to remove needed!"); //$NON-NLS-1$
         }
         Constr c = (Constr) co;
-        
+        c.remove(this);
         this.constrs.removeFromLast(c);
         clearLearntClauses();
         String type = c.getClass().getName();
@@ -508,7 +499,7 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    cs[type].get(i).remove(this);
+                    
                 } else {
                     cs[type].moveTo(j++, i);
                 }
@@ -845,7 +836,7 @@ public class Solver<D extends DataStructureFactory>
         /**
          * 
          */
-        
+        private static final long serialVersionUID = 1L;
 
         public void simplify(IVecInt conflictToReduce) {
             // Taken from MiniSAT 1.14
@@ -1001,10 +992,6 @@ public class Solver<D extends DataStructureFactory>
             f = Solver.class.getDeclaredField(simp.toString());
             this.simplifier = (ISimplifier) f.get(this);
         } catch (Exception e) {
-            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
-                    .hasNext();) {
-                iterator.next().remove(this);
-            }
             Logger.getLogger("org.sat4j.core").log(Level.INFO,
                     "Issue when assigning simplifier: disabling simplification",
                     e);
@@ -1208,7 +1195,7 @@ public class Solver<D extends DataStructureFactory>
         while (!trail.isEmpty() && trail.size() > level) {
             undoOne();
             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                
+                trailLim.pop();
                 decisions.pop();
             }
         }
@@ -1582,7 +1569,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1816,7 +1803,8 @@ public class Solver<D extends DataStructureFactory>
                             null, assumps, p);
                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
                 } else {
-                    this.voc.unassign(p);
+                    this.slistener.conflictFound(confl, decisionLevel(),
+                            this.trail.size());
                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
                             confl, assumps, ILits.UNDEFINED);
                 }
@@ -1846,6 +1834,10 @@ public class Solver<D extends DataStructureFactory>
                 TimerTask stopMe = new TimerTask() {
                     @Override
                     public void run() {
+                        if (Solver.this.timer != null) {
+                            Solver.this.timer.cancel();
+                            Solver.this.timer = null;
+                        }
                         Solver.this.undertimeout = false;
                         synchronized (Solver.this) {
                             if (Solver.this.timer != null) {
@@ -2482,7 +2474,6 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
-        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

@@ -394,7 +394,7 @@ public class Solver<D extends DataStructureFactory>
         this.stats.incLearnedclauses();
         switch (c.size()) {
         case 2:
-            claDecayActivity();
+            this.stats.incLearnedbinaryclauses();
             break;
         case 3:
             this.stats.incLearnedternaryclauses();
@@ -714,7 +714,7 @@ public class Solver<D extends DataStructureFactory>
             confl = this.voc.getReason(p);
             undoOne();
             if (confl == null && p == (conflictingLiteral ^ 1)) {
-                
+                outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
                 this.trailLim.pop();
@@ -859,7 +859,7 @@ public class Solver<D extends DataStructureFactory>
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
                 if (voc.getReason(conflictToReduce.get(i)) == null
                         || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
+                    
                 }
             }
             conflictToReduce.shrink(i - j);
@@ -1294,7 +1294,7 @@ public class Solver<D extends DataStructureFactory>
                                         .solutionFound((this.fullmodel != null)
                                                 ? this.fullmodel
                                                 : this.model, this);
-                                
+                                return Lbool.TRUE;
                             } else {
                                 confl = preventTheSameDecisionsToBeMade();
                                 this.lastConflictMeansUnsat = false;
@@ -1639,7 +1639,7 @@ public class Solver<D extends DataStructureFactory>
 
                 @Override
                 public void run() {
-                    getSolver().setNeedToReduceDB(true);
+                    
                 }
             };
 
@@ -1749,7 +1749,7 @@ public class Solver<D extends DataStructureFactory>
         this.trail.ensure(howmany);
         this.trailLim.ensure(howmany);
         this.learnedLiterals.ensure(howmany);
-        
+        this.decisions.clear();
         this.implied.clear();
         this.slistener.start();
         this.model = null; // forget about previous model
@@ -2436,7 +2436,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);

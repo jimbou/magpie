@@ -199,7 +199,7 @@ bool Solver::addClause_(vec<Lit>& ps)
 
     if (ps.size() == 0)/*auto*/{
       
-        return ok = false;
+        
     }/*auto*/
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
@@ -692,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -827,6 +827,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1110,7 +1117,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 {
     // Handle case when solver is in contradictory state:
     if (!ok){
-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+        
         return; }
 
     vec<Var> map; Var max = 0;
@@ -1234,5 +1241,5 @@ void Solver::garbageCollect()
         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
                ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
     }/*auto*/
-    to.moveTo(ca);
+    
 }

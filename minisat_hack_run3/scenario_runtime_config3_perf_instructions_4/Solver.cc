@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -445,7 +444,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     
                     if (!seen[var(c[k])] && level(var(c[k])) > 0){
                         out_learnt[j++] = out_learnt[i];
-                        break; }
+                         }
                 }/*auto*/
             }
         }
@@ -693,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -828,6 +827,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1149,6 +1155,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     fprintf(f, "p cnf %d %d\n", max, cnt);
 
     for (int i = 0; i < assumptions.size(); i++){
+        watches.cleanAll();
         assert(value(assumptions[i]) != l_False);
         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
     }

@@ -1404,7 +1404,7 @@ public class Solver<D extends DataStructureFactory>
             String str;
             for (var i = 0; i < trailLim.size(); i++) {
                 q = trail.get(trailLim.get(i));
-                
+                stb.append(LiteralsUtils.toDimacs(q));
                 this.voc.unassign(q);
                 this.voc.satisfies(q ^ 1);
                 // can change invariants in constraints data
@@ -2093,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2137,7 +2135,7 @@ public class Solver<D extends DataStructureFactory>
         }
         stb.append("Listener: ");
         stb.append(slistener);
-        
+        stb.append("\n");
         stb.append(prefix);
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();
@@ -2481,6 +2479,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
         this.timeBasedTimeout = false;
     }
 

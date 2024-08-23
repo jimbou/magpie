@@ -508,7 +508,7 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    
+                    cs[type].get(i).remove(this);
                 } else {
                     cs[type].moveTo(j++, i);
                 }
@@ -1204,7 +1204,7 @@ public class Solver<D extends DataStructureFactory>
         while (!trail.isEmpty() && trail.size() > level) {
             undoOne();
             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                
+                trailLim.pop();
                 decisions.pop();
             }
         }
@@ -1283,7 +1283,10 @@ public class Solver<D extends DataStructureFactory>
                             // satisfied
                             var allsat = true;
                             for (var i = 0; i < this.constrs.size(); i++) {
-                                
+                                if (!this.constrs.get(i).isSatisfied()) {
+                                    allsat = false;
+                                    break;
+                                }
                             }
                             if (allsat) {
                                 modelFound();
@@ -1401,7 +1404,7 @@ public class Solver<D extends DataStructureFactory>
             String str;
             for (var i = 0; i < trailLim.size(); i++) {
                 q = trail.get(trailLim.get(i));
-                
+                stb.append(LiteralsUtils.toDimacs(q));
                 this.voc.unassign(q);
                 this.voc.satisfies(q ^ 1);
                 // can change invariants in constraints data
@@ -1474,7 +1477,6 @@ public class Solver<D extends DataStructureFactory>
                     int p = this.voc.getFromPool(i);
                     if (!this.voc.isUnassigned(p)) {
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
-                        Solver.this.undertimeout = false;
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
                             this.decisions.push(tempmodel.last());
@@ -1821,7 +1823,6 @@ public class Solver<D extends DataStructureFactory>
                 cancelLearntLiterals(learnedLiteralsLimit);
                 return false;
             }
-            return true;
         }
         this.rootLevel = decisionLevel();
         // moved initialization here if new literals are added in the
@@ -2092,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2258,9 +2257,7 @@ public class Solver<D extends DataStructureFactory>
             if (this.trail.isEmpty()) {
                 return;
             }
-            if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                trailLim.pop();
-            }
+            int i, j, k;
             current = this.trail.last();
         }
         undoOne();
@@ -2437,7 +2434,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);
@@ -2480,6 +2477,8 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

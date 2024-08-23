@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -266,7 +265,7 @@ void Solver::removeClause(CRef cr) {
     detachClause(cr);
     // Don't leave pointers to free'd memory!
     if (locked(c))/*auto*/{
-       
+       vardata[var(c[0])].reason = CRef_Undef;
     }/*auto*/
     c.mark(1); 
     ca.free(cr);
@@ -693,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -828,6 +827,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1152,7 +1158,6 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         assert(value(assumptions[i]) != l_False);
         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
     }
-    removeSatisfied(lF);
 
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
         
@@ -1164,7 +1169,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     if (verbosity > 0)/*auto*/{
         
                
-        printf("Wrote %d clauses with %d variables.\n", cnt, max);
+        
         
     }/*auto*/
 }
@@ -1228,7 +1233,6 @@ void Solver::garbageCollect()
 {
     // Initialize the next region to a size corresponding to the estimated utilization degree. This
     // is not precise but should avoid some unnecessary reallocations for the new region:
-    LBD_cut = (int32_t)opt_lbd_cut;
     ClauseAllocator to(ca.size() - ca.wasted()); 
 
     relocAll(to);

@@ -2135,7 +2135,7 @@ public class Solver<D extends DataStructureFactory>
         }
         stb.append("Listener: ");
         stb.append(slistener);
-        
+        stb.append("\n");
         stb.append(prefix);
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();
@@ -2479,6 +2479,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

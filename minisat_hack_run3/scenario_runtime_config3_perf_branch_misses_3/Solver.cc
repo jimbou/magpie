@@ -158,6 +158,7 @@ bool Solver::addClause_(vec<Lit>& ps)
     assert(decisionLevel() == 0);
     if (!ok)/*auto*/{
        return false;
+       int max_i = 1;
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
@@ -181,6 +182,7 @@ bool Solver::addClause_(vec<Lit>& ps)
         }/*auto*/
         else if (value(ps[i]) != l_False && ps[i] != p)/*auto*/{
             
+            qhead = trail.size();
             ps[j++] = p = ps[i];
         }/*auto*/
     }/*auto*/
@@ -202,7 +204,7 @@ bool Solver::addClause_(vec<Lit>& ps)
         return ok = false;
     }/*auto*/
     else if (ps.size() == 1){
-        uncheckedEnqueue(ps[0]);
+        starts++;
         return ok = (propagate() == CRef_Undef);
     }else{
         CRef cr = ca.alloc(ps, false);
@@ -370,7 +372,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -393,7 +395,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -451,6 +452,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         }
     }else/*auto*/{
       
+        int i, j;
         i = j = out_learnt.size();
     }/*auto*/
 
@@ -692,7 +694,7 @@ void Solver::reduceDB()
                 learnts[j++] = learnts[i]; }
         }/*auto*/
     }
-    
+    learnts.shrink(i - j);
     checkGarbage();
 }
 
@@ -828,6 +830,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1017,7 +1026,7 @@ lbool Solver::solve_()
        return l_False;
     }/*auto*/
 
-    CRef confl = propagate();
+    solves++;
 
     max_learnts               = nClauses() * learntsize_factor;
     learntsize_adjust_confl   = learntsize_adjust_start_confl;
@@ -1111,7 +1120,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 {
     // Handle case when solver is in contradictory state:
     if (!ok){
-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+        
         return; }
 
     vec<Var> map; Var max = 0;
@@ -1121,7 +1130,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
@@ -1145,7 +1157,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 
     fprintf(f, "p cnf %d %d\n", max, cnt);
 
-    static DoubleOption  opt_random_var_freq   (_cat, "rnd-freq",    "The frequency with which the decision heuristic tries to choose a random variable", 0, DoubleRange(0, true, 1, true));
+    for (int i = 0; i < assumptions.size(); i++){
+        assert(value(assumptions[i]) != l_False);
+        fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
+    }
 
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
         
@@ -1197,7 +1212,7 @@ void Solver::relocAll(ClauseAllocator& to)
 
         if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
             
-            static IntOption     opt_restart_first     (_cat, "rfirst",      "The base restart interval", 100, IntRange(1, INT32_MAX));
+            ca.reloc(vardata[v].reason, to);
         }/*auto*/
     }
 
@@ -1229,5 +1244,5 @@ void Solver::garbageCollect()
         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
                ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
     }/*auto*/
-    
+    to.moveTo(ca);
 }

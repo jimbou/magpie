@@ -640,8 +640,6 @@ CRef Solver::propagate()
                     
                     *j++ = *i++;
                 }/*auto*/
-                if (value(blocker) == l_True){
-                    *j++ = *i++; continue; }
             }else/*auto*/{
                 
                 uncheckedEnqueue(first, cr);
@@ -773,7 +771,7 @@ bool Solver::simplify()
     rebuildOrderHeap();
 
     simpDB_assigns = nAssigns();
-    simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
+       // (shouldn't depend on stats really, but it will do for now)
 
     return true;
 }
@@ -1035,6 +1033,7 @@ lbool Solver::solve_()
         }/*auto*/
         curr_restarts++;
     }
+    solves++;
 
     if (verbosity >= 1)/*auto*/{
       
@@ -1080,7 +1079,10 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 
     for (int i = 0; i < c.size(); i++)/*auto*/{
       
-        lS = 0, LQ.clear();
+        if (value(c[i]) != l_False)/*auto*/{
+            
+            fprintf(f, "%s%d ", sign(c[i]) ? "-" : "", mapVar(var(c[i]), map, max)+1);
+        }/*auto*/
     }/*auto*/
     fprintf(f, "0\n");
 }
@@ -1089,10 +1091,7 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 void Solver::toDimacs(const char *file, const vec<Lit>& assumps)
 {
     FILE* f = fopen(file, "wr");
-    if (f == NULL)/*auto*/{
-      
-        fprintf(stderr, "could not open file %s\n", file), exit(1);
-    }/*auto*/
+    
     toDimacs(f, assumps);
     fclose(f);
 }

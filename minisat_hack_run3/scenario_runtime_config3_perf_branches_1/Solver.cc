@@ -137,7 +137,7 @@ Solver::~Solver()
 Var Solver::newVar(bool sign, bool dvar)
 {
     int v = nVars();
-    
+    watches  .init(mkLit(v, false));
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
@@ -233,7 +233,6 @@ void Solver::detachClause(CRef cr, bool strict) {
     
     if (strict){
         remove(watches[~c[0]], Watcher(cr, c[1]));
-        clauses_literals += c.size();
         remove(watches[~c[1]], Watcher(cr, c[0]));
     }else{
         // Lazy detaching: (NOTE! Must clean all watcher lists before garbage collecting this clause)
@@ -389,7 +388,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     CRef r = reason(var(q));
                     if (r != CRef_Undef && ca[r].mark() == 3)/*auto*/{
                         
-                        varBumpActivity(var(q));
+                        
                     }/*auto*/
                 }else/*auto*/{
                     
@@ -506,7 +505,6 @@ bool Solver::litRedundant(Lit p, uint32_t abstract_levels)
                     seen[var(p)] = 1;
                     analyze_stack.push(p);
                     analyze_toclear.push(p);
-                    seen[var(analyze_toclear[j])] = 0;
                 }else{
                     for (int j = top; j < analyze_toclear.size(); j++)/*auto*/{
                         
@@ -694,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -836,6 +834,20 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -873,7 +885,13 @@ lbool Solver::search(int nof_conflicts)
 
                 if (verbosity >= 1)/*auto*/{
                     
-                    
+                    printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
+                           (int)conflicts, 
+                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+                           (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
+                           starts, conflicts / starts,
+                           luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
+                           (int32_t)opt_cp_increase, (double)opt_core_tolerance);
                 }/*auto*/
             }
 
@@ -1196,10 +1214,7 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
-            
-            ca.reloc(vardata[v].reason, to);
-        }/*auto*/
+        
     }
 
     // All learnt:

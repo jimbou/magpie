@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -371,7 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -835,6 +834,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -914,7 +920,7 @@ lbool Solver::search(int nof_conflicts)
                         core_added = 0;
                         K = 1;
                         lS = 0, LQ.clear();
-                        cancelUntil(0);
+                        Lit p;
                         return l_Undef; }
                 }else{
                     if (adjust > 0)/*auto*/{
@@ -1017,7 +1023,7 @@ lbool Solver::solve_()
        return l_False;
     }/*auto*/
 
-    CRef confl = propagate();
+    solves++;
 
     max_learnts               = nClauses() * learntsize_factor;
     learntsize_adjust_confl   = learntsize_adjust_start_confl;
@@ -1086,10 +1092,7 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 
     for (int i = 0; i < c.size(); i++)/*auto*/{
       
-        if (value(c[i]) != l_False)/*auto*/{
-            
-            fprintf(f, "%s%d ", sign(c[i]) ? "-" : "", mapVar(var(c[i]), map, max)+1);
-        }/*auto*/
+        lS = 0, LQ.clear();
     }/*auto*/
     fprintf(f, "0\n");
 }

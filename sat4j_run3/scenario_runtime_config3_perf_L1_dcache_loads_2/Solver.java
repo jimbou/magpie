@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -723,10 +714,34 @@ public class Solver<D extends DataStructureFactory>
         if (confl == null) {
             return outLearnt;
         }
-        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
-                .hasNext();) {
-            iterator.next().remove(this);
-        }
+        do {
+            preason.clear();
+            confl.calcReason(p, preason);
+            // Trace reason for p
+            for (var j = 0; j < preason.size(); j++) {
+                int q = preason.get(j);
+                if (!seen[q >> 1]) {
+                    seen[q >> 1] = true;
+                    if (this.voc.getReason(q) == null
+                            && this.voc.getLevel(q) > 0) {
+                        assert assumps.contains(toDimacs(q));
+                        outLearnt.push(toDimacs(q));
+                    }
+                }
+            }
+
+            // select next reason to look at
+            do {
+                p = this.trail.last();
+                confl = this.voc.getReason(p);
+                undoOne();
+                if (decisionLevel() > 0
+                        && this.trail.size() <= this.trailLim.last()) {
+                    this.trailLim.pop();
+                }
+            } while (this.trail.size() > 0 && decisionLevel() > 0
+                    && (!seen[p >> 1] || confl == null));
+        } while (decisionLevel() > 0);
         return outLearnt;
     }
 
@@ -1554,7 +1569,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2060,7 +2075,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        
+        printStat(out, prefix);
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2233,9 +2248,7 @@ public class Solver<D extends DataStructureFactory>
             if (this.trail.isEmpty()) {
                 return;
             }
-            if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                trailLim.pop();
-            }
+            int i, j, k;
             current = this.trail.last();
         }
         undoOne();
@@ -2401,8 +2414,7 @@ public class Solver<D extends DataStructureFactory>
             LearnedConstraintsEvaluationType evaluation) {
         if (this.conflictCount != null) {
             this.conflictCount.add(timer);
-            this.conflictCount
-                    .remove(this.learnedConstraintsDeletionStrategy.getTimer());
+            
         }
         switch (evaluation) {
         case ACTIVITY:

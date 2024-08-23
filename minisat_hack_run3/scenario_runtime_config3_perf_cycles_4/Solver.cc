@@ -369,8 +369,8 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             LBD(c);
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
-                
-                
+                lF.push(confl);
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -388,7 +388,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     CRef r = reason(var(q));
                     if (r != CRef_Undef && ca[r].mark() == 3)/*auto*/{
                         
-                        varBumpActivity(var(q));
+                        
                     }/*auto*/
                 }else/*auto*/{
                     
@@ -547,7 +547,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
         if (seen[x]){
             if (reason(x) == CRef_Undef){
                 assert(level(x) > 0);
-                int index   = trail.size() - 1;
+                out_conflict.push(~trail[i]);
             }else{
                 Clause& c = ca[reason(x)];
                 for (int j = 1; j < c.size(); j++)/*auto*/{
@@ -1085,10 +1085,7 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 
     for (int i = 0; i < c.size(); i++)/*auto*/{
       
-        if (value(c[i]) != l_False)/*auto*/{
-            
-            fprintf(f, "%s%d ", sign(c[i]) ? "-" : "", mapVar(var(c[i]), map, max)+1);
-        }/*auto*/
+        lS = 0, LQ.clear();
     }/*auto*/
     fprintf(f, "0\n");
 }

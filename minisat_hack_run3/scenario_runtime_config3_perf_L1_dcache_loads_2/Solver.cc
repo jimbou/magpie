@@ -649,7 +649,7 @@ CRef Solver::propagate()
         }
         ws.shrink(i - j);
     }
-    propagations += num_props;
+    
     simpDB_props -= num_props;
 
     return confl;
@@ -767,7 +767,7 @@ bool Solver::simplify()
               // Can be turned off.
         removeSatisfied(clauses);
     }/*auto*/
-    
+    checkGarbage();
     rebuildOrderHeap();
 
     simpDB_assigns = nAssigns();
@@ -834,6 +834,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -864,22 +871,7 @@ lbool Solver::search(int nof_conflicts)
             claDecayActivity();
 
             //if (--learntsize_adjust_cnt == 0){
-            if (conflicts % 5000 == 0){
-                //learntsize_adjust_confl *= learntsize_adjust_inc;
-                //learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
-                //max_learnts             *= learntsize_inc;
-
-                if (verbosity >= 1)/*auto*/{
-                    
-                    printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
-                           (int)conflicts, 
-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
-                           (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
-                           starts, conflicts / starts,
-                           luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
-                           (int32_t)opt_cp_increase, (double)opt_core_tolerance);
-                }/*auto*/
-            }
+            
 
         }else{
             // NO CONFLICT
@@ -910,6 +902,10 @@ lbool Solver::search(int nof_conflicts)
                     }/*auto*/
 
                     if (!luby_restart){
+                        if (L < LBD_cut){
+                            lF.push(confl);
+                            core_added++;
+                        }
                         core_added = 0;
                         K = 1;
                         lS = 0, LQ.clear();
@@ -1120,7 +1116,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{

@@ -141,6 +141,7 @@ Var Solver::newVar(bool sign, bool dvar)
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
+    watches  .init(mkLit(v, false));
     //activity .push(0);
     activity .push(rnd_init_act ? drand(random_seed) * 0.00001 : 0);
     seen     .push(0);
@@ -204,7 +205,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -371,6 +371,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
+                Var x = var(trail[i]);
                 core_added++;
             }else/*auto*/{
                 
@@ -690,6 +691,10 @@ void Solver::reduceDB()
             else{
                 c.mark(0);
                 learnts[j++] = learnts[i]; }
+        }/*auto*/
+        if (conflicts % 5000 == 0 && var_decay < 0.95)/*auto*/{
+            
+            var_decay += 0.01;
         }/*auto*/
     }
     learnts.shrink(i - j);
@@ -1070,7 +1075,10 @@ lbool Solver::solve_()
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
-    
+    if (map.size() <= x || map[x] == -1){
+        map.growTo(x+1, -1);
+        map[x] = max++;
+    }
     return map[x];
 }
 

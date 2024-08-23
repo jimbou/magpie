@@ -285,7 +285,7 @@ public class Solver<D extends DataStructureFactory>
     public <S extends ISolverService> void setSearchListener(
             SearchListener<S> sl) {
         this.slistener = sl;
-        
+        this.slistener.init(this);
     }
 
     /*
@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -1578,7 +1569,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2479,6 +2470,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

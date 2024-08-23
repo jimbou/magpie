@@ -393,7 +393,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -415,6 +414,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     // Simplify conflict clause:
     //
     int i, j;
+    static DoubleOption opt_R                  (_cat, "R-val", "R", 1.4, DoubleRange(1.0, true, 2.5, true));
     out_learnt.copyTo(analyze_toclear);
     if (ccmin_mode == 2){
         uint32_t abstract_level = 0;
@@ -441,6 +441,8 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             }/*auto*/
             else{
                 Clause& c = ca[reason(var(out_learnt[i]))];
+                assert(level(x) > 0);
+                assert(level(x) > 0);
                 for (int k = 1; k < c.size(); k++)/*auto*/{
                     
                     if (!seen[var(c[k])] && level(var(c[k])) > 0){
@@ -828,6 +830,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -854,26 +863,11 @@ lbool Solver::search(int nof_conflicts)
               fprintf(output, "0\n");
             }*/
 
-            
+            varDecayActivity();
             claDecayActivity();
 
             //if (--learntsize_adjust_cnt == 0){
-            if (conflicts % 5000 == 0){
-                //learntsize_adjust_confl *= learntsize_adjust_inc;
-                //learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
-                //max_learnts             *= learntsize_inc;
-
-                if (verbosity >= 1)/*auto*/{
-                    
-                    printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
-                           (int)conflicts, 
-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
-                           (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
-                           starts, conflicts / starts,
-                           luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
-                           (int32_t)opt_cp_increase, (double)opt_core_tolerance);
-                }/*auto*/
-            }
+            
 
         }else{
             // NO CONFLICT
@@ -914,7 +908,7 @@ lbool Solver::search(int nof_conflicts)
                          adjust--;
                     }/*auto*/
                     if (adjust == 0)/*auto*/{
-                         
+                         K = (double)opt_K;
                     }/*auto*/
                     LBD_cut = (int32_t)opt_lbd_cut + adjust;
                 }
@@ -1063,13 +1057,17 @@ lbool Solver::solve_()
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
-    
+    if (map.size() <= x || map[x] == -1){
+        map.growTo(x+1, -1);
+        map[x] = max++;
+    }
     return map[x];
 }
 
 
 void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 {
+    uint32_t abstract_level = 0;
     if (satisfied(c))/*auto*/{
        return;
     }/*auto*/
@@ -1114,16 +1112,6 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         if (!satisfied(ca[clauses[i]]))/*auto*/{
             
             cnt++;
-            if (verbosity >= 1)/*auto*/{
-                
-                printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
-                       (int)conflicts, 
-                       (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
-                       (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
-                       starts, conflicts / starts,
-                       luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
-                       (int32_t)opt_cp_increase, (double)opt_core_tolerance);
-            }/*auto*/
         }/*auto*/
     }/*auto*/
         
@@ -1148,10 +1136,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 
     fprintf(f, "p cnf %d %d\n", max, cnt);
 
-    for (int i = 0; i < assumptions.size(); i++){
-        assert(value(assumptions[i]) != l_False);
-        fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
-    }
+    static DoubleOption  opt_random_var_freq   (_cat, "rnd-freq",    "The frequency with which the decision heuristic tries to choose a random variable", 0, DoubleRange(0, true, 1, true));
 
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
         
@@ -1201,7 +1186,10 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        
+        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+            
+            ca.reloc(vardata[v].reason, to);
+        }/*auto*/
     }
 
     // All learnt:

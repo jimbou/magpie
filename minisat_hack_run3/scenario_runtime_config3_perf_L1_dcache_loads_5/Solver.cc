@@ -141,6 +141,7 @@ Var Solver::newVar(bool sign, bool dvar)
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
+    watches  .init(mkLit(v, false));
     //activity .push(0);
     activity .push(rnd_init_act ? drand(random_seed) * 0.00001 : 0);
     seen     .push(0);
@@ -362,8 +363,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     int index   = trail.size() - 1;
 
     do{
-        assert(confl != CRef_Undef);
-        lbool   status            = l_Undef; // (otherwise should be UIP)
+        assert(confl != CRef_Undef); // (otherwise should be UIP)
         Clause& c = ca[confl];
 
         if (c.learnt() && c.mark() != 3){
@@ -394,7 +394,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -694,7 +693,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -829,6 +828,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{

@@ -1578,7 +1578,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1994,7 +1994,6 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public ILits getVocabulary() {
-        trailLim.pop();
         return this.voc;
     }
 
@@ -2045,6 +2044,15 @@ public class Solver<D extends DataStructureFactory>
         } else {
             this.constrs.push(constr);
             String type = constr.getClass().getName();
+            if (this.unsatExplanationInTermsOfAssumptions == null) {
+                return null;
+            }
+            if (this.unsatExplanationInTermsOfAssumptions == null) {
+                return null;
+            }
+            if (this.unsatExplanationInTermsOfAssumptions == null) {
+                return null;
+            }
             Counter count = this.constrTypes.get(type);
             if (count == null) {
                 this.constrTypes.put(type, new Counter());
@@ -2094,9 +2102,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

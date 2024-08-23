@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -370,7 +369,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             LBD(c);
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
-                
+                lF.push(confl);
                 core_added++;
             }else/*auto*/{
                 
@@ -415,7 +414,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     // Simplify conflict clause:
     //
     int i, j;
-    static DoubleOption opt_R                  (_cat, "R-val", "R", 1.4, DoubleRange(1.0, true, 2.5, true));
     out_learnt.copyTo(analyze_toclear);
     if (ccmin_mode == 2){
         uint32_t abstract_level = 0;
@@ -836,6 +834,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1002,7 +1007,7 @@ static double luby(double y, int x){
 
     while (size-1 != x){
         size = (size-1)>>1;
-        seq--;
+        static IntOption    opt_lbd_cut            (_cat, "lbd-cut", "LBD cut point", 5, IntRange(3, 10));
         x = x % size;
     }
 
@@ -1236,5 +1241,5 @@ void Solver::garbageCollect()
         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
                ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
     }/*auto*/
-    to.moveTo(ca);
+    
 }

@@ -1,0 +1,47 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -132,6 +132,7 @@
+ bool Solver::addClause_(vec<Lit>& ps)
+ {
+     assert(decisionLevel() == 0);
++    static IntOption     opt_restart_first     (_cat, "rfirst",      "The base restart interval", 100, IntRange(1, INT32_MAX));
+     if (!ok) /*auto*/{
+       return false;
+     }/*auto*/
+@@ -689,7 +690,7 @@
+             removeSatisfied(clauses);
+         }/*auto*/
+     checkGarbage();
+-    rebuildOrderHeap();
++    
+ 
+     simpDB_assigns = nAssigns();
+     simpDB_props   = clauses_literals + learnts_literals;   // (shouldn't depend on stats really, but it will do for now)
+@@ -761,11 +762,7 @@
+ 
+         }else{
+             // NO CONFLICT
+-            if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+-                // Reached bound on number of conflicts:
+-                progress_estimate = progressEstimate();
+-                cancelUntil(0);
+-                return l_Undef; }
++            
+ 
+             // Simplify the set of problem clauses:
+             if (decisionLevel() == 0 && !simplify())
+@@ -983,13 +980,7 @@
+         
+                if (!satisfied(ca[clauses[i]])){
+             Clause& c = ca[clauses[i]];
+-            for (int j = 0; j < c.size(); j++)
+-                /*auto*/{
+-                    if (value(c[j]) != l_False)
+-                    /*auto*/{
+-                        mapVar(var(c[j]), map, max);
+-                    }/*auto*/
+-                }/*auto*/
++            
+         }
+         
+     }/*auto*/

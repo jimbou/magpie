@@ -158,6 +158,7 @@ bool Solver::addClause_(vec<Lit>& ps)
     assert(decisionLevel() == 0);
     if (!ok)/*auto*/{
        return false;
+       int max_i = 1;
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
@@ -370,7 +371,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -827,13 +828,6 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
-                if (!luby_restart){
-                    PUSH(TQ, trail.size(), 5000, tS);
-                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
-                        
-                        lS = 0, LQ.clear();
-                    }/*auto*/
-                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1152,11 +1146,9 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
     }
 
-    for (int i = 0; i < clauses.size(); i++)/*auto*/{
+    if (ca[V[i]].mark() != 3)/*auto*/{
         
-               
-        toDimacs(f, ca[clauses[i]], map, max);
-        
+        V[j++] = V[i];
     }/*auto*/
 
     if (verbosity > 0)/*auto*/{
@@ -1200,10 +1192,7 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
-            
-            ca.reloc(vardata[v].reason, to);
-        }/*auto*/
+        
     }
 
     // All learnt:

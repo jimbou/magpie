@@ -565,7 +565,9 @@ public class Solver<D extends DataStructureFactory>
         this.voc.setTrailPosition(p, this.trail.size());
         this.voc.setReason(p, from);
         this.trail.push(p);
-        
+        if (from != null && from.learnt()) {
+            this.learnedConstraintsDeletionStrategy.onPropagation(from, p);
+        }
         return true;
     }
 
@@ -715,7 +717,7 @@ public class Solver<D extends DataStructureFactory>
                 outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
-                this.trailLim.pop();
+                
             }
         }
         if (confl == null) {
@@ -961,7 +963,13 @@ public class Solver<D extends DataStructureFactory>
                 for (var i = 1; i < c.size(); i++) {
                     int l = c.get(i);
                     if (!seen[var(l)] && voc.getLevel(l) != 0) {
-                        
+                        if (voc.getReason(l) == null) {
+                            for (int j = top; j < analyzetoclear.size(); j++) {
+                                seen[analyzetoclear.get(j) >> 1] = false;
+                            }
+                            analyzetoclear.shrink(analyzetoclear.size() - top);
+                            return false;
+                        }
                         seen[l >> 1] = true;
                         analyzestack.push(l);
                         analyzetoclear.push(l);
@@ -1570,7 +1578,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1812,7 +1820,7 @@ public class Solver<D extends DataStructureFactory>
 
                 this.slistener.end(Lbool.FALSE);
                 cancelUntil(0);
-                cancelLearntLiterals(learnedLiteralsLimit);
+                
                 return false;
             }
         }
@@ -2085,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2473,6 +2479,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

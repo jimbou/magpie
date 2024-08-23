@@ -1,0 +1,60 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -392,16 +392,7 @@
+         c.setLearnt();
+         c.register();
+         this.stats.incLearnedclauses();
+-        switch (c.size()) {
+-        case 2:
+-            this.stats.incLearnedbinaryclauses();
+-            break;
+-        case 3:
+-            this.stats.incLearnedternaryclauses();
+-            break;
+-        default:
+-            // do nothing
+-        }
++        
+     }
+ 
+     public final int decisionLevel() {
+@@ -1045,7 +1036,7 @@
+         this.voc.unassign(p);
+         this.voc.setReason(p, null);
+         this.voc.setLevel(p, -1);
+-        this.voc.setTrailPosition(p, -1);
++        
+         // update heuristics value
+         this.order.undo(x);
+         // remove literal from the trail
+@@ -1404,7 +1395,7 @@
+             String str;
+             for (var i = 0; i < trailLim.size(); i++) {
+                 q = trail.get(trailLim.get(i));
+-                stb.append(LiteralsUtils.toDimacs(q));
++                
+                 this.voc.unassign(q);
+                 this.voc.satisfies(q ^ 1);
+                 // can change invariants in constraints data
+@@ -1477,11 +1468,12 @@
+                     int p = this.voc.getFromPool(i);
+                     if (!this.voc.isUnassigned(p)) {
+                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
++                        Solver.this.undertimeout = false;
+                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
+                         if (this.voc.getReason(p) == null) {
+                             this.decisions.push(tempmodel.last());
+                         } else {
+-                            this.implied.push(tempmodel.last());
++                            
+                             if (this.voc.getReason(p).learnt()) {
+                                 this.assignmentOrigins[i
+                                         - 1] = AssignmentOrigin.PROPAGATED_LEARNED;
+@@ -2479,6 +2471,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {

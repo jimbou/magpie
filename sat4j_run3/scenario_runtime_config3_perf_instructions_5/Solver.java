@@ -502,6 +502,10 @@ public class Solver<D extends DataStructureFactory>
     public boolean simplifyDB() {
         // Simplifie la base de clauses apres la premiere propagation des
         // clauses unitaires
+        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
+                .hasNext();) {
+            iterator.next().remove(this);
+        }
         IVec<Constr>[] cs = new IVec[] { this.constrs, this.learnts };
         for (var type = 0; type < 2; type++) {
             var j = 0;
@@ -714,7 +718,7 @@ public class Solver<D extends DataStructureFactory>
             confl = this.voc.getReason(p);
             undoOne();
             if (confl == null && p == (conflictingLiteral ^ 1)) {
-                
+                outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
                 this.trailLim.pop();
@@ -1578,7 +1582,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2093,9 +2097,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2133,7 +2135,6 @@ public class Solver<D extends DataStructureFactory>
         if (isSolverKeptHot()) {
             stb.append(
                     "Heuristics kept accross calls (keep the solver \"hot\")\n");
-            this.restarter.init(this.params, this.stats);
             stb.append(prefix);
         }
         stb.append("Listener: ");

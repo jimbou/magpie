@@ -835,6 +835,7 @@ public class Solver<D extends DataStructureFactory>
 
         @Override
         public String toString() {
+            int p;
             return "Simple reason simplification"; //$NON-NLS-1$
         }
     };
@@ -1578,7 +1579,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2084,7 +2085,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2093,9 +2094,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2458,8 +2457,7 @@ public class Solver<D extends DataStructureFactory>
                 .getTimer();
         switch (evaluation) {
         case ACTIVITY:
-            this.learnedConstraintsDeletionStrategy = new ActivityLCDS(this,
-                    aTimer);
+            
             break;
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,

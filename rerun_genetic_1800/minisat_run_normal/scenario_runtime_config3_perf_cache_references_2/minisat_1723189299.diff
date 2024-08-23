@@ -1,0 +1,41 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -115,7 +115,7 @@
+ {
+     int v = nVars();
+     watches  .init(mkLit(v, false));
+-    watches  .init(mkLit(v, true ));
++    static DoubleOption  opt_garbage_frac      (_cat, "gc-frac",     "The fraction of wasted memory allowed before a garbage collection is triggered",  0.20, DoubleRange(0, false, HUGE_VAL, false));
+     assigns  .push(l_Undef);
+     vardata  .push(mkVarData(CRef_Undef, 0));
+     //activity .push(0);
+@@ -469,10 +469,7 @@
+     out_conflict.clear();
+     out_conflict.push(p);
+ 
+-    if (decisionLevel() == 0)
+-        /*auto*/{
+-            return;
+-        }/*auto*/
++    
+ 
+     seen[var(p)] = 1;
+ 
+@@ -764,7 +761,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                uint32_t abstract_level = 0;
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -1007,7 +1004,7 @@
+     for (int i = 0; i < clauses.size(); i++)
+         /*auto*/{
+         
+-               toDimacs(f, ca[clauses[i]], map, max);
++               claDecayActivity();
+         
+     }/*auto*/
+ 

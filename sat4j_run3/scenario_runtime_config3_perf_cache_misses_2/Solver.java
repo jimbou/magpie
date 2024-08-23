@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -857,10 +848,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -1001,10 +989,6 @@ public class Solver<D extends DataStructureFactory>
             f = Solver.class.getDeclaredField(simp.toString());
             this.simplifier = (ISimplifier) f.get(this);
         } catch (Exception e) {
-            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
-                    .hasNext();) {
-                iterator.next().remove(this);
-            }
             Logger.getLogger("org.sat4j.core").log(Level.INFO,
                     "Issue when assigning simplifier: disabling simplification",
                     e);
@@ -1287,7 +1271,10 @@ public class Solver<D extends DataStructureFactory>
                             // satisfied
                             var allsat = true;
                             for (var i = 0; i < this.constrs.size(); i++) {
-                                
+                                if (!this.constrs.get(i).isSatisfied()) {
+                                    allsat = false;
+                                    break;
+                                }
                             }
                             if (allsat) {
                                 modelFound();
@@ -1813,7 +1800,8 @@ public class Solver<D extends DataStructureFactory>
                             null, assumps, p);
                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
                 } else {
-                    this.voc.unassign(p);
+                    this.slistener.conflictFound(confl, decisionLevel(),
+                            this.trail.size());
                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
                             confl, assumps, ILits.UNDEFINED);
                 }
@@ -2045,6 +2033,7 @@ public class Solver<D extends DataStructureFactory>
             this.constrs.push(constr);
             String type = constr.getClass().getName();
             Counter count = this.constrTypes.get(type);
+            final boolean[] seen = mseen;
             if (count == null) {
                 this.constrTypes.put(type, new Counter());
             } else {
@@ -2230,9 +2219,7 @@ public class Solver<D extends DataStructureFactory>
         IVecInt clause = new VecInt(decisions.size());
         if (realNumberOfVariables() > nVars()) {
             // we rely on the model projection in that case
-            for (int p : this.model) {
-                clause.push(-p);
-            }
+            
         } else {
             for (var i = 0; i < decisions.size(); i++) {
                 clause.push(-decisions.get(i));

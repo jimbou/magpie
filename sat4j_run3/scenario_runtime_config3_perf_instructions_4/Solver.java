@@ -714,7 +714,7 @@ public class Solver<D extends DataStructureFactory>
             confl = this.voc.getReason(p);
             undoOne();
             if (confl == null && p == (conflictingLiteral ^ 1)) {
-                
+                outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
                 this.trailLim.pop();
@@ -1045,7 +1045,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        
+        this.voc.setTrailPosition(p, -1);
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1204,7 +1204,7 @@ public class Solver<D extends DataStructureFactory>
         while (!trail.isEmpty() && trail.size() > level) {
             undoOne();
             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                
+                trailLim.pop();
                 decisions.pop();
             }
         }
@@ -2093,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2481,6 +2479,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

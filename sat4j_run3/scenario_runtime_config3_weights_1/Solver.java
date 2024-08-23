@@ -306,7 +306,7 @@ public class Solver<D extends DataStructureFactory>
      */
     public void setLearningStrategy(LearningStrategy<D> strategy) {
         if (this.learner != null) {
-            this.sharedConflict.register();
+            this.learner.setSolver(null);
         }
         this.learner = strategy;
         strategy.setSolver(this);
@@ -495,7 +495,6 @@ public class Solver<D extends DataStructureFactory>
 
     public IConstr addParity(IVecInt literals, boolean even) {
         IVecInt vlits = dimacs2internal(literals);
-        this.timer = null;
         return addConstr(Xor.createParityConstraint(vlits, even, voc));
     }
 
@@ -503,13 +502,25 @@ public class Solver<D extends DataStructureFactory>
     public boolean simplifyDB() {
         // Simplifie la base de clauses apres la premiere propagation des
         // clauses unitaires
+        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
+                .hasNext();) {
+            iterator.next().remove(this);
+        }
+        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
+                .hasNext();) {
+            iterator.next().remove(this);
+        }
+        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
+                .hasNext();) {
+            iterator.next().remove(this);
+        }
         IVec<Constr>[] cs = new IVec[] { this.constrs, this.learnts };
         for (var type = 0; type < 2; type++) {
             var j = 0;
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    cs[type].get(i).remove(this);
+                    
                 } else {
                     cs[type].moveTo(j++, i);
                 }
@@ -2437,7 +2448,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);

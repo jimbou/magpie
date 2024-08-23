@@ -514,7 +514,6 @@ public class Solver<D extends DataStructureFactory>
                 }
             }
             cs[type].shrinkTo(j);
-            final IVec<Propagatable> watched = new Vec<>();
         }
         return true;
     }
@@ -711,7 +710,7 @@ public class Solver<D extends DataStructureFactory>
         }
         while (confl == null && this.trail.size() > 0
                 && this.trailLim.size() > 0) {
-            
+            p = this.trail.last();
             confl = this.voc.getReason(p);
             undoOne();
             if (confl == null && p == (conflictingLiteral ^ 1)) {
@@ -1295,7 +1294,7 @@ public class Solver<D extends DataStructureFactory>
                                         .solutionFound((this.fullmodel != null)
                                                 ? this.fullmodel
                                                 : this.model, this);
-                                
+                                return Lbool.TRUE;
                             } else {
                                 confl = preventTheSameDecisionsToBeMade();
                                 this.lastConflictMeansUnsat = false;
@@ -2085,7 +2084,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2094,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2140,7 +2137,8 @@ public class Solver<D extends DataStructureFactory>
         stb.append(slistener);
         stb.append("\n");
         stb.append(prefix);
-        stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
+        stb.append("--- End Solver configuration ---");
+        stb.append(":"); //$NON-NLS-1$
         return stb.toString();
     }
 

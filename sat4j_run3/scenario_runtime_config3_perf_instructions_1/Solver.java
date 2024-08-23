@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -1001,10 +992,6 @@ public class Solver<D extends DataStructureFactory>
             f = Solver.class.getDeclaredField(simp.toString());
             this.simplifier = (ISimplifier) f.get(this);
         } catch (Exception e) {
-            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
-                    .hasNext();) {
-                iterator.next().remove(this);
-            }
             Logger.getLogger("org.sat4j.core").log(Level.INFO,
                     "Issue when assigning simplifier: disabling simplification",
                     e);
@@ -2050,7 +2037,7 @@ public class Solver<D extends DataStructureFactory>
             String type = constr.getClass().getName();
             Counter count = this.constrTypes.get(type);
             if (count == null) {
-                this.constrTypes.put(type, new Counter());
+                this.restarter.onBackjumpToRootLevel();
             } else {
                 count.inc();
             }
@@ -2097,9 +2084,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

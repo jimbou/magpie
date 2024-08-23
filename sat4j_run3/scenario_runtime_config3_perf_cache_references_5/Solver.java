@@ -508,13 +508,12 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    cs[type].get(i).remove(this);
+                    
                 } else {
                     cs[type].moveTo(j++, i);
                 }
             }
             cs[type].shrinkTo(j);
-            final IVec<Propagatable> watched = new Vec<>();
         }
         return true;
     }
@@ -846,7 +845,7 @@ public class Solver<D extends DataStructureFactory>
         /**
          * 
          */
-        
+        private static final long serialVersionUID = 1L;
 
         public void simplify(IVecInt conflictToReduce) {
             // Taken from MiniSAT 1.14
@@ -2085,7 +2084,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        
+        printStat(out, prefix);
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2094,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2439,7 +2436,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            break;
+            
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);
@@ -2482,6 +2479,12 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

@@ -398,7 +398,7 @@ public class Solver<D extends DataStructureFactory>
             break;
         case 3:
             this.stats.incLearnedternaryclauses();
-            break;
+            
         default:
             // do nothing
         }
@@ -1578,7 +1578,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2084,7 +2084,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2093,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2137,7 +2135,7 @@ public class Solver<D extends DataStructureFactory>
         }
         stb.append("Listener: ");
         stb.append(slistener);
-        
+        stb.append("\n");
         stb.append(prefix);
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();

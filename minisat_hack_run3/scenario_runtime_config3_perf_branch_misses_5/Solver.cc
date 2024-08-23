@@ -370,7 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -504,7 +504,6 @@ bool Solver::litRedundant(Lit p, uint32_t abstract_levels)
                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
                     seen[var(p)] = 1;
                     analyze_stack.push(p);
-                    checkGarbage();
                     analyze_toclear.push(p);
                 }else{
                     for (int j = top; j < analyze_toclear.size(); j++)/*auto*/{
@@ -553,10 +552,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
                 Clause& c = ca[reason(x)];
                 for (int j = 1; j < c.size(); j++)/*auto*/{
                     
-                    if (level(var(c[j])) > 0)/*auto*/{
-                        
-                        seen[var(c[j])] = 1;
-                    }/*auto*/
+                    
                 }/*auto*/
             }
             seen[x] = 0;
@@ -828,6 +824,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1201,10 +1204,7 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
-            
-            ca.reloc(vardata[v].reason, to);
-        }/*auto*/
+        
     }
 
     // All learnt:

@@ -393,7 +393,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -693,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -757,6 +756,7 @@ bool Solver::simplify()
         if (ca[V[i]].mark() != 3)/*auto*/{
             
             V[j++] = V[i];
+            assert(confl != CRef_Undef);
         }/*auto*/
     }/*auto*/
     V.shrink(i - j);
@@ -828,6 +828,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1070,7 +1077,10 @@ lbool Solver::solve_()
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
-    
+    if (map.size() <= x || map[x] == -1){
+        map.growTo(x+1, -1);
+        map[x] = max++;
+    }
     return map[x];
 }
 
@@ -1095,7 +1105,10 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 void Solver::toDimacs(const char *file, const vec<Lit>& assumps)
 {
     FILE* f = fopen(file, "wr");
-    
+    if (f == NULL)/*auto*/{
+      
+        fprintf(stderr, "could not open file %s\n", file), exit(1);
+    }/*auto*/
     toDimacs(f, assumps);
     fclose(f);
 }
@@ -1105,7 +1118,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
 {
     // Handle case when solver is in contradictory state:
     if (!ok){
-        fprintf(f, "p cnf 1 2\n1 0\n-1 0\n");
+        
         return; }
 
     vec<Var> map; Var max = 0;
@@ -1118,6 +1131,16 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         if (!satisfied(ca[clauses[i]]))/*auto*/{
             
             cnt++;
+            if (verbosity >= 1)/*auto*/{
+                
+                printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
+                       (int)conflicts, 
+                       (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
+                       (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
+                       starts, conflicts / starts,
+                       luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
+                       (int32_t)opt_cp_increase, (double)opt_core_tolerance);
+            }/*auto*/
         }/*auto*/
     }/*auto*/
         
@@ -1126,7 +1149,13 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
                
         if (!satisfied(ca[clauses[i]])){
             Clause& c = ca[clauses[i]];
+            for (int j = 0; j < c.size(); j++)/*auto*/{
             
+                if (value(c[j]) != l_False)/*auto*/{
+                    
+                    mapVar(var(c[j]), map, max);
+                }/*auto*/
+            }/*auto*/
         }
         
     }/*auto*/

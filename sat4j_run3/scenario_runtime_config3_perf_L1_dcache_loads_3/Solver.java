@@ -717,7 +717,7 @@ public class Solver<D extends DataStructureFactory>
                 outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
-                this.trailLim.pop();
+                
             }
         }
         if (confl == null) {
@@ -1749,7 +1749,7 @@ public class Solver<D extends DataStructureFactory>
         this.trail.ensure(howmany);
         this.trailLim.ensure(howmany);
         this.learnedLiterals.ensure(howmany);
-        this.decisions.clear();
+        
         this.implied.clear();
         this.slistener.start();
         this.model = null; // forget about previous model
@@ -1812,7 +1812,8 @@ public class Solver<D extends DataStructureFactory>
                             null, assumps, p);
                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
                 } else {
-                    this.voc.unassign(p);
+                    this.slistener.conflictFound(confl, decisionLevel(),
+                            this.trail.size());
                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
                             confl, assumps, ILits.UNDEFINED);
                 }
@@ -2092,9 +2093,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2136,7 +2135,7 @@ public class Solver<D extends DataStructureFactory>
         }
         stb.append("Listener: ");
         stb.append(slistener);
-        
+        stb.append("\n");
         stb.append(prefix);
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();
@@ -2258,9 +2257,7 @@ public class Solver<D extends DataStructureFactory>
             if (this.trail.isEmpty()) {
                 return;
             }
-            if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                trailLim.pop();
-            }
+            int i, j, k;
             current = this.trail.last();
         }
         undoOne();
@@ -2437,7 +2434,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);

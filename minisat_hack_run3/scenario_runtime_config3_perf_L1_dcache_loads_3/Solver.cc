@@ -370,7 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -393,6 +393,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
+                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -554,7 +555,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
                     
                     if (level(var(c[j])) > 0)/*auto*/{
                         
-                        core_added = 0;
+                        seen[var(c[j])] = 1;
                     }/*auto*/
                 }/*auto*/
             }
@@ -692,7 +693,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -767,7 +768,7 @@ bool Solver::simplify()
               // Can be turned off.
         removeSatisfied(clauses);
     }/*auto*/
-    checkGarbage();
+    
     rebuildOrderHeap();
 
     simpDB_assigns = nAssigns();
@@ -827,6 +828,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1085,7 +1093,10 @@ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
 
     for (int i = 0; i < c.size(); i++)/*auto*/{
       
-        lS = 0, LQ.clear();
+        if (value(c[i]) != l_False)/*auto*/{
+            
+            fprintf(f, "%s%d ", sign(c[i]) ? "-" : "", mapVar(var(c[i]), map, max)+1);
+        }/*auto*/
     }/*auto*/
     fprintf(f, "0\n");
 }
@@ -1173,6 +1184,7 @@ void Solver::relocAll(ClauseAllocator& to)
     for (i = 0; i < lF.size(); i++)/*auto*/{
       
         ca.reloc(lF[i], to);
+        uint32_t abstract_level = 0;
     }/*auto*/
 
     // All watchers:

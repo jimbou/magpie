@@ -370,7 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
-                
+                core_added++;
             }else/*auto*/{
                 
                 claBumpActivity(c);
@@ -388,7 +388,10 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     CRef r = reason(var(q));
                     if (r != CRef_Undef && ca[r].mark() == 3)/*auto*/{
                         
-                        varBumpActivity(var(q));
+                        if (level(var(c[j])) > 0)/*auto*/{
+                            
+                            seen[var(c[j])] = 1;
+                        }/*auto*/
                     }/*auto*/
                 }else/*auto*/{
                     
@@ -504,9 +507,7 @@ bool Solver::litRedundant(Lit p, uint32_t abstract_levels)
                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
                     seen[var(p)] = 1;
                     analyze_stack.push(p);
-                    checkGarbage();
                     analyze_toclear.push(p);
-                    Lit p  = c[i];
                 }else{
                     for (int j = top; j < analyze_toclear.size(); j++)/*auto*/{
                         
@@ -543,14 +544,13 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
     }/*auto*/
 
     seen[var(p)] = 1;
-    static IntOption    opt_lbd_cut            (_cat, "lbd-cut", "LBD cut point", 5, IntRange(3, 10));
 
     for (int i = trail.size()-1; i >= trail_lim[0]; i--){
         Var x = var(trail[i]);
         if (seen[x]){
             if (reason(x) == CRef_Undef){
                 assert(level(x) > 0);
-                out_conflict.push(~trail[i]);
+                int index   = trail.size() - 1;
             }else{
                 Clause& c = ca[reason(x)];
                 for (int j = 1; j < c.size(); j++)/*auto*/{
@@ -615,7 +615,7 @@ CRef Solver::propagate()
                 
                 c[0] = c[1], c[1] = false_lit;
             }/*auto*/
-            assert(c[1] == false_lit);
+            
             i++;
 
             // If 0th watch is true, then clause is already satisfied.
@@ -837,6 +837,27 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1029,7 +1050,7 @@ lbool Solver::solve_()
     if (verbosity >= 1){
         printf("c ============================[ Search Statistics ]==============================\n");
         printf("c | Conflicts |          ORIGINAL         |          LEARNT          | Progress |\n");
-        printf("c |           |    Vars  Clauses Literals |    Limit  Clauses Lit/Cl |          |\n");
+        
         printf("c ===============================================================================\n");
     }
 
@@ -1203,7 +1224,10 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        
+        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+            
+            ca.reloc(vardata[v].reason, to);
+        }/*auto*/
     }
 
     // All learnt:

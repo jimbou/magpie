@@ -495,7 +495,6 @@ public class Solver<D extends DataStructureFactory>
 
     public IConstr addParity(IVecInt literals, boolean even) {
         IVecInt vlits = dimacs2internal(literals);
-        this.timer = null;
         return addConstr(Xor.createParityConstraint(vlits, even, voc));
     }
 
@@ -1478,7 +1477,6 @@ public class Solver<D extends DataStructureFactory>
                     int p = this.voc.getFromPool(i);
                     if (!this.voc.isUnassigned(p)) {
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
-                        Solver.this.undertimeout = false;
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
                             this.decisions.push(tempmodel.last());
@@ -1580,7 +1578,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2048,7 +2046,7 @@ public class Solver<D extends DataStructureFactory>
             String type = constr.getClass().getName();
             Counter count = this.constrTypes.get(type);
             if (count == null) {
-                this.constrTypes.put(type, new Counter());
+                this.restarter.onBackjumpToRootLevel();
             } else {
                 count.inc();
             }
@@ -2086,7 +2084,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        
+        printStat(out, prefix);
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2095,7 +2093,9 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        printLearntClausesInfos(out, prefix);
+        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+            trailLim.pop();
+        }
     }
 
     /*
@@ -2239,6 +2239,8 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < decisions.size(); i++) {
                 clause.push(-decisions.get(i));
             }
+            this.order.setVarDecay(1 / this.params.getVarDecay());
+            this.order.setVarDecay(1 / this.params.getVarDecay());
         }
 
         return clause;
@@ -2259,9 +2261,7 @@ public class Solver<D extends DataStructureFactory>
             if (this.trail.isEmpty()) {
                 return;
             }
-            if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                trailLim.pop();
-            }
+            int i, j, k;
             current = this.trail.last();
         }
         undoOne();

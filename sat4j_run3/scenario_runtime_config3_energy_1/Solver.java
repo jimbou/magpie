@@ -394,7 +394,7 @@ public class Solver<D extends DataStructureFactory>
         this.stats.incLearnedclauses();
         switch (c.size()) {
         case 2:
-            claDecayActivity();
+            this.stats.incLearnedbinaryclauses();
             break;
         case 3:
             this.stats.incLearnedternaryclauses();
@@ -508,7 +508,7 @@ public class Solver<D extends DataStructureFactory>
             for (var i = 0; i < cs[type].size(); i++) {
                 if (cs[type].get(i).simplify()) {
                     // enleve les contraintes satisfaites de la base
-                    cs[type].get(i).remove(this);
+                    
                 } else {
                     cs[type].moveTo(j++, i);
                 }
@@ -635,6 +635,7 @@ public class Solver<D extends DataStructureFactory>
                 confl = this.voc.getReason(p);
                 undoOne();
             } while (!seen[p >> 1]);
+            this.restarter.onBackjumpToRootLevel();
             // seen[p.var] indique que p se trouve dans outLearnt ou dans
             // le dernier niveau de d?cision
         } while (--counter > 0);
@@ -1001,10 +1002,6 @@ public class Solver<D extends DataStructureFactory>
             f = Solver.class.getDeclaredField(simp.toString());
             this.simplifier = (ISimplifier) f.get(this);
         } catch (Exception e) {
-            for (Iterator<Constr> iterator = this.learnts.iterator(); iterator
-                    .hasNext();) {
-                iterator.next().remove(this);
-            }
             Logger.getLogger("org.sat4j.core").log(Level.INFO,
                     "Issue when assigning simplifier: disabling simplification",
                     e);
@@ -1582,7 +1579,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
+        
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1816,7 +1813,8 @@ public class Solver<D extends DataStructureFactory>
                             null, assumps, p);
                     this.unsatExplanationInTermsOfAssumptions.push(toDimacs(p));
                 } else {
-                    this.voc.unassign(p);
+                    this.slistener.conflictFound(confl, decisionLevel(),
+                            this.trail.size());
                     this.unsatExplanationInTermsOfAssumptions = analyzeFinalConflictInTermsOfAssumptions(
                             confl, assumps, ILits.UNDEFINED);
                 }
@@ -2559,7 +2557,7 @@ public class Solver<D extends DataStructureFactory>
                 subset.add(q);
                 max = level;
             } else if (level == max) {
-                
+                subset.add(q);
             }
         }
         return subset;

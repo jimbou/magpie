@@ -158,7 +158,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     assert(decisionLevel() == 0);
     if (!ok)/*auto*/{
        return false;
-       int max_i = 1;
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
@@ -555,7 +554,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
                     
                     if (level(var(c[j])) > 0)/*auto*/{
                         
-                        core_added = 0;
+                        seen[var(c[j])] = 1;
                     }/*auto*/
                 }/*auto*/
             }
@@ -828,6 +827,20 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1063,7 +1076,10 @@ lbool Solver::solve_()
 
 static Var mapVar(Var x, vec<Var>& map, Var& max)
 {
-    
+    if (map.size() <= x || map[x] == -1){
+        map.growTo(x+1, -1);
+        map[x] = max++;
+    }
     return map[x];
 }
 
@@ -1225,5 +1241,5 @@ void Solver::garbageCollect()
         printf("c |  Garbage collection:   %12d bytes => %12d bytes             |\n", 
                ca.size()*ClauseAllocator::Unit_Size, to.size()*ClauseAllocator::Unit_Size);
     }/*auto*/
-    to.moveTo(ca);
+    
 }

@@ -1,0 +1,36 @@
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -115,7 +115,7 @@
+ {
+     int v = nVars();
+     watches  .init(mkLit(v, false));
+-    watches  .init(mkLit(v, true ));
++    static DoubleOption  opt_garbage_frac      (_cat, "gc-frac",     "The fraction of wasted memory allowed before a garbage collection is triggered",  0.20, DoubleRange(0, false, HUGE_VAL, false));
+     assigns  .push(l_Undef);
+     vardata  .push(mkVarData(CRef_Undef, 0));
+     //activity .push(0);
+@@ -367,6 +367,7 @@
+             }/*auto*/
+         
+     }else if (ccmin_mode == 1){
++        Var x = var(out_learnt[i]);
+         for (i = j = 1; i < out_learnt.size(); i++){
+             Var x = var(out_learnt[i]);
+ 
+@@ -764,7 +765,7 @@
+             if (nof_conflicts >= 0 && conflictC >= nof_conflicts || !withinBudget()){
+                 // Reached bound on number of conflicts:
+                 progress_estimate = progressEstimate();
+-                cancelUntil(0);
++                
+                 return l_Undef; }
+ 
+             // Simplify the set of problem clauses:
+@@ -932,6 +933,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 

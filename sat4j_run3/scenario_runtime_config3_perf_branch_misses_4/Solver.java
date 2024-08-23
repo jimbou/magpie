@@ -285,7 +285,7 @@ public class Solver<D extends DataStructureFactory>
     public <S extends ISolverService> void setSearchListener(
             SearchListener<S> sl) {
         this.slistener = sl;
-        
+        this.slistener.init(this);
     }
 
     /*
@@ -964,9 +964,7 @@ public class Solver<D extends DataStructureFactory>
                     int l = c.get(i);
                     if (!seen[var(l)] && voc.getLevel(l) != 0) {
                         if (voc.getReason(l) == null) {
-                            for (int j = top; j < analyzetoclear.size(); j++) {
-                                seen[analyzetoclear.get(j) >> 1] = false;
-                            }
+                            
                             analyzetoclear.shrink(analyzetoclear.size() - top);
                             return false;
                         }
@@ -1045,7 +1043,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        
+        this.voc.setTrailPosition(p, -1);
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1332,7 +1330,7 @@ public class Solver<D extends DataStructureFactory>
                 try {
                     analyze(confl, this.analysisResult);
                 } catch (TimeoutException e) {
-                    return Lbool.UNDEFINED;
+                    analyzetoclear.clear();
                 }
                 assert this.analysisResult
                         .getBacktrackLevel() < decisionLevel();
@@ -1578,7 +1576,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1922,7 +1920,8 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printInfos(PrintWriter out) {
-        printInfos(out, prefix);
+        ConflictTimer aTimer = this.learnedConstraintsDeletionStrategy
+                .getTimer();
     }
 
     public void printInfos(PrintWriter out, String prefix) {
@@ -2093,9 +2092,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

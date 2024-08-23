@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -1045,7 +1036,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        
+        this.voc.setTrailPosition(p, -1);
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1578,7 +1569,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2084,7 +2075,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2131,6 +2122,7 @@ public class Solver<D extends DataStructureFactory>
         if (isSolverKeptHot()) {
             stb.append(
                     "Heuristics kept accross calls (keep the solver \"hot\")\n");
+            this.restarter.init(this.params, this.stats);
             stb.append(prefix);
         }
         stb.append("Listener: ");
@@ -2436,7 +2428,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);

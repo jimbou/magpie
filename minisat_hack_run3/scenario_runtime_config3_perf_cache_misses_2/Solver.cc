@@ -137,7 +137,7 @@ Solver::~Solver()
 Var Solver::newVar(bool sign, bool dvar)
 {
     int v = nVars();
-    watches  .init(mkLit(v, false));
+    
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
@@ -173,7 +173,17 @@ bool Solver::addClause_(vec<Lit>& ps)
           flag = 1;
     }*/
 
-    
+    for (i = j = 0, p = lit_Undef; i < ps.size(); i++)/*auto*/{
+      
+        if (value(ps[i]) == l_True || ps[i] == ~p)/*auto*/{
+            
+            return true;
+        }/*auto*/
+        else if (value(ps[i]) != l_False && ps[i] != p)/*auto*/{
+            
+            ps[j++] = p = ps[i];
+        }/*auto*/
+    }/*auto*/
     ps.shrink(i - j);
 
     /*if (flag && (output != NULL)) {
@@ -824,6 +834,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -840,6 +857,10 @@ lbool Solver::search(int nof_conflicts)
                 else/*auto*/{
                     
                     core_added++;
+                    lS = 0, LQ.clear();
+                    lS = 0, LQ.clear();
+                    lS = 0, LQ.clear();
+                    lS = 0, LQ.clear();
                 }/*auto*/
                 uncheckedEnqueue(learnt_clause[0], cr);
             }
@@ -1190,7 +1211,10 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        
+        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+            
+            ca.reloc(vardata[v].reason, to);
+        }/*auto*/
     }
 
     // All learnt:

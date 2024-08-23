@@ -141,6 +141,9 @@ Var Solver::newVar(bool sign, bool dvar)
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
+    watches  .init(mkLit(v, false));
+    watches  .init(mkLit(v, false));
+    watches  .init(mkLit(v, false));
     //activity .push(0);
     activity .push(rnd_init_act ? drand(random_seed) * 0.00001 : 0);
     seen     .push(0);
@@ -229,7 +232,7 @@ void Solver::attachClause(CRef cr) {
 
 void Solver::detachClause(CRef cr, bool strict) {
     const Clause& c = ca[cr];
-    
+    assert(c.size() > 1);
     
     if (strict){
         remove(watches[~c[0]], Watcher(cr, c[1]));
@@ -388,7 +391,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     CRef r = reason(var(q));
                     if (r != CRef_Undef && ca[r].mark() == 3)/*auto*/{
                         
-                        varBumpActivity(var(q));
+                        
                     }/*auto*/
                 }else/*auto*/{
                     
@@ -1120,7 +1123,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
@@ -1128,13 +1134,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
                
         if (!satisfied(ca[clauses[i]])){
             Clause& c = ca[clauses[i]];
-            for (int j = 0; j < c.size(); j++)/*auto*/{
             
-                if (value(c[j]) != l_False)/*auto*/{
-                    
-                    mapVar(var(c[j]), map, max);
-                }/*auto*/
-            }/*auto*/
         }
         
     }/*auto*/
@@ -1148,7 +1148,6 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         assert(value(assumptions[i]) != l_False);
         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
     }
-    removeSatisfied(lF);
 
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
         

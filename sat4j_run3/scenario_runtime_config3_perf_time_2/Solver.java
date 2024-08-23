@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -514,6 +505,7 @@ public class Solver<D extends DataStructureFactory>
                 }
             }
             cs[type].shrinkTo(j);
+            final IVec<Propagatable> watched = new Vec<>();
         }
         return true;
     }
@@ -565,7 +557,9 @@ public class Solver<D extends DataStructureFactory>
         this.voc.setTrailPosition(p, this.trail.size());
         this.voc.setReason(p, from);
         this.trail.push(p);
-        
+        if (from != null && from.learnt()) {
+            this.learnedConstraintsDeletionStrategy.onPropagation(from, p);
+        }
         return true;
     }
 
@@ -1448,7 +1442,6 @@ public class Solver<D extends DataStructureFactory>
                     tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
                     this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                     reason = this.voc.getReason(p);
-                    Constr confl = reduceClausesContainingTheNegationOf(p);
                     if (reason == null && this.voc.getLevel(p) > 0
                             // we consider literals propagated by learned
                             // clauses
@@ -2083,7 +2076,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2092,9 +2085,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2136,7 +2127,7 @@ public class Solver<D extends DataStructureFactory>
         }
         stb.append("Listener: ");
         stb.append(slistener);
-        
+        stb.append("\n");
         stb.append(prefix);
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();
@@ -2480,7 +2471,6 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
-        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

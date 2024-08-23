@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -502,6 +493,10 @@ public class Solver<D extends DataStructureFactory>
     public boolean simplifyDB() {
         // Simplifie la base de clauses apres la premiere propagation des
         // clauses unitaires
+        for (Iterator<Constr> iterator = this.constrs.iterator(); iterator
+                .hasNext();) {
+            iterator.next().remove(this);
+        }
         IVec<Constr>[] cs = new IVec[] { this.constrs, this.learnts };
         for (var type = 0; type < 2; type++) {
             var j = 0;
@@ -857,10 +852,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -1045,7 +1037,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        
+        this.voc.setTrailPosition(p, -1);
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1578,7 +1570,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2093,9 +2085,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2133,7 +2123,6 @@ public class Solver<D extends DataStructureFactory>
         if (isSolverKeptHot()) {
             stb.append(
                     "Heuristics kept accross calls (keep the solver \"hot\")\n");
-            this.restarter.init(this.params, this.stats);
             stb.append(prefix);
         }
         stb.append("Listener: ");

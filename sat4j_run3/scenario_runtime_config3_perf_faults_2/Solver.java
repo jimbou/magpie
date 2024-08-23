@@ -392,16 +392,7 @@ public class Solver<D extends DataStructureFactory>
         c.setLearnt();
         c.register();
         this.stats.incLearnedclauses();
-        switch (c.size()) {
-        case 2:
-            this.stats.incLearnedbinaryclauses();
-            break;
-        case 3:
-            this.stats.incLearnedternaryclauses();
-            break;
-        default:
-            // do nothing
-        }
+        
     }
 
     public final int decisionLevel() {
@@ -1045,7 +1036,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        this.voc.setTrailPosition(p, -1);
+        
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1204,7 +1195,7 @@ public class Solver<D extends DataStructureFactory>
         while (!trail.isEmpty() && trail.size() > level) {
             undoOne();
             if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-                
+                trailLim.pop();
                 decisions.pop();
             }
         }
@@ -1404,7 +1395,7 @@ public class Solver<D extends DataStructureFactory>
             String str;
             for (var i = 0; i < trailLim.size(); i++) {
                 q = trail.get(trailLim.get(i));
-                stb.append(LiteralsUtils.toDimacs(q));
+                
                 this.voc.unassign(q);
                 this.voc.satisfies(q ^ 1);
                 // can change invariants in constraints data
@@ -1477,11 +1468,12 @@ public class Solver<D extends DataStructureFactory>
                     int p = this.voc.getFromPool(i);
                     if (!this.voc.isUnassigned(p)) {
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
+                        Solver.this.undertimeout = false;
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
                             this.decisions.push(tempmodel.last());
                         } else {
-                            this.implied.push(tempmodel.last());
+                            
                             if (this.voc.getReason(p).learnt()) {
                                 this.assignmentOrigins[i
                                         - 1] = AssignmentOrigin.PROPAGATED_LEARNED;
@@ -1578,7 +1570,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2084,7 +2076,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        
+        printStat(out, prefix);
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2093,9 +2085,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2438,7 +2428,7 @@ public class Solver<D extends DataStructureFactory>
         case LBD:
             this.learnedConstraintsDeletionStrategy = new GlucoseLCDS<D>(this,
                     timer);
-            
+            break;
         case LBD2:
             this.learnedConstraintsDeletionStrategy = new Glucose2LCDS<D>(this,
                     timer);
@@ -2481,6 +2471,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

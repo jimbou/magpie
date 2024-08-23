@@ -285,7 +285,7 @@ public class Solver<D extends DataStructureFactory>
     public <S extends ISolverService> void setSearchListener(
             SearchListener<S> sl) {
         this.slistener = sl;
-        
+        this.slistener.init(this);
     }
 
     /*
@@ -305,7 +305,9 @@ public class Solver<D extends DataStructureFactory>
      * LearningStrategy)
      */
     public void setLearningStrategy(LearningStrategy<D> strategy) {
-        
+        if (this.learner != null) {
+            this.learner.setSolver(null);
+        }
         this.learner = strategy;
         strategy.setSolver(this);
     }
@@ -745,7 +747,6 @@ public class Solver<D extends DataStructureFactory>
                 if (decisionLevel() > 0
                         && this.trail.size() <= this.trailLim.last()) {
                     this.trailLim.pop();
-                    this.learnedConstraintsDeletionStrategy.init();
                 }
             } while (this.trail.size() > 0 && decisionLevel() > 0
                     && (!seen[p >> 1] || confl == null));
@@ -856,10 +857,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -2092,9 +2090,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

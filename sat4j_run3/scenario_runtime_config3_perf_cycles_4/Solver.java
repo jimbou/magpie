@@ -717,7 +717,7 @@ public class Solver<D extends DataStructureFactory>
                 outLearnt.push(toDimacs(p));
             }
             if (this.trail.size() <= this.trailLim.last()) {
-                this.trailLim.pop();
+                
             }
         }
         if (confl == null) {
@@ -1477,10 +1477,9 @@ public class Solver<D extends DataStructureFactory>
                     int p = this.voc.getFromPool(i);
                     if (!this.voc.isUnassigned(p)) {
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
-                        Solver.this.undertimeout = false;
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
-                            
+                            this.decisions.push(tempmodel.last());
                         } else {
                             this.implied.push(tempmodel.last());
                             if (this.voc.getReason(p).learnt()) {
@@ -1923,7 +1922,8 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printInfos(PrintWriter out) {
-        printInfos(out, prefix);
+        ConflictTimer aTimer = this.learnedConstraintsDeletionStrategy
+                .getTimer();
     }
 
     public void printInfos(PrintWriter out, String prefix) {
@@ -2094,9 +2094,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2482,6 +2480,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

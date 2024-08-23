@@ -86,7 +86,7 @@ public class Solver<D extends DataStructureFactory>
 
     private static final String CALL_THE_SOLVE_METHOD_FIRST = "Call the solve method first!!!";
 
-    private static final long serialVersionUID = 1L;
+    
 
     private static final double CLAUSE_RESCALE_FACTOR = 1e-20;
 
@@ -367,10 +367,7 @@ public class Solver<D extends DataStructureFactory>
     public void expireTimeout() {
         this.undertimeout = false;
         if (this.timeBasedTimeout) {
-            if (this.timer != null) {
-                this.timer.cancel();
-                this.timer = null;
-            }
+            
         } else {
             if (this.conflictCount != null) {
                 this.conflictCount = null;
@@ -514,7 +511,6 @@ public class Solver<D extends DataStructureFactory>
                 }
             }
             cs[type].shrinkTo(j);
-            final IVec<Propagatable> watched = new Vec<>();
         }
         return true;
     }
@@ -1579,7 +1575,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2085,7 +2081,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2094,9 +2090,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*

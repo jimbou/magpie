@@ -857,10 +857,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -1479,7 +1476,7 @@ public class Solver<D extends DataStructureFactory>
                         tempmodel.push(this.voc.isSatisfied(p) ? i : -i);
                         this.userbooleanmodel[i - 1] = this.voc.isSatisfied(p);
                         if (this.voc.getReason(p) == null) {
-                            
+                            this.decisions.push(tempmodel.last());
                         } else {
                             this.implied.push(tempmodel.last());
                             if (this.voc.getReason(p).learnt()) {
@@ -1578,7 +1575,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2093,7 +2090,9 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        printLearntClausesInfos(out, prefix);
+        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+            trailLim.pop();
+        }
     }
 
     /*

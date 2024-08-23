@@ -857,10 +857,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -1404,7 +1401,7 @@ public class Solver<D extends DataStructureFactory>
             String str;
             for (var i = 0; i < trailLim.size(); i++) {
                 q = trail.get(trailLim.get(i));
-                
+                stb.append(LiteralsUtils.toDimacs(q));
                 this.voc.unassign(q);
                 this.voc.satisfies(q ^ 1);
                 // can change invariants in constraints data
@@ -1578,7 +1575,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -2084,7 +2081,7 @@ public class Solver<D extends DataStructureFactory>
     }
 
     public void printStat(PrintWriter out) {
-        printStat(out, prefix);
+        
     }
 
     public void printStat(PrintWriter out, String prefix) {
@@ -2093,9 +2090,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2133,7 +2128,6 @@ public class Solver<D extends DataStructureFactory>
         if (isSolverKeptHot()) {
             stb.append(
                     "Heuristics kept accross calls (keep the solver \"hot\")\n");
-            this.restarter.init(this.params, this.stats);
             stb.append(prefix);
         }
         stb.append("Listener: ");
@@ -2482,6 +2476,7 @@ public class Solver<D extends DataStructureFactory>
 
     public void setKeepSolverHot(boolean keepHot) {
         this.keepHot = keepHot;
+        this.timeBasedTimeout = false;
     }
 
     private final Comparator<Integer> trailComparator() {

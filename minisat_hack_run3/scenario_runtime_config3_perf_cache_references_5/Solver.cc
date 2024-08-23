@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -230,7 +229,7 @@ void Solver::attachClause(CRef cr) {
 
 void Solver::detachClause(CRef cr, bool strict) {
     const Clause& c = ca[cr];
-    
+    assert(c.size() > 1);
     
     if (strict){
         remove(watches[~c[0]], Watcher(cr, c[1]));
@@ -389,12 +388,11 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                     CRef r = reason(var(q));
                     if (r != CRef_Undef && ca[r].mark() == 3)/*auto*/{
                         
-                        varBumpActivity(var(q));
+                        
                     }/*auto*/
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -537,10 +535,7 @@ void Solver::analyzeFinal(Lit p, vec<Lit>& out_conflict)
     out_conflict.clear();
     out_conflict.push(p);
 
-    if (decisionLevel() == 0)/*auto*/{
-      
-        return;
-    }/*auto*/
+    
 
     seen[var(p)] = 1;
 
@@ -829,6 +824,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{

@@ -158,6 +158,7 @@ bool Solver::addClause_(vec<Lit>& ps)
     assert(decisionLevel() == 0);
     if (!ok)/*auto*/{
        return false;
+       int max_i = 1;
     }/*auto*/
 
     // Check if clause is satisfied and remove false/duplicate literals:
@@ -204,7 +205,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -394,7 +394,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -694,7 +693,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -836,6 +835,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -922,7 +928,6 @@ lbool Solver::search(int nof_conflicts)
                          adjust--;
                     }/*auto*/
                     if (adjust == 0)/*auto*/{
-                         static DoubleOption  opt_random_seed       (_cat, "rnd-seed",    "Used by the random variable selection",         91648253, DoubleRange(0, false, HUGE_VAL, false));
                          K = (double)opt_K;
                     }/*auto*/
                     LBD_cut = (int32_t)opt_lbd_cut + adjust;
@@ -1019,7 +1024,7 @@ lbool Solver::solve_()
        return l_False;
     }/*auto*/
 
-    CRef confl = propagate();
+    solves++;
 
     max_learnts               = nClauses() * learntsize_factor;
     learntsize_adjust_confl   = learntsize_adjust_start_confl;
@@ -1123,7 +1128,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{

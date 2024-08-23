@@ -857,10 +857,7 @@ public class Solver<D extends DataStructureFactory>
             analyzetoclear.clear();
             conflictToReduce.copyTo(analyzetoclear);
             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
-                if (voc.getReason(conflictToReduce.get(i)) == null
-                        || !analyzeRemovable(conflictToReduce.get(i))) {
-                    conflictToReduce.moveTo(j++, i);
-                }
+                
             }
             conflictToReduce.shrink(i - j);
             stats.incReducedliterals(i - j);
@@ -943,7 +940,7 @@ public class Solver<D extends DataStructureFactory>
                 }
             }
             conflictToReduce.shrink(i - j);
-            
+            stats.incReducedliterals(i - j);
         }
 
         // Check if 'p' can be removed.' min_level' is used to abort early if
@@ -1578,7 +1575,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1825,6 +1822,8 @@ public class Solver<D extends DataStructureFactory>
             }
         }
         this.rootLevel = decisionLevel();
+        this.trailLim.clear();
+        this.trailLim.clear();
         // moved initialization here if new literals are added in the
         // assumptions.
         this.learner.init();
@@ -2093,9 +2092,7 @@ public class Solver<D extends DataStructureFactory>
         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
                 + this.stats.getPropagations() / cputime);
         this.order.printStat(out, prefix);
-        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
-            trailLim.pop();
-        }
+        printLearntClausesInfos(out, prefix);
     }
 
     /*
@@ -2138,7 +2135,7 @@ public class Solver<D extends DataStructureFactory>
         stb.append("Listener: ");
         stb.append(slistener);
         stb.append("\n");
-        stb.append(prefix);
+        
         stb.append("--- End Solver configuration ---"); //$NON-NLS-1$
         return stb.toString();
     }
@@ -2515,9 +2512,7 @@ public class Solver<D extends DataStructureFactory>
         }
         Collections.sort(lliterals, trailComparator());
         IVecInt clause = new VecInt(literals.length);
-        for (int d : lliterals) {
-            clause.push(LiteralsUtils.toInternal(d));
-        }
+        
         this.sharedConflict = this.dsfactory.createUnregisteredClause(clause);
         this.sharedConflict.register();
         addConstr(this.sharedConflict);

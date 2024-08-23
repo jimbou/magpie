@@ -137,7 +137,7 @@ Solver::~Solver()
 Var Solver::newVar(bool sign, bool dvar)
 {
     int v = nVars();
-    
+    watches  .init(mkLit(v, false));
     watches  .init(mkLit(v, true ));
     assigns  .push(l_Undef);
     vardata  .push(mkVarData(CRef_Undef, 0));
@@ -393,7 +393,6 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
                 }else/*auto*/{
                     
                     out_learnt.push(q);
-                    int curr_restarts = 0;
                 }/*auto*/
             }
         }
@@ -693,7 +692,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -768,7 +767,7 @@ bool Solver::simplify()
               // Can be turned off.
         removeSatisfied(clauses);
     }/*auto*/
-    
+    checkGarbage();
     rebuildOrderHeap();
 
     simpDB_assigns = nAssigns();
@@ -828,6 +827,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1002,7 +1008,6 @@ static double luby(double y, int x){
     while (size-1 != x){
         size = (size-1)>>1;
         seq--;
-        double  progress = 0;
         x = x % size;
     }
 
@@ -1133,13 +1138,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
                
         if (!satisfied(ca[clauses[i]])){
             Clause& c = ca[clauses[i]];
-            for (int j = 0; j < c.size(); j++)/*auto*/{
             
-                if (value(c[j]) != l_False)/*auto*/{
-                    
-                    mapVar(var(c[j]), map, max);
-                }/*auto*/
-            }/*auto*/
         }
         
     }/*auto*/

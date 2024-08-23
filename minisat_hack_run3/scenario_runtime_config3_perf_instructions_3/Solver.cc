@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -371,6 +370,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
             c.mark(L < LBD_cut ? 3 : 2);
             if (L < LBD_cut){
                 lF.push(confl);
+                Var x = var(trail[i]);
                 core_added++;
             }else/*auto*/{
                 
@@ -432,23 +432,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         }/*auto*/
         
     }else if (ccmin_mode == 1){
-        for (i = j = 1; i < out_learnt.size(); i++){
-            Var x = var(out_learnt[i]);
-
-            if (reason(x) == CRef_Undef)/*auto*/{
-                
-                out_learnt[j++] = out_learnt[i];
-            }/*auto*/
-            else{
-                Clause& c = ca[reason(var(out_learnt[i]))];
-                for (int k = 1; k < c.size(); k++)/*auto*/{
-                    
-                    if (!seen[var(c[k])] && level(var(c[k])) > 0){
-                        out_learnt[j++] = out_learnt[i];
-                        break; }
-                }/*auto*/
-            }
-        }
+        out_learnt[j++] = out_learnt[i];
     }else/*auto*/{
       
         i = j = out_learnt.size();
@@ -693,7 +677,7 @@ void Solver::reduceDB()
         }/*auto*/
     }
     learnts.shrink(i - j);
-    
+    checkGarbage();
 }
 
 
@@ -835,6 +819,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -870,16 +861,7 @@ lbool Solver::search(int nof_conflicts)
                 //learntsize_adjust_cnt    = (int)learntsize_adjust_confl;
                 //max_learnts             *= learntsize_inc;
 
-                if (verbosity >= 1)/*auto*/{
-                    
-                    printf("c | %9d | %7d %8d %8d | %8d %8d %6.0f | %6.3f %% | %d %d | %d %.1f (%.1f) %.1f (%.1f) %d (%d-%d) %d %.2f\n", 
-                           (int)conflicts, 
-                           (int)dec_vars - (trail_lim.size() == 0 ? trail.size() : trail_lim[0]), nClauses(), (int)clauses_literals, 
-                           (int)lF.size()/*max_learnts*/, nLearnts(), (double)learnts_literals/(lF.size()+nLearnts()), progressEstimate()*100,
-                           starts, conflicts / starts,
-                           luby_restart, K, (double)opt_K, R, (double)opt_R, LBD_cut, (int32_t)opt_lbd_cut, (int32_t)opt_lbd_cut_max,
-                           (int32_t)opt_cp_increase, (double)opt_core_tolerance);
-                }/*auto*/
+                
             }
 
         }else{
@@ -1034,7 +1016,6 @@ lbool Solver::solve_()
     // Search:
     int curr_restarts = 0;
     while (status == l_Undef){
-        claDecayActivity();
         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
         status = search(rest_base * restart_first);
         if (!withinBudget())/*auto*/{

@@ -312,10 +312,7 @@ Lit Solver::pickBranchLit()
     // Random decision:
     if (drand(random_seed) < random_var_freq && !order_heap.empty()){
         next = order_heap[irand(random_seed,order_heap.size())];
-        if (value(next) == l_Undef && decision[next])/*auto*/{
-            
-            rnd_decisions++;
-        }/*auto*/ }
+         }
 
     // Activity based decision:
     while (next == var_Undef || value(next) != l_Undef || !decision[next])/*auto*/{
@@ -362,8 +359,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
     int index   = trail.size() - 1;
 
     do{
-        assert(confl != CRef_Undef);
-        lbool   status            = l_Undef; // (otherwise should be UIP)
+        assert(confl != CRef_Undef); // (otherwise should be UIP)
         Clause& c = ca[confl];
 
         if (c.learnt() && c.mark() != 3){
@@ -835,6 +831,13 @@ lbool Solver::search(int nof_conflicts)
                         lS = 0, LQ.clear();
                     }/*auto*/
                 }
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
             }
 
             if (learnt_clause.size() == 1){
@@ -1036,7 +1039,9 @@ lbool Solver::solve_()
     while (status == l_Undef){
         double rest_base = luby_restart ? luby(restart_inc, curr_restarts) : 0;//pow(restart_inc, curr_restarts);
         status = search(rest_base * restart_first);
-        Clause& c = ca[reason(var(analyze_stack.last()))];
+        if (!withinBudget())/*auto*/{
+             break;
+        }/*auto*/
         curr_restarts++;
     }
 

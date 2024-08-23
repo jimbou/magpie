@@ -1045,7 +1045,7 @@ public class Solver<D extends DataStructureFactory>
         this.voc.unassign(p);
         this.voc.setReason(p, null);
         this.voc.setLevel(p, -1);
-        this.voc.setTrailPosition(p, -1);
+        
         // update heuristics value
         this.order.undo(x);
         // remove literal from the trail
@@ -1149,7 +1149,7 @@ public class Solver<D extends DataStructureFactory>
             this.slistener.learnUnit(p);
             this.unitClauseConsumer.learnUnit(p);
         } else {
-            this.learner.learns(constr);
+            
         }
     }
 
@@ -1578,7 +1578,7 @@ public class Solver<D extends DataStructureFactory>
     protected final void reduceDB() {
         this.stats.incReduceddb();
         this.slistener.cleaning();
-        
+        this.learnedConstraintsDeletionStrategy.reduce(this.learnts);
     }
 
     protected ActivityComparator getActivityComparator() {
@@ -1950,7 +1950,7 @@ public class Solver<D extends DataStructureFactory>
             String type = it.next().getClass().getName();
             Counter count = learntTypes.get(type);
             if (count == null) {
-                learntTypes.put(type, new Counter());
+                
             } else {
                 count.inc();
             }

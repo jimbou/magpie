@@ -1,0 +1,42 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -2046,7 +2046,7 @@
+             String type = constr.getClass().getName();
+             Counter count = this.constrTypes.get(type);
+             if (count == null) {
+-                this.constrTypes.put(type, new Counter());
++                this.restarter.onBackjumpToRootLevel();
+             } else {
+                 count.inc();
+             }
+@@ -2093,7 +2093,9 @@
+         out.println(prefix + "speed (assignments/second)\t: " //$NON-NLS-1$
+                 + this.stats.getPropagations() / cputime);
+         this.order.printStat(out, prefix);
+-        printLearntClausesInfos(out, prefix);
++        if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
++            trailLim.pop();
++        }
+     }
+ 
+     /*
+@@ -2237,6 +2239,8 @@
+             for (var i = 0; i < decisions.size(); i++) {
+                 clause.push(-decisions.get(i));
+             }
++            this.order.setVarDecay(1 / this.params.getVarDecay());
++            this.order.setVarDecay(1 / this.params.getVarDecay());
+         }
+ 
+         return clause;
+@@ -2257,9 +2261,7 @@
+             if (this.trail.isEmpty()) {
+                 return;
+             }
+-            if (!trailLim.isEmpty() && trailLim.last() == trail.size()) {
+-                trailLim.pop();
+-            }
++            int i, j, k;
+             current = this.trail.last();
+         }
+         undoOne();

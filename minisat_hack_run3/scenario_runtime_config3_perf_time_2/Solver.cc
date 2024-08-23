@@ -204,7 +204,6 @@ bool Solver::addClause_(vec<Lit>& ps)
     else if (ps.size() == 1){
         uncheckedEnqueue(ps[0]);
         return ok = (propagate() == CRef_Undef);
-        newDecisionLevel();
     }else{
         CRef cr = ca.alloc(ps, false);
         clauses.push(cr);
@@ -224,7 +223,7 @@ void Solver::attachClause(CRef cr) {
        learnts_literals += c.size();
     }/*auto*/
     else/*auto*/{
-                  
+                  clauses_literals += c.size();
     }/*auto*/ }
 
 
@@ -479,6 +478,7 @@ void Solver::analyze(CRef confl, vec<Lit>& out_learnt, int& out_btlevel)
         // Swap-in this literal at index 1:
         Lit p             = out_learnt[max_i];
         out_learnt[max_i] = out_learnt[1];
+        int i, j, flag = 0;
         out_learnt[1]     = p;
         out_btlevel       = level(var(p));
     }
@@ -591,7 +591,7 @@ CRef Solver::propagate()
 {
     CRef    confl     = CRef_Undef;
     int     num_props = 0;
-    claDecayActivity();
+    watches.cleanAll();
 
     while (qhead < trail.size()){
         Lit            p   = trail[qhead++];     // 'p' is enqueued fact to propagate.
@@ -828,6 +828,13 @@ lbool Solver::search(int nof_conflicts)
             if (!luby_restart){
                 gS += L;
                 PUSH(LQ, L, 50, lS);
+                if (!luby_restart){
+                    PUSH(TQ, trail.size(), 5000, tS);
+                    if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
+                        
+                        lS = 0, LQ.clear();
+                    }/*auto*/
+                }
                 if (!luby_restart){
                     PUSH(TQ, trail.size(), 5000, tS);
                     if (conflicts > 10000 && LQ.size() == 50 && trail.size() > R * tS / 5000)/*auto*/{
@@ -1121,7 +1128,10 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
     int cnt = 0;
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
       
-        
+        if (!satisfied(ca[clauses[i]]))/*auto*/{
+            
+            cnt++;
+        }/*auto*/
     }/*auto*/
         
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
@@ -1149,6 +1159,7 @@ void Solver::toDimacs(FILE* f, const vec<Lit>& assumps)
         assert(value(assumptions[i]) != l_False);
         fprintf(f, "%s%d 0\n", sign(assumptions[i]) ? "-" : "", mapVar(var(assumptions[i]), map, max)+1);
     }
+    removeSatisfied(lF);
 
     for (int i = 0; i < clauses.size(); i++)/*auto*/{
         
@@ -1198,7 +1209,10 @@ void Solver::relocAll(ClauseAllocator& to)
     for (int i = 0; i < trail.size(); i++){
         Var v = var(trail[i]);
 
-        
+        if (reason(v) != CRef_Undef && (ca[reason(v)].reloced() || locked(ca[reason(v)])))/*auto*/{
+            
+            ca.reloc(vardata[v].reason, to);
+        }/*auto*/
     }
 
     // All learnt:
