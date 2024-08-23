@@ -246,23 +246,25 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     # "energy_ram", "energy_uncore"
     perf_items = ['time','perf_time', 'perf_cycles',
         "perf_cache_references", "perf_cache_misses", 
-        "perf_branch_misses", "energy","perf_instructions", "perf_branches","weights", "perf_L1_dcache_loads", "perf_faults"]
+        "perf_branch_misses", "energy","perf_instructions", "perf_branches","weights", "perf_L1_dcache_loads", "perf_faults","perf_cpu_clock", "perf_task_clock"
     # erf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
     #     "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy", "perf_L1_dcache_loads"]
     retry_attempts = {     # Retries for item1 at attempts 1, 2, and 3
     'time': [],
-    'perf_time': [2],
-    'perf_cycles': [4],
-    'perf_cache_references': [3,4,5],
-    'perf_branch_misses': [1,2,3,4,5],
-    'perf_cache_misses': [1,2,3,4,5],
-    'energy': [1,3,4],
-    'perf_instructions': [1,2,4,3,5],
-    'perf_branches': [1,2,4,5],
-    'weights': [1,2,3,4],
-    'perf_L1_dcache_loads': [1, 2, 3,4, 5],
-    'perf_faults': [2]
+    'perf_time': [],
+    'perf_cycles': [],
+    'perf_cache_references': [],
+    'perf_branch_misses': [],
+    'perf_cache_misses': [],
+    'energy': [2,5],
+    'perf_instructions': [],
+    'perf_branches': [3],
+    'weights': [5],
+    'perf_L1_dcache_loads': [],
+    'perf_faults': [1,3,4,5],
+    'perf_cpu_clock': [1,2,3,4,5],
+    'perf_task_clock': [1,2,3,4,5]
 
         # Retries for item3 at attempts 1, 3, 4, and 6
     # Add more items and retry lists as needed

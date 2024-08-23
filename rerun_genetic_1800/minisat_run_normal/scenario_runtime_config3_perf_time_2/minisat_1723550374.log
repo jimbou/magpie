@@ -1,0 +1,720 @@
+2024-08-13 12:59:34,801	[DEBUG]	==== CONFIG ====
+[magpie]
+import = 
+seed = 45
+log_dir = _magpie_logs
+work_dir = _magpie_work
+local_original_copy = True
+local_original_name = __original__
+output_encoding = ascii
+edit_retries = 10
+default_timeout = 100
+default_lengthout = 1e6
+diff_method = unified
+trust_local_filesystem = True
+run_timeout = 100
+
+[magpie.log]
+color_output = True
+format_info = {counter:<7} {status:<20} {best}{fitness} ({ratio}) [{size}] {cached} {log}
+format_debug = patch({counter})="{patch}"{diffifbest}
+format_fitness = {:.6f}
+format_ratio = {:.2%%}
+format_patchif = 
+	 --> {patch}
+format_diffif = 
+	{diff}
+
+[software]
+path = examples/minisat
+target_files = 
+	core/Solver.cc.xml
+software = BasicSoftware
+model_rules = 
+	*.params : ParamFileConfigModel
+	*.xml : SrcmlModel
+	* : LineModel
+model_config = 
+	*.params : [paramconfig]
+	*.xml : [srcml]
+init_cmd = bash init.sh
+init_timeout = 60
+init_lengthout = -1
+setup_cmd = bash compile.sh
+setup_timeout = 
+setup_lengthout = 
+compile_cmd = bash compile.sh
+compile_timeout = 
+compile_lengthout = 
+test_cmd = bash test.sh
+test_timeout = 
+test_lengthout = 
+run_cmd = perf stat  bash run_fixed.sh
+run_timeout = 
+run_lengthout = 
+retries = 2
+batch_timeout = 
+batch_lengthout = 
+batch_bin_fitness_strategy = aggregate
+batch_fitness_strategy = sum
+fitness = perf_time
+
+[srcml]
+rename = 
+	stmt: break continue decl_stmt do expr_stmt for goto if return switch while
+	number: literal_number
+focus = block stmt operator_comp operator_arith number
+internodes = block
+process_pseudo_blocks = True
+process_literals = True
+process_operators = True
+
+[paramconfig]
+timing = test run
+cli_prefix = --
+cli_glue = =
+cli_boolean = show
+cli_boolean_prefix_true = 
+cli_boolean_prefix_false = no-
+cli_none = hide
+silent_prefix = @
+silent_suffix = $
+
+[search]
+protocol = BasicProtocol
+algorithm = GeneticProgrammingUniformConcat
+possible_edits = 
+	SrcmlStmtReplacement
+	SrcmlStmtInsertion
+	SrcmlStmtDeletion
+warmup = 3
+warmup_strategy = last
+max_steps = 10000
+max_time = 1800
+target_fitness = 
+cache_maxsize = 100
+cache_keep = 0.2
+batch_instances = 
+batch_shuffle = True
+batch_bin_shuffle = False
+batch_sample_size = 1
+
+[search.ls]
+delete_prob = 0.5
+max_neighbours = 
+when_trapped = continue
+accept_fail = False
+tabu_length = 10
+
+[search.gp]
+pop_size = 10
+delete_prob = 0.5
+offspring_elitism = 0.1
+offspring_crossover = 0.5
+offspring_mutation = 0.4
+uniform_rate = 0.5
+batch_reset = True
+
+[search.minify]
+do_cleanup = True
+do_rebuild = True
+do_simplify = True
+round_robin_limit = 3
+
+
+2024-08-13 12:59:34,801	[DEBUG]	
+2024-08-13 12:59:34,801	[INFO]	==== SEARCH: GeneticProgrammingUniformConcat ====
+2024-08-13 12:59:34,801	[INFO]	~~~~ WARMUP ~~~~
+2024-08-13 13:00:08,751	[DEBUG]	EXEC>  SUCCESS 14.420800745000001
+2024-08-13 13:00:08,751	[INFO]	WARM    SUCCESS               14.420801 (--) [0 edit(s)]  
+2024-08-13 13:00:37,168	[DEBUG]	EXEC>  SUCCESS 14.072998685
+2024-08-13 13:00:37,168	[INFO]	WARM    SUCCESS               14.072999 (--) [0 edit(s)]  
+2024-08-13 13:01:05,392	[DEBUG]	EXEC>  SUCCESS 13.978866355
+2024-08-13 13:01:05,392	[INFO]	WARM    SUCCESS               13.978866 (--) [0 edit(s)]  
+2024-08-13 13:01:05,392	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)]  
+2024-08-13 13:01:05,392	[INFO]	
+2024-08-13 13:01:05,392	[INFO]	~~~~ START ~~~~
+2024-08-13 13:01:07,276	[INFO]	0-1     TEST_CODE_ERROR       None (--) [1 edit(s)]  
+2024-08-13 13:01:07,276	[DEBUG]	patch(0-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 263), ('core/Solver.cc.xml', 'stmt', 155))"
+2024-08-13 13:01:36,449	[DEBUG]	EXEC>  SUCCESS 13.618214355
+2024-08-13 13:01:36,449	[INFO]	0-2     SUCCESS              *13.618214 (97.42%) [1 edit(s)]  
+2024-08-13 13:01:36,449	[DEBUG]	patch(0-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -932,6 +932,7 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+
+2024-08-13 13:01:36,888	[INFO]	0-3     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:01:36,888	[DEBUG]	patch(0-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 36), ('core/Solver.cc.xml', 'stmt', 69))"
+2024-08-13 13:01:37,331	[INFO]	0-4     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:01:37,331	[DEBUG]	patch(0-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 438), ('core/Solver.cc.xml', 'stmt', 313))"
+2024-08-13 13:02:06,979	[DEBUG]	EXEC>  SUCCESS 13.852428155
+2024-08-13 13:02:06,979	[INFO]	0-5     SUCCESS               13.852428 (99.10%) [1 edit(s)]  
+2024-08-13 13:02:06,979	[DEBUG]	patch(0-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:02:07,418	[INFO]	0-6     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:02:07,418	[DEBUG]	patch(0-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 96), ('core/Solver.cc.xml', 'stmt', 45))"
+2024-08-13 13:02:07,852	[INFO]	0-7     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:02:07,852	[DEBUG]	patch(0-7)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 401), ('core/Solver.cc.xml', 'stmt', 357))"
+2024-08-13 13:03:49,794	[INFO]	0-8     TEST_TIMEOUT          None (--) [1 edit(s)]  
+2024-08-13 13:03:49,794	[DEBUG]	patch(0-8)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 303))"
+2024-08-13 13:03:50,233	[INFO]	0-9     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:03:50,233	[DEBUG]	patch(0-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 252))"
+2024-08-13 13:04:20,038	[DEBUG]	EXEC>  SUCCESS 13.938059935
+2024-08-13 13:04:20,038	[INFO]	0-10    SUCCESS               13.938060 (99.71%) [1 edit(s)]  
+2024-08-13 13:04:20,038	[DEBUG]	patch(0-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 159), ('core/Solver.cc.xml', 'stmt', 127))"
+2024-08-13 13:04:20,042	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:04:20,048	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:04:20,054	[INFO]	1-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:04:20,054	[DEBUG]	patch(1-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:04:20,059	[INFO]	1-2     SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:04:20,060	[DEBUG]	patch(1-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:04:49,358	[DEBUG]	EXEC>  SUCCESS 13.682363695
+2024-08-13 13:04:49,358	[INFO]	1-3     SUCCESS               13.682364 (97.88%) [2 edit(s)]  
+2024-08-13 13:04:49,358	[DEBUG]	patch(1-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:04:49,364	[INFO]	1-4     SUCCESS               13.938060 (99.71%) [1 edit(s)] [cached] 
+2024-08-13 13:04:49,364	[DEBUG]	patch(1-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 159), ('core/Solver.cc.xml', 'stmt', 127))"
+2024-08-13 13:05:18,803	[DEBUG]	EXEC>  SUCCESS 13.7471835
+2024-08-13 13:05:18,803	[INFO]	1-5     SUCCESS               13.747184 (98.34%) [2 edit(s)]  
+2024-08-13 13:05:18,803	[DEBUG]	patch(1-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:05:18,807	[INFO]	1-6     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:05:18,808	[DEBUG]	patch(1-6)=""
+2024-08-13 13:05:18,811	[INFO]	1-7     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:05:18,811	[DEBUG]	patch(1-7)=""
+2024-08-13 13:05:19,253	[INFO]	1-8     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:05:19,253	[DEBUG]	patch(1-8)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 1), ('core/Solver.cc.xml', 'stmt', 317))"
+2024-08-13 13:05:19,690	[INFO]	1-9     COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:05:19,690	[DEBUG]	patch(1-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 205), ('core/Solver.cc.xml', 'stmt', 138))"
+2024-08-13 13:05:49,156	[DEBUG]	EXEC>  SUCCESS 13.766092830000002
+2024-08-13 13:05:49,156	[INFO]	1-10    SUCCESS               13.766093 (98.48%) [1 edit(s)]  
+2024-08-13 13:05:49,157	[DEBUG]	patch(1-10)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 14), ('core/Solver.cc.xml', 'stmt', 11))"
+2024-08-13 13:05:49,161	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:05:49,166	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:05:49,172	[INFO]	2-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:05:49,172	[DEBUG]	patch(2-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:05:49,178	[INFO]	2-2     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:05:49,178	[DEBUG]	patch(2-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:05:49,184	[INFO]	2-3     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:05:49,184	[DEBUG]	patch(2-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:06:18,933	[DEBUG]	EXEC>  SUCCESS 13.904737435
+2024-08-13 13:06:18,934	[INFO]	2-4     SUCCESS               13.904737 (99.47%) [2 edit(s)]  
+2024-08-13 13:06:18,934	[DEBUG]	patch(2-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 14), ('core/Solver.cc.xml', 'stmt', 11))"
+2024-08-13 13:06:18,940	[INFO]	2-5     SUCCESS               13.938060 (99.71%) [1 edit(s)] [cached] 
+2024-08-13 13:06:18,940	[DEBUG]	patch(2-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 159), ('core/Solver.cc.xml', 'stmt', 127))"
+2024-08-13 13:06:18,946	[INFO]	2-6     SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:06:18,946	[DEBUG]	patch(2-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:06:20,768	[INFO]	2-7     TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-08-13 13:06:20,768	[DEBUG]	patch(2-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 164), ('core/Solver.cc.xml', 'stmt', 119))"
+2024-08-13 13:06:20,774	[INFO]	2-8     SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:06:20,775	[DEBUG]	patch(2-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:06:50,359	[DEBUG]	EXEC>  SUCCESS 13.82435411
+2024-08-13 13:06:50,359	[INFO]	2-9     SUCCESS               13.824354 (98.89%) [3 edit(s)]  
+2024-08-13 13:06:50,359	[DEBUG]	patch(2-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:06:50,363	[INFO]	2-10    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:06:50,363	[DEBUG]	patch(2-10)=""
+2024-08-13 13:06:50,367	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:06:50,372	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:06:50,379	[INFO]	3-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:06:50,379	[DEBUG]	patch(3-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:06:50,385	[INFO]	3-2     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:06:50,385	[DEBUG]	patch(3-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:07:19,626	[DEBUG]	EXEC>  SUCCESS 13.64716762
+2024-08-13 13:07:19,626	[INFO]	3-3     SUCCESS               13.647168 (97.63%) [2 edit(s)]  
+2024-08-13 13:07:19,626	[DEBUG]	patch(3-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:07:49,168	[DEBUG]	EXEC>  SUCCESS 13.800675394999999
+2024-08-13 13:07:49,168	[INFO]	3-4     SUCCESS               13.800675 (98.73%) [2 edit(s)]  
+2024-08-13 13:07:49,168	[DEBUG]	patch(3-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:07:49,175	[INFO]	3-5     SUCCESS               13.904737 (99.47%) [3 edit(s)] [cached] 
+2024-08-13 13:07:49,175	[DEBUG]	patch(3-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 14), ('core/Solver.cc.xml', 'stmt', 11))"
+2024-08-13 13:08:18,864	[DEBUG]	EXEC>  SUCCESS 13.87889726
+2024-08-13 13:08:18,865	[INFO]	3-6     SUCCESS               13.878897 (99.28%) [1 edit(s)]  
+2024-08-13 13:08:18,865	[DEBUG]	patch(3-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:08:18,869	[INFO]	3-7     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:08:18,869	[DEBUG]	patch(3-7)=""
+2024-08-13 13:08:18,881	[INFO]	3-8     SUCCESS               13.747184 (98.34%) [2 edit(s)] [cached] 
+2024-08-13 13:08:18,881	[DEBUG]	patch(3-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:08:18,884	[INFO]	3-9     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:08:18,884	[DEBUG]	patch(3-9)=""
+2024-08-13 13:08:18,888	[INFO]	3-10    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:08:18,889	[DEBUG]	patch(3-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:08:18,892	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:08:18,897	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:08:18,904	[INFO]	4-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:08:18,904	[DEBUG]	patch(4-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:08:48,648	[DEBUG]	EXEC>  SUCCESS 13.893728215
+2024-08-13 13:08:48,649	[INFO]	4-2     SUCCESS               13.893728 (99.39%) [3 edit(s)]  
+2024-08-13 13:08:48,649	[DEBUG]	patch(4-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:09:18,012	[DEBUG]	EXEC>  SUCCESS 13.69085698
+2024-08-13 13:09:18,012	[INFO]	4-3     SUCCESS               13.690857 (97.94%) [3 edit(s)]  
+2024-08-13 13:09:18,012	[DEBUG]	patch(4-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:09:18,019	[INFO]	4-4     SUCCESS               13.747184 (98.34%) [2 edit(s)] [cached] 
+2024-08-13 13:09:18,019	[DEBUG]	patch(4-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:09:18,028	[INFO]	4-5     SUCCESS               13.690857 (97.94%) [3 edit(s)] [cached] 
+2024-08-13 13:09:18,028	[DEBUG]	patch(4-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:09:47,373	[DEBUG]	EXEC>  SUCCESS 13.70278949
+2024-08-13 13:09:47,374	[INFO]	4-6     SUCCESS               13.702789 (98.03%) [2 edit(s)]  
+2024-08-13 13:09:47,374	[DEBUG]	patch(4-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:09:47,378	[INFO]	4-7     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:09:47,378	[DEBUG]	patch(4-7)=""
+2024-08-13 13:10:17,196	[DEBUG]	EXEC>  SUCCESS 13.94338937
+2024-08-13 13:10:17,196	[INFO]	4-8     SUCCESS               13.943389 (99.75%) [1 edit(s)]  
+2024-08-13 13:10:17,196	[DEBUG]	patch(4-8)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:10:17,201	[INFO]	4-9     SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:10:17,201	[DEBUG]	patch(4-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:10:17,640	[INFO]	4-10    COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:10:17,640	[DEBUG]	patch(4-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 169), ('core/Solver.cc.xml', 'stmt', 321))"
+2024-08-13 13:10:17,644	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:10:17,649	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:10:17,656	[INFO]	5-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:17,656	[DEBUG]	patch(5-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:17,662	[INFO]	5-2     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:17,662	[DEBUG]	patch(5-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:17,668	[INFO]	5-3     SUCCESS               13.702789 (98.03%) [2 edit(s)] [cached] 
+2024-08-13 13:10:17,668	[DEBUG]	patch(5-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:10:17,677	[INFO]	5-4     SUCCESS               13.690857 (97.94%) [3 edit(s)] [cached] 
+2024-08-13 13:10:17,677	[DEBUG]	patch(5-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:10:17,682	[INFO]	5-5     SUCCESS               13.943389 (99.75%) [1 edit(s)] [cached] 
+2024-08-13 13:10:17,682	[DEBUG]	patch(5-5)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302))"
+2024-08-13 13:10:17,688	[INFO]	5-6     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:17,688	[DEBUG]	patch(5-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,523	[INFO]	5-7     TEST_CODE_ERROR       None (--) [2 edit(s)]  
+2024-08-13 13:10:19,523	[DEBUG]	patch(5-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 324))"
+2024-08-13 13:10:19,531	[INFO]	5-8     SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:10:19,531	[DEBUG]	patch(5-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,538	[INFO]	5-9     SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:10:19,538	[DEBUG]	patch(5-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:10:19,542	[INFO]	5-10    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:10:19,542	[DEBUG]	patch(5-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:10:19,546	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:10:19,551	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:10:19,558	[INFO]	6-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:19,558	[DEBUG]	patch(6-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,563	[INFO]	6-2     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:19,563	[DEBUG]	patch(6-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,569	[INFO]	6-3     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:19,569	[DEBUG]	patch(6-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,576	[INFO]	6-4     SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:10:19,576	[DEBUG]	patch(6-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:19,592	[INFO]	6-5     SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:10:19,592	[DEBUG]	patch(6-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:10:49,291	[DEBUG]	EXEC>  SUCCESS 13.869121400000001
+2024-08-13 13:10:49,291	[INFO]	6-6     SUCCESS               13.869121 (99.21%) [3 edit(s)]  
+2024-08-13 13:10:49,291	[DEBUG]	patch(6-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:10:49,295	[INFO]	6-7     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:10:49,295	[DEBUG]	patch(6-7)=""
+2024-08-13 13:10:49,301	[INFO]	6-8     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:49,301	[DEBUG]	patch(6-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:49,307	[INFO]	6-9     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:49,307	[DEBUG]	patch(6-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:49,748	[INFO]	6-10    COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-08-13 13:10:49,748	[DEBUG]	patch(6-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 348), ('core/Solver.cc.xml', 'stmt', 302)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 523), ('core/Solver.cc.xml', 'stmt', 73))"
+2024-08-13 13:10:49,752	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:10:49,758	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:10:49,764	[INFO]	7-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:49,764	[DEBUG]	patch(7-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:10:49,770	[INFO]	7-2     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:10:49,770	[DEBUG]	patch(7-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:11:19,934	[DEBUG]	EXEC>  SUCCESS 14.11148848
+2024-08-13 13:11:19,935	[INFO]	7-3     SUCCESS               14.111488 (100.95%) [3 edit(s)]  
+2024-08-13 13:11:19,935	[DEBUG]	patch(7-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:11:49,684	[DEBUG]	EXEC>  SUCCESS 13.904152285
+2024-08-13 13:11:49,684	[INFO]	7-4     SUCCESS               13.904152 (99.47%) [2 edit(s)]  
+2024-08-13 13:11:49,684	[DEBUG]	patch(7-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:11:49,693	[INFO]	7-5     SUCCESS               13.869121 (99.21%) [3 edit(s)] [cached] 
+2024-08-13 13:11:49,693	[DEBUG]	patch(7-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:11:49,696	[INFO]	7-6     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:11:49,696	[DEBUG]	patch(7-6)=""
+2024-08-13 13:12:18,955	[DEBUG]	EXEC>  SUCCESS 13.659609245
+2024-08-13 13:12:18,955	[INFO]	7-7     SUCCESS               13.659609 (97.72%) [2 edit(s)]  
+2024-08-13 13:12:18,956	[DEBUG]	patch(7-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 469), ('core/Solver.cc.xml', 'stmt', 273))"
+2024-08-13 13:14:01,970	[DEBUG]	EXEC>  TIMEOUT None
+2024-08-13 13:14:01,970	[INFO]	7-8     RUN_TIMEOUT           None (--) [3 edit(s)]  
+2024-08-13 13:14:01,970	[DEBUG]	patch(7-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 238))"
+2024-08-13 13:14:02,415	[INFO]	7-9     COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:14:02,415	[DEBUG]	patch(7-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 198), ('core/Solver.cc.xml', 'stmt', 202))"
+2024-08-13 13:14:04,241	[INFO]	7-10    TEST_CODE_ERROR       None (--) [4 edit(s)]  
+2024-08-13 13:14:04,241	[DEBUG]	patch(7-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 131), ('core/Solver.cc.xml', 'stmt', 71))"
+2024-08-13 13:14:04,245	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:14:04,251	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:14:04,257	[INFO]	8-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:14:04,257	[DEBUG]	patch(8-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:14:04,265	[INFO]	8-2     SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:14:04,265	[DEBUG]	patch(8-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:14:04,270	[INFO]	8-3     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:14:04,271	[DEBUG]	patch(8-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:14:33,683	[DEBUG]	EXEC>  SUCCESS 13.73130452
+2024-08-13 13:14:33,684	[INFO]	8-4     SUCCESS               13.731305 (98.23%) [2 edit(s)]  
+2024-08-13 13:14:33,684	[DEBUG]	patch(8-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:15:03,644	[DEBUG]	EXEC>  SUCCESS 14.006179665000001
+2024-08-13 13:15:03,644	[INFO]	8-5     SUCCESS               14.006180 (100.20%) [3 edit(s)]  
+2024-08-13 13:15:03,644	[DEBUG]	patch(8-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:03,650	[INFO]	8-6     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:15:03,650	[DEBUG]	patch(8-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:03,654	[INFO]	8-7     SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:15:03,654	[DEBUG]	patch(8-7)=""
+2024-08-13 13:15:04,099	[INFO]	8-8     COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:15:04,099	[DEBUG]	patch(8-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 469), ('core/Solver.cc.xml', 'stmt', 273)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 477), ('core/Solver.cc.xml', 'stmt', 174))"
+2024-08-13 13:15:04,105	[INFO]	8-9     SUCCESS               13.747184 (98.34%) [2 edit(s)] [cached] 
+2024-08-13 13:15:04,105	[DEBUG]	patch(8-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:04,552	[INFO]	8-10    COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:15:04,552	[DEBUG]	patch(8-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 232), ('core/Solver.cc.xml', 'stmt', 109))"
+2024-08-13 13:15:04,556	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:15:04,561	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:15:04,568	[INFO]	9-1     SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:15:04,568	[DEBUG]	patch(9-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:04,575	[INFO]	9-2     SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:15:04,575	[DEBUG]	patch(9-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:04,591	[INFO]	9-3     SUCCESS               13.731305 (98.23%) [2 edit(s)] [cached] 
+2024-08-13 13:15:04,591	[DEBUG]	patch(9-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:15:04,598	[INFO]	9-4     SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:15:04,598	[DEBUG]	patch(9-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:04,605	[INFO]	9-5     SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:15:04,606	[DEBUG]	patch(9-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:04,611	[INFO]	9-6     SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:15:04,611	[DEBUG]	patch(9-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:15:05,047	[INFO]	9-7     COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:15:05,047	[DEBUG]	patch(9-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 248), ('core/Solver.cc.xml', 'stmt', 324))"
+2024-08-13 13:16:06,262	[DEBUG]	EXEC>  SUCCESS 29.501975805
+2024-08-13 13:16:06,262	[INFO]	9-8     SUCCESS               29.501976 (211.05%) [3 edit(s)]  
+2024-08-13 13:16:06,262	[DEBUG]	patch(9-8)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214))"
+2024-08-13 13:16:06,706	[INFO]	9-9     COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:16:06,706	[DEBUG]	patch(9-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 418), ('core/Solver.cc.xml', 'stmt', 117))"
+2024-08-13 13:16:08,585	[INFO]	9-10    TEST_CODE_ERROR       None (--) [3 edit(s)]  
+2024-08-13 13:16:08,585	[DEBUG]	patch(9-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 213))"
+2024-08-13 13:16:08,589	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:16:08,595	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:16:08,601	[INFO]	10-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:16:08,601	[DEBUG]	patch(10-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:16:08,608	[INFO]	10-2    SUCCESS               13.682364 (97.88%) [2 edit(s)] [cached] 
+2024-08-13 13:16:08,608	[DEBUG]	patch(10-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:17:10,675	[DEBUG]	EXEC>  SUCCESS 29.941397285
+2024-08-13 13:17:10,675	[INFO]	10-3    SUCCESS               29.941397 (214.19%) [4 edit(s)]  
+2024-08-13 13:17:10,676	[DEBUG]	patch(10-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:17:10,681	[INFO]	10-4    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:17:10,681	[DEBUG]	patch(10-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:17:10,686	[INFO]	10-5    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:17:10,687	[DEBUG]	patch(10-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:18:12,666	[DEBUG]	EXEC>  SUCCESS 29.890751485000003
+2024-08-13 13:18:12,666	[INFO]	10-6    SUCCESS               29.890751 (213.83%) [3 edit(s)]  
+2024-08-13 13:18:12,666	[DEBUG]	patch(10-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214))"
+2024-08-13 13:18:13,107	[INFO]	10-7    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:18:13,108	[DEBUG]	patch(10-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 373), ('core/Solver.cc.xml', 'stmt', 34))"
+2024-08-13 13:18:13,114	[INFO]	10-8    SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:18:13,114	[DEBUG]	patch(10-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:18:13,120	[INFO]	10-9    SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:18:13,120	[DEBUG]	patch(10-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:18:13,125	[INFO]	10-10   SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:18:13,125	[DEBUG]	patch(10-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:18:13,129	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:18:13,135	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:18:13,141	[INFO]	11-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:18:13,141	[DEBUG]	patch(11-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:18:43,074	[DEBUG]	EXEC>  SUCCESS 13.99366445
+2024-08-13 13:18:43,074	[INFO]	11-2    SUCCESS               13.993664 (100.11%) [4 edit(s)]  
+2024-08-13 13:18:43,074	[DEBUG]	patch(11-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:18:43,082	[INFO]	11-3    SUCCESS               13.800675 (98.73%) [2 edit(s)] [cached] 
+2024-08-13 13:18:43,082	[DEBUG]	patch(11-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:19:47,106	[DEBUG]	EXEC>  SUCCESS 30.912668925
+2024-08-13 13:19:47,107	[INFO]	11-4    SUCCESS               30.912669 (221.14%) [1 edit(s)]  
+2024-08-13 13:19:47,107	[DEBUG]	patch(11-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214))"
+2024-08-13 13:19:47,113	[INFO]	11-5    SUCCESS               13.747184 (98.34%) [3 edit(s)] [cached] 
+2024-08-13 13:19:47,113	[DEBUG]	patch(11-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:19:47,119	[INFO]	11-6    SUCCESS               29.890751 (213.83%) [4 edit(s)] [cached] 
+2024-08-13 13:19:47,119	[DEBUG]	patch(11-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 214))"
+2024-08-13 13:19:47,561	[INFO]	11-7    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:19:47,561	[DEBUG]	patch(11-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 231), ('core/Solver.cc.xml', 'stmt', 381))"
+2024-08-13 13:19:47,567	[INFO]	11-8    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,567	[DEBUG]	patch(11-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:19:47,571	[INFO]	11-9    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:19:47,571	[DEBUG]	patch(11-9)=""
+2024-08-13 13:19:47,575	[INFO]	11-10   SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,576	[DEBUG]	patch(11-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:19:47,579	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:19:47,584	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:19:47,591	[INFO]	12-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,591	[DEBUG]	patch(12-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:19:47,657	[INFO]	12-2    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,657	[DEBUG]	patch(12-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:19:47,803	[INFO]	12-3    SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:19:47,803	[DEBUG]	patch(12-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:19:47,809	[INFO]	12-4    SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,809	[DEBUG]	patch(12-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:19:47,813	[INFO]	12-5    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,813	[DEBUG]	patch(12-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:19:47,818	[INFO]	12-6    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:19:47,818	[DEBUG]	patch(12-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:29,730	[INFO]	12-7    TEST_TIMEOUT          None (--) [2 edit(s)]  
+2024-08-13 13:21:29,730	[DEBUG]	patch(12-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 337))"
+2024-08-13 13:21:29,735	[INFO]	12-8    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:21:29,736	[DEBUG]	patch(12-8)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:29,741	[INFO]	12-9    SUCCESS               13.852428 (99.10%) [1 edit(s)] [cached] 
+2024-08-13 13:21:29,741	[DEBUG]	patch(12-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 32), ('core/Solver.cc.xml', 'stmt', 164))"
+2024-08-13 13:21:30,187	[INFO]	12-10   COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:21:30,187	[DEBUG]	patch(12-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 169), ('core/Solver.cc.xml', 'stmt', 249))"
+2024-08-13 13:21:30,191	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,197	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,204	[INFO]	13-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,204	[DEBUG]	patch(13-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:30,209	[INFO]	13-2    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,209	[DEBUG]	patch(13-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:30,214	[INFO]	13-3    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,214	[DEBUG]	patch(13-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,218	[INFO]	13-4    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:21:30,218	[DEBUG]	patch(13-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,223	[INFO]	13-5    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,223	[DEBUG]	patch(13-5)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:30,229	[INFO]	13-6    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,229	[DEBUG]	patch(13-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:30,667	[INFO]	13-7    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:21:30,667	[DEBUG]	patch(13-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 233), ('core/Solver.cc.xml', 'stmt', 408))"
+2024-08-13 13:21:30,671	[INFO]	13-8    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,671	[DEBUG]	patch(13-8)=""
+2024-08-13 13:21:30,676	[INFO]	13-9    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,676	[DEBUG]	patch(13-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,679	[INFO]	13-10   SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,679	[DEBUG]	patch(13-10)=""
+2024-08-13 13:21:30,683	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,688	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,694	[INFO]	14-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,694	[DEBUG]	patch(14-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:21:30,701	[INFO]	14-2    SUCCESS               13.747184 (98.34%) [2 edit(s)] [cached] 
+2024-08-13 13:21:30,701	[DEBUG]	patch(14-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,706	[INFO]	14-3    SUCCESS               13.878897 (99.28%) [3 edit(s)] [cached] 
+2024-08-13 13:21:30,706	[DEBUG]	patch(14-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,710	[INFO]	14-4    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:21:30,710	[DEBUG]	patch(14-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:21:30,831	[INFO]	14-5    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,831	[DEBUG]	patch(14-5)=""
+2024-08-13 13:21:30,834	[INFO]	14-6    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:21:30,835	[DEBUG]	patch(14-6)=""
+2024-08-13 13:21:31,277	[INFO]	14-7    COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:21:31,277	[DEBUG]	patch(14-7)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 218), ('core/Solver.cc.xml', 'stmt', 337))"
+2024-08-13 13:21:31,281	[INFO]	14-8    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:21:31,281	[DEBUG]	patch(14-8)=""
+2024-08-13 13:22:01,045	[DEBUG]	EXEC>  SUCCESS 13.920323495000002
+2024-08-13 13:22:01,046	[INFO]	14-9    SUCCESS               13.920323 (99.58%) [1 edit(s)]  
+2024-08-13 13:22:01,046	[DEBUG]	patch(14-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 84))"
+2024-08-13 13:22:01,502	[INFO]	14-10   COMPILE_CODE_ERROR    None (--) [1 edit(s)]  
+2024-08-13 13:22:01,502	[DEBUG]	patch(14-10)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 251), ('core/Solver.cc.xml', 'stmt', 42))"
+2024-08-13 13:22:01,506	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:22:01,512	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:22:01,519	[INFO]	15-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:22:01,519	[DEBUG]	patch(15-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:22:01,526	[INFO]	15-2    SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:22:01,526	[DEBUG]	patch(15-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:22:01,532	[INFO]	15-3    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:22:01,532	[DEBUG]	patch(15-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:22:01,537	[INFO]	15-4    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:22:01,537	[DEBUG]	patch(15-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:22:01,541	[INFO]	15-5    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:22:01,542	[DEBUG]	patch(15-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:22:01,547	[INFO]	15-6    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:22:01,547	[DEBUG]	patch(15-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:22:01,551	[INFO]	15-7    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:22:01,551	[DEBUG]	patch(15-7)=""
+2024-08-13 13:22:01,556	[INFO]	15-8    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:22:01,556	[DEBUG]	patch(15-8)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:22:31,087	[DEBUG]	EXEC>  SUCCESS 13.799065575
+2024-08-13 13:22:31,087	[INFO]	15-9    SUCCESS               13.799066 (98.71%) [2 edit(s)]  
+2024-08-13 13:22:31,087	[DEBUG]	patch(15-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:23:00,719	[DEBUG]	EXEC>  SUCCESS 13.847115930000001
+2024-08-13 13:23:00,719	[INFO]	15-10   SUCCESS               13.847116 (99.06%) [4 edit(s)]  
+2024-08-13 13:23:00,719	[DEBUG]	patch(15-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266))"
+2024-08-13 13:23:00,723	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:23:00,729	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:23:00,735	[INFO]	16-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:23:00,735	[DEBUG]	patch(16-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:23:00,750	[INFO]	16-2    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:23:00,750	[DEBUG]	patch(16-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:23:30,397	[DEBUG]	EXEC>  SUCCESS 13.855066825
+2024-08-13 13:23:30,397	[INFO]	16-3    SUCCESS               13.855067 (99.11%) [1 edit(s)]  
+2024-08-13 13:23:30,397	[DEBUG]	patch(16-3)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:24:00,052	[DEBUG]	EXEC>  SUCCESS 13.851274465
+2024-08-13 13:24:00,052	[INFO]	16-4    SUCCESS               13.851274 (99.09%) [4 edit(s)]  
+2024-08-13 13:24:00,052	[DEBUG]	patch(16-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266))"
+2024-08-13 13:24:00,057	[INFO]	16-5    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:24:00,057	[DEBUG]	patch(16-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:24:00,061	[INFO]	16-6    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:24:00,061	[DEBUG]	patch(16-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:24:00,065	[INFO]	16-7    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:24:00,065	[DEBUG]	patch(16-7)=""
+2024-08-13 13:24:00,523	[INFO]	16-8    COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:24:00,523	[DEBUG]	patch(16-8)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 239))"
+2024-08-13 13:24:00,528	[INFO]	16-9    SUCCESS               13.878897 (99.28%) [3 edit(s)] [cached] 
+2024-08-13 13:24:00,528	[DEBUG]	patch(16-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:24:00,533	[INFO]	16-10   SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:24:00,533	[DEBUG]	patch(16-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:24:00,536	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:24:00,542	[INFO]	BEST    SUCCESS              *13.618214 (97.42%) [0 edit(s)] [cached] 
+2024-08-13 13:24:00,548	[INFO]	17-1    SUCCESS              +13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:24:00,548	[DEBUG]	patch(17-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:24:00,553	[INFO]	17-2    SUCCESS               13.855067 (99.11%) [1 edit(s)] [cached] 
+2024-08-13 13:24:00,554	[DEBUG]	patch(17-2)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:24:29,748	[DEBUG]	EXEC>  SUCCESS 13.61690283
+2024-08-13 13:24:29,748	[INFO]	17-3    SUCCESS              *13.616903 (97.41%) [6 edit(s)]  
+2024-08-13 13:24:29,748	[DEBUG]	patch(17-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+--- before: core/Solver.cc
++++ after: core/Solver.cc
+@@ -436,7 +436,7 @@
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+-                    seen[var(p)] = 1;
++                    
+                     analyze_stack.push(p);
+                     analyze_toclear.push(p);
+                 }else{
+@@ -932,6 +932,9 @@
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
++      watches.smudge(~c[1]);
++      watches.smudge(~c[1]);
++      watches.smudge(~c[1]);
+       return;
+     }/*auto*/
+ 
+@@ -1017,6 +1020,7 @@
+                printf("Wrote %d clauses with %d variables.\n", cnt, max);
+         
+     }/*auto*/
++    rebuildOrderHeap();
+ }
+ 
+ 
+
+2024-08-13 13:24:29,754	[INFO]	17-4    SUCCESS               13.855067 (99.11%) [1 edit(s)] [cached] 
+2024-08-13 13:24:29,754	[DEBUG]	patch(17-4)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:24:29,759	[INFO]	17-5    SUCCESS               13.878897 (99.28%) [2 edit(s)] [cached] 
+2024-08-13 13:24:29,759	[DEBUG]	patch(17-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:24:29,764	[INFO]	17-6    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:24:29,764	[DEBUG]	patch(17-6)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:24:29,784	[INFO]	17-7    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:24:29,784	[DEBUG]	patch(17-7)=""
+2024-08-13 13:26:11,722	[INFO]	17-8    TEST_TIMEOUT          None (--) [5 edit(s)]  
+2024-08-13 13:26:11,722	[DEBUG]	patch(17-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 335))"
+2024-08-13 13:26:11,726	[INFO]	17-9    SUCCESS               13.978866 (100.00%) [0 edit(s)] [cached] 
+2024-08-13 13:26:11,726	[DEBUG]	patch(17-9)=""
+2024-08-13 13:26:12,177	[INFO]	17-10   COMPILE_CODE_ERROR    None (--) [3 edit(s)]  
+2024-08-13 13:26:12,177	[DEBUG]	patch(17-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 509), ('core/Solver.cc.xml', 'stmt', 136))"
+2024-08-13 13:26:12,181	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:26:12,193	[INFO]	BEST    SUCCESS              *13.616903 (97.41%) [0 edit(s)] [cached] 
+2024-08-13 13:26:12,206	[INFO]	18-1    SUCCESS              +13.616903 (97.41%) [6 edit(s)] [cached] 
+2024-08-13 13:26:12,206	[DEBUG]	patch(18-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:12,212	[INFO]	18-2    SUCCESS               13.618214 (97.42%) [1 edit(s)] [cached] 
+2024-08-13 13:26:12,212	[DEBUG]	patch(18-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:26:12,219	[INFO]	18-3    SUCCESS               13.904152 (99.47%) [2 edit(s)] [cached] 
+2024-08-13 13:26:12,219	[DEBUG]	patch(18-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:26:12,225	[INFO]	18-4    SUCCESS               13.855067 (99.11%) [1 edit(s)] [cached] 
+2024-08-13 13:26:12,225	[DEBUG]	patch(18-4)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:26:12,229	[INFO]	18-5    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:26:12,229	[DEBUG]	patch(18-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:12,234	[INFO]	18-6    SUCCESS               13.878897 (99.28%) [1 edit(s)] [cached] 
+2024-08-13 13:26:12,234	[DEBUG]	patch(18-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:12,244	[INFO]	18-7    SUCCESS               13.851274 (99.09%) [5 edit(s)] [cached] 
+2024-08-13 13:26:12,244	[DEBUG]	patch(18-7)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:12,685	[INFO]	18-8    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:26:12,686	[DEBUG]	patch(18-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 132), ('core/Solver.cc.xml', 'stmt', 145))"
+2024-08-13 13:26:13,141	[INFO]	18-9    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:26:13,141	[DEBUG]	patch(18-9)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 478), ('core/Solver.cc.xml', 'stmt', 275))"
+2024-08-13 13:26:42,656	[DEBUG]	EXEC>  SUCCESS 13.792961375
+2024-08-13 13:26:42,656	[INFO]	18-10   SUCCESS               13.792961 (98.67%) [3 edit(s)]  
+2024-08-13 13:26:42,656	[DEBUG]	patch(18-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 308))"
+2024-08-13 13:26:42,660	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:26:42,672	[INFO]	BEST    SUCCESS              *13.616903 (97.41%) [0 edit(s)] [cached] 
+2024-08-13 13:26:42,690	[INFO]	19-1    SUCCESS              +13.616903 (97.41%) [6 edit(s)] [cached] 
+2024-08-13 13:26:42,690	[DEBUG]	patch(19-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:42,702	[INFO]	19-2    SUCCESS               13.616903 (97.41%) [5 edit(s)] [cached] 
+2024-08-13 13:26:42,702	[DEBUG]	patch(19-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:26:42,712	[INFO]	19-3    SUCCESS               13.851274 (99.09%) [5 edit(s)] [cached] 
+2024-08-13 13:26:42,712	[DEBUG]	patch(19-3)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:26:42,718	[INFO]	19-4    SUCCESS               13.792961 (98.67%) [2 edit(s)] [cached] 
+2024-08-13 13:26:42,718	[DEBUG]	patch(19-4)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 308))"
+2024-08-13 13:27:12,607	[DEBUG]	EXEC>  SUCCESS 13.972712885
+2024-08-13 13:27:12,607	[INFO]	19-5    SUCCESS               13.972713 (99.96%) [5 edit(s)]  
+2024-08-13 13:27:12,607	[DEBUG]	patch(19-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 308))"
+2024-08-13 13:27:12,613	[INFO]	19-6    SUCCESS               13.855067 (99.11%) [1 edit(s)] [cached] 
+2024-08-13 13:27:12,613	[DEBUG]	patch(19-6)="SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 138), ('core/Solver.cc.xml', 'stmt', 341))"
+2024-08-13 13:27:42,106	[DEBUG]	EXEC>  SUCCESS 13.772943555
+2024-08-13 13:27:42,106	[INFO]	19-7    SUCCESS               13.772944 (98.53%) [7 edit(s)]  
+2024-08-13 13:27:42,106	[DEBUG]	patch(19-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170))"
+2024-08-13 13:27:42,549	[INFO]	19-8    COMPILE_CODE_ERROR    None (--) [2 edit(s)]  
+2024-08-13 13:27:42,550	[DEBUG]	patch(19-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 86), ('core/Solver.cc.xml', 'stmt', 147))"
+2024-08-13 13:27:42,990	[INFO]	19-9    COMPILE_CODE_ERROR    None (--) [4 edit(s)]  
+2024-08-13 13:27:42,991	[DEBUG]	patch(19-9)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 69), ('core/Solver.cc.xml', 'stmt', 308)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 373), ('core/Solver.cc.xml', 'stmt', 91))"
+2024-08-13 13:28:13,104	[DEBUG]	EXEC>  SUCCESS 14.08173301
+2024-08-13 13:28:13,105	[INFO]	19-10   SUCCESS               14.081733 (100.74%) [6 edit(s)]  
+2024-08-13 13:28:13,105	[DEBUG]	patch(19-10)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtReplacement(('core/Solver.cc.xml', 'stmt', 259), ('core/Solver.cc.xml', 'stmt', 172))"
+2024-08-13 13:28:13,109	[INFO]	REF     SUCCESS               13.978866 (--) [0 edit(s)] [cached] 
+2024-08-13 13:28:13,121	[INFO]	BEST    SUCCESS              *13.616903 (97.41%) [0 edit(s)] [cached] 
+2024-08-13 13:28:13,141	[INFO]	20-1    SUCCESS              +13.616903 (97.41%) [5 edit(s)] [cached] 
+2024-08-13 13:28:13,141	[DEBUG]	patch(20-1)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:28:42,591	[DEBUG]	EXEC>  SUCCESS 13.75035516
+2024-08-13 13:28:42,591	[INFO]	20-2    SUCCESS               13.750355 (98.37%) [2 edit(s)]  
+2024-08-13 13:28:42,591	[DEBUG]	patch(20-2)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:28:42,602	[INFO]	20-3    SUCCESS               13.851274 (99.09%) [5 edit(s)] [cached] 
+2024-08-13 13:28:42,602	[DEBUG]	patch(20-3)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:29:12,501	[DEBUG]	EXEC>  SUCCESS 13.964234725
+2024-08-13 13:29:12,501	[INFO]	20-4    SUCCESS               13.964235 (99.90%) [6 edit(s)]  
+2024-08-13 13:29:12,501	[DEBUG]	patch(20-4)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58))"
+2024-08-13 13:29:12,508	[INFO]	20-5    SUCCESS               13.847116 (99.06%) [4 edit(s)] [cached] 
+2024-08-13 13:29:12,508	[DEBUG]	patch(20-5)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:29:42,336	[DEBUG]	EXEC>  SUCCESS 13.94216718
+2024-08-13 13:29:42,336	[INFO]	20-6    SUCCESS               13.942167 (99.74%) [5 edit(s)]  
+2024-08-13 13:29:42,336	[DEBUG]	patch(20-6)="SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))"
+2024-08-13 13:29:42,788	[INFO]	20-7    COMPILE_CODE_ERROR    None (--) [6 edit(s)]  
+2024-08-13 13:29:42,788	[DEBUG]	patch(20-7)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 334), ('core/Solver.cc.xml', 'stmt', 102))"
+2024-08-13 13:29:44,642	[INFO]	20-8    TEST_CODE_ERROR       None (--) [7 edit(s)]  
+2024-08-13 13:29:44,642	[DEBUG]	patch(20-8)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 224))"
+2024-08-13 13:31:26,566	[INFO]	20-9    TEST_TIMEOUT          None (--) [8 edit(s)]  
+2024-08-13 13:31:26,566	[DEBUG]	patch(20-9)="SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 170)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 356))"
+2024-08-13 13:31:26,579	[INFO]	~~~~ END ~~~~
+2024-08-13 13:31:26,579	[INFO]	
+2024-08-13 13:31:26,579	[INFO]	==== REPORT ====
+2024-08-13 13:31:26,579	[INFO]	Termination: time budget
+2024-08-13 13:31:26,580	[INFO]	Retries: 2
+2024-08-13 13:31:26,580	[INFO]	Log file: /home/dbouras/magpie/_magpie_logs/minisat_1723550374.log
+2024-08-13 13:31:26,580	[INFO]	Patch file: _magpie_logs/minisat_1723550374.patch
+2024-08-13 13:31:26,580	[INFO]	Diff file: _magpie_logs/minisat_1723550374.diff
+2024-08-13 13:31:26,580	[INFO]	Reference fitness: 13.978866
+2024-08-13 13:31:26,580	[INFO]	Best fitness: 13.616903
+2024-08-13 13:31:26,580	[INFO]	
+2024-08-13 13:31:26,581	[INFO]	==== BEST PATCH ====
+SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 519), ('core/Solver.cc.xml', 'stmt', 266)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtInsertion(('core/Solver.cc.xml', '_inter_block', 495), ('core/Solver.cc.xml', 'stmt', 58)) | SrcmlStmtDeletion(('core/Solver.cc.xml', 'stmt', 162))
+2024-08-13 13:31:26,581	[INFO]	
+2024-08-13 13:31:26,581	[INFO]	==== DIFF ====
+[1m--- before: core/Solver.cc[0m
+[1m+++ after: core/Solver.cc[0m
+[36m@@ -436,7 +436,7 @@[0m
+             Lit p  = c[i];
+             if (!seen[var(p)] && level(var(p)) > 0){
+                 if (reason(var(p)) != CRef_Undef && (abstractLevel(var(p)) & abstract_levels) != 0){
+[31m-                    seen[var(p)] = 1;[0m
+[32m+                    [0m
+                     analyze_stack.push(p);
+                     analyze_toclear.push(p);
+                 }else{
+[36m@@ -932,6 +932,9 @@[0m
+ void Solver::toDimacs(FILE* f, Clause& c, vec<Var>& map, Var& max)
+ {
+     if (satisfied(c)) /*auto*/{
+[32m+      watches.smudge(~c[1]);[0m
+[32m+      watches.smudge(~c[1]);[0m
+[32m+      watches.smudge(~c[1]);[0m
+       return;
+     }/*auto*/
+ 
+[36m@@ -1017,6 +1020,7 @@[0m
+                printf("Wrote %d clauses with %d variables.\n", cnt, max);
+         
+     }/*auto*/
+[32m+    rebuildOrderHeap();[0m
+ }
+ 
+ 
+
