@@ -244,9 +244,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     #     "perf_dTLB_load_misses", "weights", "energy"
     # ]
     # "energy_ram", "energy_uncore"
-    perf_items = ['time','perf_time', 'perf_cycles',
-        "perf_cache_references", "perf_cache_misses", 
-        "perf_branch_misses", "energy","perf_instructions", "perf_branches","weights", "perf_L1_dcache_loads", "perf_faults","perf_cpu_clock", "perf_task_clock"
+    perf_items = ['time','perf_time', 'perf_cycles',"perf_cache_references", "perf_cache_misses", "perf_branch_misses", "energy","perf_instructions", "perf_branches","weights", "perf_L1_dcache_loads", "perf_faults","perf_cpu_clock", "perf_task_clock"]
     # erf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
     #     "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy", "perf_L1_dcache_loads"]

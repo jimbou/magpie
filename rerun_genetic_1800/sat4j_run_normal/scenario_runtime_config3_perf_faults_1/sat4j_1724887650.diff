@@ -1,0 +1,67 @@
+--- before: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
++++ after: org.sat4j.core/src/main/java/org/sat4j/minisat/core/Solver.java
+@@ -240,7 +240,7 @@
+             IOrder order, RestartStrategy restarter, ILogAble logger) {
+         this.order = order;
+         this.params = params;
+-        this.restarter = restarter;
++        
+         this.out = logger;
+         setDataStructureFactory(dsf);
+         // should be called after dsf has been set up
+@@ -392,16 +392,7 @@
+         c.setLearnt();
+         c.register();
+         this.stats.incLearnedclauses();
+-        switch (c.size()) {
+-        case 2:
+-            this.stats.incLearnedbinaryclauses();
+-            break;
+-        case 3:
+-            this.stats.incLearnedternaryclauses();
+-            break;
+-        default:
+-            // do nothing
+-        }
++        
+     }
+ 
+     public final int decisionLevel() {
+@@ -857,10 +848,7 @@
+             analyzetoclear.clear();
+             conflictToReduce.copyTo(analyzetoclear);
+             for (i = 1, j = 1; i < conflictToReduce.size(); i++) {
+-                if (voc.getReason(conflictToReduce.get(i)) == null
+-                        || !analyzeRemovable(conflictToReduce.get(i))) {
+-                    conflictToReduce.moveTo(j++, i);
+-                }
++                
+             }
+             conflictToReduce.shrink(i - j);
+             stats.incReducedliterals(i - j);
+@@ -1313,7 +1301,7 @@
+             }
+             if (confl != null) {
+                 // conflict found
+-                this.stats.incConflicts();
++                this.restarter.init(this.params, this.stats);
+                 this.slistener.conflictFound(confl, decisionLevel(),
+                         this.trail.size());
+                 this.conflictCount.newConflict();
+@@ -1752,7 +1740,7 @@
+         this.decisions.clear();
+         this.implied.clear();
+         this.slistener.start();
+-        this.model = null; // forget about previous model
++         // forget about previous model
+         this.fullmodel = null;
+         this.userbooleanmodel = null;
+         this.prime = null;
+@@ -2479,6 +2467,7 @@
+ 
+     public void setKeepSolverHot(boolean keepHot) {
+         this.keepHot = keepHot;
++        this.timeBasedTimeout = false;
+     }
+ 
+     private final Comparator<Integer> trailComparator() {
