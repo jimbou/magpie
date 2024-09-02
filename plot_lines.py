@@ -99,20 +99,20 @@ def process_json_data(directory, json_filename):
         
         results.append(metrics)
 
-        plt.figure()
+        plt.figure(figsize=(10, 6))  # You can adjust the size as needed
+
         plt.scatter(range(len(fitness_values)), fitness_values, label='Fitness Values', marker='o')
-        plt.title(f"{item_name} - Fitness Points")
-        plt.xlabel('Step')
-        plt.ylabel('Fitness Value')
+        plt.title(f"{item_name} - Fitness values")
+        plt.xlabel('Variant Number')
+        plt.ylabel('Fitness Values')
         plt.grid(True)
         plt.legend()
-        
-        # Save the plot
-        graph_name = f"{item_name}_{retries}.png"
-        plt.savefig(os.path.join(output_dir, graph_name))
-        plt.close()  # Close the plot to free up memory
 
-        
+        # Save the plot with higher DPI
+        graph_name = f"{item_name}_{retries}.png"
+        plt.savefig(os.path.join(output_dir, graph_name), dpi=300)  # Increase DPI for better quality
+        plt.close()
+                
     
     df = pd.DataFrame(results)
     csv_filename = 'fitness_analysis_results.csv'
