@@ -10,7 +10,8 @@ import magpie.settings
 #python3.11 run_examples.py triangle-c scenario scenario_params run_triangle "make run_triangle" triangle.c
 data = {
     "original": {
-        "median_execution_time": 0
+        "median_execution_time": 0,
+        "search_type": ""
     },
     "items": []
 }
@@ -46,25 +47,47 @@ def update_retries(filepath, new_retry_value):
 
     
     return new_filepath
+def update_crossover(filepath, new_retry_value):
+    # Read the original file
+    with open(filepath, 'r') as file:
+        lines = file.readlines()
+
+    # Update the specified line
+    for i in range(len(lines)):
+        if lines[i].strip().startswith("algorithm ="):
+            lines[i] = f"algorithm = {new_retry_value}\n"
+            break
+
+    # Generate a new file name based on the original name and new_retry_value
+    base_name, ext = os.path.splitext(filepath)
+    new_filepath = f"{base_name}_{new_retry_value}{ext}"
+
+    # Write to the new file
+    with open(new_filepath, 'w') as file:
+        file.writelines(lines)
+
+    
+    return new_filepath
 
 
 def extract_data_from_log(file_path):
     # Regular expression to find the number of retries
     retries_pattern = re.compile(r"Retries:\s+(\d+)")
     # Regular expression to find all occurrences of "patch(xxx)="
-    patch_numbers_pattern = re.compile(r"patch\((\d+)\)=")
+    patch_numbers_pattern = re.compile(r"patch\((\d+)(?:-(\d+))?\)=")
     #fitness if float
     best_fitness_pattern = re.compile(r"Best fitness:\s+(\d+(?:\.\d+)?)")
 
 
     ref_fitness_pattern = re.compile(r"Reference fitness:\s+(\d+(?:\.\d+)?)")
 
-    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")   
+    fitness_values_pattern = re.compile(r"\[INFO\]\s+\d+(?:-\d+)?\s+SUCCESS\s+\*?\+?(\d+(?:\.\d+)?)")  
 
-
+    algorithm_pattern = re.compile(r"algorithm =\s+(\w+)")
 
     retries_number = None
     max_patch_number = None
+    algorithm = None
 
     try:
         with open(file_path, 'r') as file:
@@ -86,9 +109,25 @@ def extract_data_from_log(file_path):
             ref_fitness_match = ref_fitness_pattern.search(file_content)
             if ref_fitness_match:
                 ref_fitness = float(ref_fitness_match.group(1))
+            
+            #algorithm
+            algorithm_match = algorithm_pattern.search(file_content)
+            if algorithm_match:
+                algorithm = algorithm_match.group(1)
+                
 
             # Find all patch numbers and determine the maximum
-            patch_numbers = [int(num) for num in patch_numbers_pattern.findall(file_content)]
+            patch_numbers=[]
+            num_matches = patch_numbers_pattern.findall(file_content)
+            for match in num_matches:
+                if match[1]:  # If the second group is not empty, it's a range
+                    first = int(match[0])
+                    second = int(match[1])
+                    result = first * 10 + second
+                else:  # Otherwise, it's a single number
+                    result = int(match[0])
+                patch_numbers.append(result)
+    
             if patch_numbers:
                 max_patch_number = max(patch_numbers)
             
@@ -101,7 +140,7 @@ def extract_data_from_log(file_path):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-    return retries_number, max_patch_number, best_fitness, ref_fitness, fitness_values
+    return retries_number, max_patch_number, best_fitness, ref_fitness, fitness_values, algorithm
 
 
 
@@ -223,7 +262,7 @@ def build_command(params, cmd):
                     cmd.append(flag_mappings[key] + '=' + value)
     return cmd
 
-def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file):
+def main(name1, scenario ,name3, compile_command, improved_file, main_directory, params_file,search_type='local_search'):
     # perf_items = [
     #     'time', 'perf_time', 'perf_instructions', 'perf_cycles',
     #     "perf_cache_references", "perf_cache_misses", "perf_branches",
@@ -233,9 +272,9 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     #     "perf_dTLB_load_misses", "weights", "energy"
     # ]
     # "energy_ram", "energy_uncore"
-    # perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
-    #     "perf_cache_references", "perf_cache_misses", "perf_branches",
-    #     "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy"]
+    perf_items = ['time','perf_time','perf_instructions', 'perf_cycles',
+        "perf_cache_references", "perf_cache_misses", "perf_branches",
+        "perf_branch_misses", "perf_cpu_clock", "perf_task_clock", "perf_faults", "weights", "energy", "perf_L1_dcache_loads"]
     perf_items = [ 'time']
     erroneous=[]
     execution_times = []
@@ -255,26 +294,30 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
         execution_times.append(float(duration))
         #if the command returns error then add that to the erroneous list
         
+        
 
 
     
     median_time_orig = statistics.median(execution_times)
     data["original"]["median_execution_time"] = median_time_orig
+    data["original"]["search_type"]= search_type
     print(f'Median execution time: {median_time_orig}')
 
     # Main directory for this run
-    
+    crossover_options=["GeneticProgrammingUniformConcat", "GeneticProgrammingConcat", "GeneticProgramming1Point", "GeneticProgramming2Point", "GeneticProgrammingUniformInter"]
+
     orig_path=f"examples/{name1}/necessary"
     for item in perf_items:
         #get time before execution
         try:
-            for retries_num  in range(1,2):
-
+            retries_num=1
+            for crossover_option  in crossover_options:
                 new_string = f"{scenario }_{item}.txt"
-                print(f"Running {new_string} for retry {retries_num}")
+                print(f"Running {new_string} for crossover_option {crossover_option}")
                 scenario_path_base = f"examples/{name1}/_magpie/{new_string}"
-                scenario_path=update_retries(scenario_path_base,retries_num)
-                command = f"python3.11 magpie genetic_programming --scenario {scenario_path}"
+                # scenario_path=update_retries(scenario_path_base,retries_num)
+                scenario_path=update_crossover(scenario_path_base,crossover_option)
+                command = f"python3.11 magpie {search_type} --scenario {scenario_path}"
                 
                 if item != "weights":
                     start_mag_w = time.perf_counter()
@@ -314,7 +357,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     continue
                 # Subdirectory for the current item
                 item_directory = os.path.join(main_directory, scenario+"_"+item)
-                item_directory = item_directory +"_"+str(retries_num)
+                item_directory = item_directory +"_"+str(crossover_option)
                 os.makedirs(item_directory, exist_ok=True)
                 final_destination = os.path.join(item_directory, 'necessary')
                 # Copy files
@@ -327,10 +370,11 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 with open(patch_path, 'r') as file:
                     patch_contents = file.read()
                 diff_name = os.path.basename(diff_path)
-                retries, max_patch, best_fitness, ref_fitness, fitness_values = extract_data_from_log(log_path)
-                if retries is not None and max_patch is not None:
+                retries, max_patch, best_fitness, ref_fitness, fitness_values, algorithm = extract_data_from_log(log_path)
+                if retries is not None and max_patch is not None and algorithm is not None:
                     print("Number of Retries:", retries)
                     print("Highest Patch Number:", max_patch)
+                    print("Crossover option:", algorithm)
                 else:
                     print("Failed to extract data.")
 
@@ -351,7 +395,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                     run_com2= " ".join(run_com2)
                     print(run_com2)
                 execution_times = []
-                for _ in range(20):
+                for _ in range(1):
                     start = time.perf_counter()
                     result = run_command(run_com2, f"{item_directory}/necessary")
                     end = time.perf_counter()
@@ -377,6 +421,7 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 "duration":duration_magpie ,
                 "patch_contents": patch_contents,
                 "number_of_retries": retries,
+                "crossover": crossover_option,
                 "number_of_steps": max_patch,
                 "best_fitness": best_fitness,
                 "reference_fitness": ref_fitness,
@@ -387,26 +432,30 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
                 })
                 with open(f'{main_directory}/performance_data_temp.json', 'w') as file:
                     json.dump(data, file, indent=4)
+            #sleep for 60 seconds
+                time.sleep(60)
         except Exception as e:
             print(f"An error occurred: {e}")
             print(f"Erroneeous in {erroneous}")
             with open(f'{main_directory}/performance_data.json', 'w') as file:
                 json.dump(data, file, indent=4)  
             return -1
+    with open(f'erroneous.txt', 'w') as file:
+        file.write(f"{name1} {scenario} {name3} Erroneeous = {erroneous}")
     print(f"Erroneeous = {erroneous}")    
 
 if __name__ == "__main__":
-    if len(sys.argv) != 8:
-        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file>")
+    if len(sys.argv) != 9:
+        print("Usage: python script.py <dir name> <scenario> <scenario_params> <executable> <compile command> <improved_file> <params_file> <search_type>")
     else:
         main_directory = f"{sys.argv[1]}_run"
         main_directory = create_directory_with_suffix(main_directory)
         if sys.argv[2] != "":
             print("Executing with normal scenario")
-            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7] )
+            main(sys.argv[1], sys.argv[2], sys.argv[4], sys.argv[5], sys.argv[6],main_directory,sys.argv[7],sys.argv[8] )
         if sys.argv[3] != "":
             print("Executing with params scenario")
-            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7])
+            main(sys.argv[1], sys.argv[3], sys.argv[4], sys.argv[5], sys.argv[6], main_directory, sys.argv[7],sys.argv[8])
 
         with open(f'{main_directory}/performance_data.json', 'w') as file:
             json.dump(data, file, indent=4)
