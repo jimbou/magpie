@@ -304,7 +304,8 @@ def main(name1, scenario ,name3, compile_command, improved_file, main_directory,
     print(f'Median execution time: {median_time_orig}')
 
     # Main directory for this run
-    crossover_options=["GeneticProgrammingUniformConcat", "GeneticProgrammingConcat", "GeneticProgramming1Point", "GeneticProgramming2Point", "GeneticProgrammingUniformInter"]
+    crossover_options=["GeneticProgrammingUniformConcat", "GeneticProgrammingConcat","GeneticProgramming1Point", "GeneticProgramming2Point", "GeneticProgrammingUniformInter"]
+    # crossover_options=["GeneticProgrammingConcat"]
 
     orig_path=f"examples/{name1}/necessary"
     for item in perf_items:
